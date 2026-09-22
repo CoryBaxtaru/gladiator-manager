@@ -1,0 +1,152 @@
+import { useState } from "react";
+import { useGame } from "../state/GameContext";
+import { REPUTATION_TIER_LABELS, PROMOTION } from "../config";
+import {
+  promotionAvailable,
+  promotionOnCooldown,
+  promotionChampion,
+  reputationCapFor,
+  nextTierOf,
+  buildPromotionMatchup,
+} from "../engine/promotion";
+import { estimateWinChance } from "../engine/combat";
+import { currentAbilityStars, currentAbilityOf } from "../engine/rating";
+import { moodLabel } from "../engine/mood";
+import { StarRating } from "./StarRating";
+import { Card } from "./Card";
+import { GladiatorHoverCard, hoverDataFromGladiator, hoverDataFromRival } from "./GladiatorHoverCard";
+import { WinChanceBadge } from "./WinChanceBadge";
+import { ConfirmDialog } from "./ConfirmDialog";
+
+/**
+ * Tier-up is gated behind an optional, player-timed Promotion Fight against the best
+ * gladiator of the top-ranked rival ludus in the player's current tier (see
+ * engine/promotion.ts). Reaching the reputation cap only unlocks the option; nothing
+ * forces the attempt, so a player gets a real prep window before committing.
+ */
+export function PromotionScreen() {
+  const { state, attemptPromotion } = useGame();
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+
+  const nextTier = nextTierOf(state.unlockedTier);
+  const cap = reputationCapFor(state);
+  const onCooldown = promotionOnCooldown(state);
+  const available = promotionAvailable(state);
+  const champion = promotionChampion(state);
+  const eligibleGladiators = state.gladiators.filter((g) => g.status === "active" && g.injuryDaysRemaining === 0);
+  const confirmingGladiator = eligibleGladiators.find((g) => g.id === confirmingId) ?? null;
+
+  if (!nextTier) {
+    return (
+      <div className="screen">
+        <h2>Promotion</h2>
+        <p className="empty-note">
+          The ludus has reached the Colosseum, the highest tier there is. There's no one left to be promoted past.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="screen">
+      <h2>Promotion</h2>
+      <p className="hint">
+        Reputation caps at {cap} while fighting at {REPUTATION_TIER_LABELS[state.unlockedTier]}. Winning a
+        Promotion Fight against the best of this tier unlocks {REPUTATION_TIER_LABELS[nextTier]} for real, on your
+        own schedule, not the moment you qualify.
+      </p>
+
+      {!available && !onCooldown && (
+        <Card>
+          <div className="card-row">
+            <span>Reputation</span>
+            <span>{state.reputation} / {cap}</span>
+          </div>
+          <div className="progress-bar">
+            <div className="progress-bar-fill" style={{ width: `${Math.min(100, Math.round((state.reputation / cap) * 100))}%` }} />
+          </div>
+          <p className="hint">Keep fighting to reach the cap. A Promotion Fight unlocks once you do.</p>
+        </Card>
+      )}
+
+      {onCooldown && (
+        <div className="banner warning">
+          That attempt didn't go your way. {champion ? champion.gladiator.name : "The champion"} will accept a
+          rematch after day {state.promotionCooldownUntilDay}. Ordinary fighting, training, and recruiting continue
+          as normal in the meantime.
+        </div>
+      )}
+
+      {available && champion && (
+        <>
+          <Card accent="gold">
+            <h3>The Champion</h3>
+            <GladiatorHoverCard data={hoverDataFromRival(champion.gladiator)} reputation={state.reputation}>
+              <div className="matchup-preview-side">
+                <div className="matchup-preview-name">{champion.gladiator.name}</div>
+                <div className="hint">Best of the {champion.rivalLudus.name}</div>
+              </div>
+            </GladiatorHoverCard>
+            <p className="hint">
+              A hard fight, but not a death match. Losing costs reputation and time, not his life, and you can
+              regroup and try again after the cooldown.
+            </p>
+          </Card>
+
+          <h3>Choose Your Champion</h3>
+          <p className="hint">
+            Review your roster before committing, sell off anyone who won't hold up at the next tier, recruit or
+            train a replacement, from Roster, Training, or Recruitment, then come back when you're ready.
+          </p>
+          {eligibleGladiators.length === 0 ? (
+            <p className="empty-note">No one is fit to fight right now.</p>
+          ) : (
+            <>
+              <div className="fighter-select-header">
+                <span className="fsh-name">Name</span>
+                <span className="fsh-ability">Ability</span>
+                <span className="fsh-mood">Mood</span>
+                <span className="fsh-winchance">Win Chance</span>
+                <span className="fsh-action" />
+              </div>
+              <div className="fighter-select-list">
+              {eligibleGladiators.map((g) => {
+                const matchup = buildPromotionMatchup(state, g.id);
+                const estimate = matchup ? estimateWinChance(g, matchup, state, state.currentDay) : null;
+                return (
+                  <GladiatorHoverCard data={hoverDataFromGladiator(g)} reputation={state.reputation} key={g.id}>
+                    <div className="fighter-select-row">
+                      <span className="fighter-select-name">{g.name}</span>
+                      <span className="fighter-select-sub">
+                        <StarRating value={currentAbilityStars(currentAbilityOf(g))} size="sm" />
+                        <span className="fighter-select-mood">{moodLabel(g.mood)}</span>
+                      </span>
+                      {estimate && <WinChanceBadge estimate={estimate} />}
+                      <button className="btn small primary" onClick={() => setConfirmingId(g.id)}>
+                        Challenge
+                      </button>
+                    </div>
+                  </GladiatorHoverCard>
+                );
+              })}
+              </div>
+            </>
+          )}
+        </>
+      )}
+
+      {confirmingGladiator && champion && (
+        <ConfirmDialog
+          title="Challenge for promotion?"
+          message={`Send ${confirmingGladiator.name} to challenge ${champion.gladiator.name}. A loss costs real reputation and starts a ${PROMOTION.cooldownDays}-day cooldown before another attempt, but he survives either way.`}
+          confirmLabel="Challenge"
+          onConfirm={() => {
+            attemptPromotion(confirmingGladiator.id);
+            setConfirmingId(null);
+          }}
+          onCancel={() => setConfirmingId(null)}
+        />
+      )}
+    </div>
+  );
+}

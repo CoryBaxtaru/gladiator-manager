@@ -1,0 +1,2313 @@
+{
+  "meta": {
+    "title": "Ethnic name pools for a gladiator ludus game",
+    "compiled": "2026-09-21",
+    "companionDocument": "gladiator-name-pools.md",
+    "keyPrinciple": "Almost no gladiator fought under his birth name. Gladiators were slaves, war captives or auctorati, and the epigraphic record shows them bearing a single Latin or Greek ARENA name regardless of origin (Flamma, the best-documented gladiator, is recorded as natione Syrus). Generate a birth name from a group's pool, then assign an arena name from arenaNames on enrolment.",
+    "armatureWarning": "Thraex, Gallus and Samnis are fighting styles named after long-defeated peoples, not ethnicities. Do not couple armature to origin in the generator.",
+    "confidence": {
+      "A": "attested for that people in the ancient record",
+      "A-g": "attested specifically for a gladiator",
+      "R": "plausible reconstruction from attested name-elements; not itself on record"
+    }
+  },
+  "groups": {
+    "thracian": {
+      "label": "Thracian",
+      "convention": "single name, no family name; short simple names and dithematic compounds",
+      "recordDepth": "very good",
+      "birthNames": {
+        "compoundsAttested": [
+          "Auluzenis",
+          "Auluporis",
+          "Aulutralis",
+          "Bithytralis",
+          "Brasitralis",
+          "Breizenis",
+          "Daleporis",
+          "Daletralis",
+          "Diazenthos",
+          "Diascuporis",
+          "Dytouporis",
+          "Dytoutralis",
+          "Eptetralis",
+          "Eptaikenthos",
+          "Epteporis",
+          "Mucatralis",
+          "Mucaporis",
+          "Mucakenthos",
+          "Mucatra",
+          "Mucapor"
+        ],
+        "simpleAttested": [
+          "Bithus",
+          "Beithys",
+          "Dinis",
+          "Dizas",
+          "Zipas",
+          "Tarsa",
+          "Doles",
+          "Durises",
+          "Brasus",
+          "Seuthes",
+          "Teres",
+          "Cotys",
+          "Sitalces",
+          "Amadocus",
+          "Sparatocus",
+          "Bergaios",
+          "Mostis",
+          "Olorus",
+          "Getas",
+          "Diegylis",
+          "Rabocentus",
+          "Cosingas",
+          "Ziselmius",
+          "Syrmus"
+        ],
+        "dynasticAttested": [
+          "Rhescuporis",
+          "Rhoemetalces",
+          "Cersobleptes",
+          "Berisades",
+          "Cetriporis",
+          "Hebryzelmis",
+          "Dromichaetes",
+          "Zalmodegicus",
+          "Rhemaxos",
+          "Charnabon",
+          "Cothelas",
+          "Abrupolis"
+        ],
+        "geticDacianCommonAttested": [
+          "Dadas",
+          "Dadazi",
+          "Zoutoula",
+          "Dotos",
+          "Dotouzi",
+          "Dieri",
+          "Diernais",
+          "Diengis",
+          "Didas",
+          "Blaikisa",
+          "Blegissa",
+          "Diourdanos",
+          "Thiadicem",
+          "Avizina",
+          "Dourpokis",
+          "Kaigiza",
+          "Dardiolai",
+          "Denzibalos",
+          "Pouridour",
+          "Thiaper",
+          "Tiatitis",
+          "Dekinais",
+          "Rolouzis"
+        ],
+        "geticDacianEliteAttested": [
+          "Burebista",
+          "Decebalus",
+          "Diurpaneus",
+          "Cotiso",
+          "Comosicus",
+          "Deceneus",
+          "Scorilo",
+          "Duras",
+          "Dapyx",
+          "Dicomes",
+          "Rholes",
+          "Zyraxes",
+          "Zoltes",
+          "Oroles",
+          "Rubobostes",
+          "Pieporus",
+          "Tarbus",
+          "Bicilis",
+          "Vezinas",
+          "Natoporus"
+        ]
+      },
+      "compoundGenerator": {
+        "confidence": "R",
+        "prefixes": [
+          "Aulu-",
+          "Bithy-",
+          "Bei-",
+          "Brasi-",
+          "Brei-",
+          "Dale-",
+          "Dia-",
+          "Diasku-",
+          "Dytou-",
+          "Epta-",
+          "Epte-",
+          "Muca-",
+          "Zi-",
+          "Dini-",
+          "Tarsa-",
+          "Seuthi-",
+          "Rhesku-"
+        ],
+        "suffixes": [
+          "-zenis",
+          "-poris",
+          "-por",
+          "-tralis",
+          "-tralos",
+          "-kenthos",
+          "-kenthus",
+          "-centus",
+          "-zis",
+          "-mes",
+          "-thes"
+        ],
+        "examples": [
+          "Mucazenis",
+          "Eptaporis",
+          "Diatralis",
+          "Bithykenthos",
+          "Daletralos"
+        ]
+      },
+      "notes": [
+        "Patronymic by apposition in the Greek genitive: Mucakenthos Beithyos, 'son of Bithus'.",
+        "Romanised Thracians keep the native name as cognomen: Aurelius Mucatralis, Traianus Mucianus.",
+        "Do not append Latin -us to the compounds. Mucaporis is right; Mucaporius is not.",
+        "Sparatocus is the Odrysian royal name behind Spartacus, our one genuinely Thracian gladiator.",
+        "Dynastic names are status-loaded; sparing use for slaves."
+      ],
+      "illyrianBonusAttested": [
+        "Bato",
+        "Pinnes",
+        "Dasius",
+        "Scenobarbus",
+        "Verzo",
+        "Epicadus",
+        "Temus",
+        "Panes",
+        "Tata"
+      ]
+    },
+    "gallic": {
+      "label": "Gallic",
+      "convention": "single name, often a dithematic compound of heroic vocabulary; under Rome kept as cognomen",
+      "recordDepth": "very good",
+      "birthNames": {
+        "chieftainsAttested": [
+          "Vercingetorix",
+          "Celtillus",
+          "Critognatus",
+          "Vercassivellaunus",
+          "Ambiorix",
+          "Catuvolcus",
+          "Dumnorix",
+          "Diviciacus",
+          "Orgetorix",
+          "Cingetorix",
+          "Indutiomarus",
+          "Commius",
+          "Litaviccus",
+          "Convictolitavis",
+          "Eporedorix",
+          "Viridomarus",
+          "Viridovix",
+          "Camulogenus",
+          "Lucterius",
+          "Drappes",
+          "Correus",
+          "Cotuatus",
+          "Conconnetodumnus",
+          "Tasgetius",
+          "Moritasgus",
+          "Acco",
+          "Segovax",
+          "Carvilius",
+          "Taximagulus",
+          "Mandubracius",
+          "Cassivellaunus",
+          "Boduognatus",
+          "Casticus",
+          "Liscus",
+          "Cotus",
+          "Teutomatus",
+          "Epasnactus",
+          "Sedullus",
+          "Vertiscus",
+          "Roucillus",
+          "Nammeius",
+          "Verucloetius",
+          "Bituitus",
+          "Magalos",
+          "Adiatorix",
+          "Dumnacus",
+          "Ollovico",
+          "Iccius"
+        ],
+        "commonersAttested": [
+          "Atto",
+          "Atepomarus",
+          "Adnamatus",
+          "Agedillus",
+          "Andegenus",
+          "Ambio",
+          "Anbiorix",
+          "Cintugnatus",
+          "Cintusmus",
+          "Dagomarus",
+          "Divixtus",
+          "Drutus",
+          "Epos",
+          "Esumopas",
+          "Excingomarus",
+          "Litugenus",
+          "Litumaros",
+          "Nertomaros",
+          "Oclicnos",
+          "Ollognatus",
+          "Rextugenos",
+          "Sacrillos",
+          "Segomaros",
+          "Senognatus",
+          "Solimarus",
+          "Suratus",
+          "Tancorix",
+          "Toutiorix",
+          "Vepogenus",
+          "Bellicus",
+          "Congonnetiacus",
+          "Lugurix",
+          "Vassorix",
+          "Cobnertus",
+          "Bilicatus"
+        ],
+        "feminineAttested": [
+          "Belatumara",
+          "Deuognata",
+          "Camulognata",
+          "Eluissa",
+          "Toutissa"
+        ]
+      },
+      "compoundGenerator": {
+        "confidence": "R",
+        "prefixes": [
+          "Ambi-",
+          "Bodu-",
+          "Camulo-",
+          "Catu-",
+          "Cintu-",
+          "Congonne-",
+          "Dago-",
+          "Dubno-",
+          "Dumno-",
+          "Epo-",
+          "Exingo-",
+          "Litu-",
+          "Nerto-",
+          "Ollo-",
+          "Rextu-",
+          "Sego-",
+          "Seno-",
+          "Souli-",
+          "Tanco-",
+          "Teuto-",
+          "Touto-",
+          "Vepo-",
+          "Ver-",
+          "Virido-"
+        ],
+        "suffixes": [
+          "-rix",
+          "-maros",
+          "-marus",
+          "-genos",
+          "-genus",
+          "-gnatus",
+          "-dubnos",
+          "-talus",
+          "-valos",
+          "-vellaunus",
+          "-bnertus",
+          "-cnos"
+        ],
+        "suffixMeanings": {
+          "-rix": "king",
+          "-maros": "great",
+          "-genos": "born of",
+          "-gnatus": "son of",
+          "-dubnos": "world",
+          "-vellaunus": "commanding",
+          "-bnertus": "strength",
+          "-cnos": "son of"
+        },
+        "examples": [
+          "Catumaros",
+          "Segogenos",
+          "Bodurix",
+          "Ollomaros",
+          "Camulognatus",
+          "Vepomaros"
+        ]
+      },
+      "notes": [
+        "-rix means 'king'. Keep it under roughly 15% of Gallic output or it reads as parody.",
+        "Both raw Gaulish and Latinised forms are legitimate: Segomaros / Segomarus.",
+        "The Gallus armature was obsolete by the early Empire, replaced by the murmillo; the Ludus Gallicus in Rome is nevertheless real.",
+        "Do not use Insular Celtic names (Conall, Fergus, Brian, Niall) - wrong branch, centuries too late."
+      ]
+    },
+    "roman": {
+      "label": "Roman",
+      "convention": "gladiators bore a single arena name; freeborn volunteers could keep the full citizen formula",
+      "recordDepth": "excellent",
+      "birthNames": {
+        "note": "Roman gladiators have no separate birth-name pool - they draw directly from arenaNames. For free volunteers and citizens, build a full name from lanistae.triaNomina."
+      },
+      "notes": [
+        "A suffix in -ianus after an arena name marks the owning school, not the name: Hilarus Neronianus = 'Hilarus of the Neronian ludus'. Good mechanic to model on purchase.",
+        "Greek and Latin forms interchange freely: Neikephoros / Nicephorus, Hermas / Herma.",
+        "Freeborn auctorati may appear under a full tria nomina with the arena name as cognomen."
+      ]
+    },
+    "numidian": {
+      "label": "Numidian",
+      "convention": "single Libyco-Berber name; Punic names circulate alongside native Libyan ones",
+      "recordDepth": "thin - script only partly deciphered, several readings contested",
+      "birthNames": {
+        "royalAttested": [
+          "Masinissa",
+          "Gaia",
+          "Micipsa",
+          "Mastanabal",
+          "Gulussa",
+          "Jugurtha",
+          "Hiempsal",
+          "Adherbal",
+          "Oezalces",
+          "Capussa",
+          "Lacumazes",
+          "Mazaetullus",
+          "Massiva",
+          "Syphax",
+          "Vermina",
+          "Hiarbas",
+          "Juba",
+          "Bocchus",
+          "Bogud",
+          "Sosus",
+          "Mastanesosus",
+          "Tacfarinas",
+          "Zilalsan"
+        ],
+        "commonersAttested": [
+          "Shufet",
+          "Afshan",
+          "Banay",
+          "Shanok",
+          "Tanaku",
+          "Yirashtan",
+          "Sadyalan",
+          "Ashyan",
+          "Ankikan",
+          "Patash",
+          "Sactut",
+          "Ihimir",
+          "Salmedenkez",
+          "Sakedbaten",
+          "Mesekesben",
+          "Abdeshmun",
+          "Magon"
+        ],
+        "punicAttested": [
+          "Hannibal",
+          "Hasdrubal",
+          "Hamilcar",
+          "Hanno",
+          "Himilco",
+          "Bomilcar",
+          "Bostar",
+          "Mago",
+          "Gisco",
+          "Muttines",
+          "Maharbal",
+          "Carthalo",
+          "Adherbal",
+          "Hannon",
+          "Abdmelqart",
+          "Baalyaton",
+          "Eshmunazar",
+          "Gerashtart"
+        ]
+      },
+      "compoundGenerator": {
+        "confidence": "R",
+        "segments": [
+          "Mas-",
+          "Mast-",
+          "-san",
+          "-bal",
+          "Iu-",
+          "Yu-",
+          "-tan",
+          "-nes"
+        ],
+        "examples": [
+          "Mastansan",
+          "Masitan",
+          "Yugurbal"
+        ],
+        "warning": "Reconstruction only. Keep a minority of output."
+      },
+      "originTags": [
+        "Numidae",
+        "Mauri",
+        "Gaetuli",
+        "Musulamii",
+        "Garamantes"
+      ],
+      "notes": [
+        "-bal endings invoke the Punic god Baal; more likely in Carthaginianised families than purely Libyan ones.",
+        "Tacfarinas is the standout: native in form, non-royal in status, exactly the profile that ends in an arena.",
+        "Romanised Africans carry the Libyan name as cognomen: Lucius Iulius Iugurtha.",
+        "Avoid modern Amazigh given names (Idir, Yidir) - anachronistic by two millennia."
+      ]
+    },
+    "germanic": {
+      "label": "Germanic",
+      "convention": "single dithematic name; every form we have is filtered through Latin",
+      "recordDepth": "moderate - elite-skewed, Latinised",
+      "birthNames": {
+        "attested": [
+          "Arminius",
+          "Segestes",
+          "Segimundus",
+          "Segimerus",
+          "Sesithacus",
+          "Inguiomerus",
+          "Flavus",
+          "Italicus",
+          "Thumelicus",
+          "Chariovalda",
+          "Chariomerus",
+          "Actumerus",
+          "Catumerus",
+          "Adgandestrius",
+          "Ballomar",
+          "Maroboduus",
+          "Catualda",
+          "Vannius",
+          "Vangio",
+          "Sido",
+          "Gannascus",
+          "Malorix",
+          "Verritus",
+          "Boiocalus",
+          "Nasua",
+          "Cimberius",
+          "Ariovistus",
+          "Cruptorix",
+          "Civilis",
+          "Briganticus",
+          "Classicus",
+          "Tutor",
+          "Labeo",
+          "Chrauttius",
+          "Gambax"
+        ],
+        "feminineAttested": [
+          "Veleda",
+          "Ganna",
+          "Albruna",
+          "Thusnelda",
+          "Ramis"
+        ]
+      },
+      "compoundGenerator": {
+        "confidence": "R",
+        "prefixes": [
+          "Hari-",
+          "Chari-",
+          "Segi-",
+          "Theud-",
+          "Gund-",
+          "Hild-",
+          "Wulf-",
+          "Vulf-",
+          "Brand-",
+          "Rand-",
+          "Berg-",
+          "Alah-",
+          "Ans-",
+          "Frith-",
+          "Rik-",
+          "Mund-",
+          "Bald-",
+          "Gaut-",
+          "Ermin-"
+        ],
+        "suffixes": [
+          "-mar",
+          "-mer",
+          "-merus",
+          "-rik",
+          "-ricus",
+          "-vald",
+          "-valda",
+          "-gast",
+          "-mund",
+          "-bad",
+          "-hari",
+          "-brand",
+          "-wulf",
+          "-gis",
+          "-gisil"
+        ],
+        "examples": [
+          "Segibrand",
+          "Hariwald",
+          "Theudomer",
+          "Gundomar",
+          "Wulfhari",
+          "Randomerus"
+        ]
+      },
+      "originTags": [
+        "Cherusci",
+        "Chatti",
+        "Marcomanni",
+        "Quadi",
+        "Bructeri",
+        "Chauci",
+        "Frisii",
+        "Batavi",
+        "Tencteri",
+        "Usipetes",
+        "Sugambri",
+        "Suebi",
+        "Semnones",
+        "Langobardi",
+        "Hermunduri",
+        "Cimbri",
+        "Teutones"
+      ],
+      "notes": [
+        "Chronology matters most here. Alaric, Genseric, Theodoric, Athanaric, Fritigern are 3rd-5th century; wrong for a 1st-2nd century ludus.",
+        "Chrauttius and Gambax come from the Vindolanda tablets - ordinary soldiers, not princes.",
+        "Germanic captives genuinely reached the arena in volume under Caesar, Augustus, Nero and Domitian.",
+        "Do not use Norse names (Ragnar, Bjorn, Sigurd, Leif) - wrong branch, eight centuries early."
+      ]
+    },
+    "nubian": {
+      "label": "Nubian / sub-Saharan African",
+      "convention": "single Meroitic name; the record is Kushite, not gladiatorial",
+      "recordDepth": "very thin - and zero named gladiators of this origin exist",
+      "honestCaveat": "No gladiator is attested as Nubian or sub-Saharan African by name. Not one. Romans knew Nubia, fought it under Augustus and enslaved people from it, and Aethiopes appear in art and in the venationes - but no named arena fighter. Everything below is Kushite onomastics, not arena evidence.",
+      "birthNames": {
+        "commonersAttested": [
+          "Arilanemakas",
+          "Malutuna",
+          "Ataqu",
+          "Mitasalabe",
+          "Natarura",
+          "Qurqurla",
+          "Qurtakara",
+          "Abratoye"
+        ],
+        "postMeroiticRulersAttested": [
+          "Silko",
+          "Kharamadoye",
+          "Tamal"
+        ],
+        "royalAttested": [
+          "Piye",
+          "Piankhy",
+          "Shabaka",
+          "Shebitku",
+          "Taharqa",
+          "Tantamani",
+          "Atlanersa",
+          "Senkamanisken",
+          "Anlamani",
+          "Aspelta",
+          "Malonaqen",
+          "Karkamani",
+          "Siaspiqa",
+          "Nasakhma",
+          "Talakhamani",
+          "Baskakeren",
+          "Harsiotef",
+          "Akhratan",
+          "Nastasen",
+          "Arakamani",
+          "Amanislo",
+          "Arnekhamani",
+          "Arqamani",
+          "Adikhalamani",
+          "Teriteqas",
+          "Amanirenas",
+          "Amanishakheto",
+          "Natakamani",
+          "Amanitore",
+          "Tanyidamani",
+          "Amanakhareqerema",
+          "Shorkaror",
+          "Teqorideamani",
+          "Amanipilade",
+          "Amanitenmemide",
+          "Amanikhatashan",
+          "Amanitaraqide",
+          "Akinidad",
+          "Arakakhataror",
+          "Amannote-erike",
+          "Aryamani"
+        ]
+      },
+      "compoundGenerator": {
+        "confidence": "R",
+        "segments": [
+          "Amani-",
+          "-qo",
+          "-tore",
+          "-deamani",
+          "-khatashan",
+          "Ata-",
+          "Qur-",
+          "Mal-",
+          "Nata-",
+          "-lebte",
+          "-taror"
+        ],
+        "warning": "Amani- names are overwhelmingly ROYAL (the god Amun). Naming an enslaved fighter Amanideqo is like calling a galley-slave 'Prince Augustus'. For rank-and-file use the commoner shapes: two or three syllables, -a and -u endings, no god element."
+      },
+      "recommendedApproach": {
+        "originTags": [
+          "Aethiops",
+          "Nubia",
+          "Meroe",
+          "Blemmys",
+          "Garamas",
+          "Troglodyta"
+        ],
+        "arenaNames": [
+          "Aethiops",
+          "Niger",
+          "Fuscus",
+          "Aquilo",
+          "Memnon"
+        ],
+        "note": "Memnon especially - the Ethiopian king of the Trojan cycle, exactly the literary joke a lanista would make. Pair a Latin arena name with an origin tag and surface the Meroitic birth name as flavour only."
+      }
+    },
+    "syrian": {
+      "label": "Syrian / Levantine",
+      "convention": "single Aramaic name, often theophoric, with a bar- patronymic in Palmyrene usage",
+      "recordDepth": "good - the Palmyrene corpus is large",
+      "anchor": "Flamma, the best-documented gladiator in the Latin record, is natione Syrus (CIL X 7297, Lilybaeum).",
+      "birthNames": {
+        "palmyreneAttested": [
+          "Zabdas",
+          "Zabdibol",
+          "Zabdilah",
+          "Zebida",
+          "Zabbaeus",
+          "Wahballat",
+          "Odainat",
+          "Maliku",
+          "Malichus",
+          "Hairan",
+          "Ogeilu",
+          "Taimarsu",
+          "Taimai",
+          "Taimallat",
+          "Yarhai",
+          "Barnebo",
+          "Bar'ateh",
+          "Moqimu",
+          "Male",
+          "Elahbel",
+          "Animu",
+          "Sa'adi",
+          "Bonne",
+          "Haddudan",
+          "Lishamsh",
+          "Nurbel",
+          "Belshuri",
+          "Nebuzabad",
+          "Ogga",
+          "Shalamallat",
+          "Nasrallat",
+          "Abdallath",
+          "Abdarsas",
+          "Abdousiris",
+          "Abdasamsos",
+          "Abdaasthores",
+          "Salamagathes",
+          "Aailameis",
+          "Aaphgatheis"
+        ],
+        "dynasticAttested": [
+          "Sampsigeramus",
+          "Iamblichus",
+          "Sohaemus",
+          "Azizus",
+          "Bassianus",
+          "Alexianus",
+          "Uranius",
+          "Aretas",
+          "Haritat",
+          "Obodas",
+          "Rabbel",
+          "Syllaeus",
+          "Gamilat",
+          "Shaqilat",
+          "Huldu",
+          "Zenobia"
+        ],
+        "judaeanAttested": [
+          "Shimon",
+          "Simon",
+          "Yehoshua",
+          "Yosef",
+          "Yohanan",
+          "Eleazar",
+          "Yehudah",
+          "Menahem",
+          "Hananiah",
+          "Matityahu",
+          "Yaakov",
+          "Levi",
+          "Zakkai",
+          "Gorion",
+          "Yair",
+          "Shaul"
+        ]
+      },
+      "compoundGenerator": {
+        "confidence": "R",
+        "prefixes": [
+          "Abd-",
+          "Zabd-",
+          "Taim-",
+          "Wahb-",
+          "Bar-",
+          "Moqim-",
+          "Shalam-",
+          "Nasr-"
+        ],
+        "prefixMeanings": {
+          "Abd-": "servant of",
+          "Zabd-": "gift",
+          "Taim-": "servant",
+          "Wahb-": "gift of",
+          "Bar-": "son of",
+          "Moqim-": "raiser",
+          "Shalam-": "peace",
+          "Nasr-": "help"
+        },
+        "divineElements": [
+          "Bel",
+          "Bol",
+          "Yarhibol",
+          "Aglibol",
+          "Malakbel",
+          "Nebo",
+          "-samsos",
+          "-allath",
+          "Atargatis",
+          "Baalshamin",
+          "Elah"
+        ],
+        "examples": [
+          "Zabdallath",
+          "Taimbel",
+          "Wahbnebo",
+          "Abdbel",
+          "Abdmelqart"
+        ]
+      },
+      "originTags": [
+        "Palmyrenus",
+        "Antiochenus",
+        "Emesenus",
+        "Nabataeus",
+        "Iudaeus",
+        "Commagenus",
+        "Ituraeus",
+        "Berytius"
+      ],
+      "notes": [
+        "Greek and Latin renderings diverge hard: Wahballat -> Vaballathus, Odainat -> Odaenathus, Bat Zabbai -> Zenobia. Free texture for a Romanisation mechanic.",
+        "After AD 70 Titus distributed Judaean captives to provincial amphitheatres - one of the best-evidenced origin stories available.",
+        "Palmyrene tombstones carry three- and four-generation patronymic chains; good for a wealthy Syrian patron.",
+        "Syrian archers were a famous auxiliary speciality - a defensible characterisation."
+      ]
+    },
+    "greek": {
+      "label": "Greek",
+      "convention": "single name; the richest gladiatorial pool of all, from Greek-East relief stelae",
+      "recordDepth": "excellent - hundreds of named gladiators",
+      "birthNames": {
+        "civiliansAttested": [
+          "Demetrios",
+          "Nikanor",
+          "Theodoros",
+          "Apollonios",
+          "Diodoros",
+          "Herakleides",
+          "Sostratos",
+          "Philon",
+          "Kleon",
+          "Timotheos",
+          "Zenon",
+          "Aristeas",
+          "Menekrates",
+          "Epaphroditos",
+          "Onesimos",
+          "Trophimos",
+          "Hermogenes",
+          "Zosimos",
+          "Eutyches",
+          "Philetos",
+          "Diadoumenos",
+          "Nikostratos",
+          "Agathopous",
+          "Soterichos",
+          "Straton",
+          "Antiochos",
+          "Alexandros",
+          "Theophilos",
+          "Isidoros",
+          "Kallistos"
+        ]
+      },
+      "notes": [
+        "Greek-East monuments record rank by palus (primus to octavus palus) and crown-count, not a simple win tally - a ready-made historical rank system.",
+        "Latin names appear freely among Greek-East gladiators and Greek names freely in the West. Do not partition the pools strictly.",
+        "In Greek inscriptions gladiators are monomachoi; the patron of games is a priest of the imperial cult (archiereus / asiarch), not a lanista.",
+        "Greek names are also the standard stock of freedmen - a good default for the ludus doctor and medicus.",
+        "Avoid modern Greek forms (Yannis, Kostas, Dimitris)."
+      ]
+    }
+  },
+  "arenaNames": {
+    "note": "Assign on enrolment, regardless of the fighter's origin. This is how the record actually looks.",
+    "attestedGladiators": [
+      {
+        "name": "Nobilior",
+        "confidence": "A-g",
+        "place": "Pompeii",
+        "note": "Julian ludus"
+      },
+      {
+        "name": "Pugnax",
+        "confidence": "A-g",
+        "place": "Pompeii",
+        "note": "Neronian ludus"
+      },
+      {
+        "name": "Murranus",
+        "confidence": "A-g",
+        "place": "Pompeii",
+        "note": "Neronian ludus"
+      },
+      {
+        "name": "Cycnus",
+        "confidence": "A-g",
+        "place": "Pompeii",
+        "note": "Julian ludus"
+      },
+      {
+        "name": "Atticus",
+        "confidence": "A-g",
+        "place": "Pompeii",
+        "note": "Julian ludus"
+      },
+      {
+        "name": "Herma",
+        "confidence": "A-g",
+        "place": "Pompeii",
+        "note": "Julian ludus"
+      },
+      {
+        "name": "Scylax",
+        "confidence": "A-g",
+        "place": "Pompeii",
+        "note": "Julian ludus"
+      },
+      {
+        "name": "Astus",
+        "confidence": "A-g",
+        "place": "Pompeii",
+        "note": "Julian ludus"
+      },
+      {
+        "name": "Princeps",
+        "confidence": "A-g",
+        "place": "Nola",
+        "note": "Neronian ludus"
+      },
+      {
+        "name": "Hilarus",
+        "confidence": "A-g",
+        "place": "Nola/Pompeii",
+        "note": "Neronian ludus; 14 victories"
+      },
+      {
+        "name": "Creunus",
+        "confidence": "A-g",
+        "place": "Nola"
+      },
+      {
+        "name": "Celadus",
+        "confidence": "A-g",
+        "type": "thraex",
+        "place": "Pompeii",
+        "note": "suspirium puellarum, 3 victories"
+      },
+      {
+        "name": "Crescens",
+        "confidence": "A-g",
+        "type": "retiarius",
+        "place": "Pompeii"
+      },
+      {
+        "name": "Severus",
+        "confidence": "A-g",
+        "place": "Pompeii"
+      },
+      {
+        "name": "Albanus",
+        "confidence": "A-g",
+        "place": "Pompeii"
+      },
+      {
+        "name": "Faustus",
+        "confidence": "A-g",
+        "type": "murmillo",
+        "place": "Pompeii"
+      },
+      {
+        "name": "Armentarius",
+        "confidence": "A-g",
+        "type": "murmillo",
+        "place": "Pompeii"
+      },
+      {
+        "name": "Flamma",
+        "confidence": "A-g",
+        "type": "secutor",
+        "place": "Lilybaeum",
+        "note": "CIL X 7297; natione Syrus, 34 fights, 21 wins"
+      },
+      {
+        "name": "Priscus",
+        "confidence": "A-g",
+        "note": "Martial, Liber Spectaculorum"
+      },
+      {
+        "name": "Verus",
+        "confidence": "A-g",
+        "note": "Martial, Liber Spectaculorum"
+      },
+      {
+        "name": "Spiculus",
+        "confidence": "A-g",
+        "note": "Nero's favourite (Suetonius)"
+      },
+      {
+        "name": "Columbus",
+        "confidence": "A-g",
+        "note": "Caligula's reign (Suetonius)"
+      },
+      {
+        "name": "Tetraites",
+        "confidence": "A-g",
+        "note": "named on souvenir glassware"
+      },
+      {
+        "name": "Carpophorus",
+        "confidence": "A-g",
+        "type": "bestiarius",
+        "note": "Martial"
+      },
+      {
+        "name": "Pardus",
+        "confidence": "A-g",
+        "place": "Rome"
+      },
+      {
+        "name": "Probus",
+        "confidence": "A-g"
+      },
+      {
+        "name": "Iuvenis",
+        "confidence": "A-g"
+      },
+      {
+        "name": "Glaucus",
+        "confidence": "A-g",
+        "place": "Mutina",
+        "note": "CIL V 3466"
+      },
+      {
+        "name": "Urbicus",
+        "confidence": "A-g",
+        "type": "secutor",
+        "place": "Mediolanum",
+        "note": "CIL V 5933"
+      },
+      {
+        "name": "Macedo",
+        "confidence": "A-g"
+      },
+      {
+        "name": "Exsochus",
+        "confidence": "A-g",
+        "type": "essedarius",
+        "place": "Colonia Agrippina"
+      },
+      {
+        "name": "Triumphus",
+        "confidence": "A-g"
+      },
+      {
+        "name": "Oceanus",
+        "confidence": "A-g"
+      },
+      {
+        "name": "Marcus Attilius",
+        "confidence": "A-g",
+        "place": "Pompeii",
+        "note": "tiro, freeborn; defeated Hilarus"
+      },
+      {
+        "name": "Marcus Antonius Exochus",
+        "confidence": "A-g",
+        "type": "thraex",
+        "place": "Rome",
+        "note": "CIL VI 10194"
+      },
+      {
+        "name": "Sextus Iulius Felicissimus",
+        "confidence": "A-g",
+        "type": "bestiarius",
+        "place": "Aix-en-Provence"
+      },
+      {
+        "name": "Quintus Petillus",
+        "confidence": "A-g",
+        "place": "Pompeii"
+      },
+      {
+        "name": "Publius Ostorius",
+        "confidence": "A-g",
+        "place": "Pompeii"
+      },
+      {
+        "name": "Lucius Fabius",
+        "confidence": "A-g",
+        "place": "Pompeii"
+      },
+      {
+        "name": "Polyneikes",
+        "confidence": "A-g",
+        "place": "Alabanda",
+        "note": "undefeated in 20 fights"
+      },
+      {
+        "name": "Pardalas",
+        "confidence": "A-g",
+        "place": "Aphrodisias",
+        "note": "primus palus"
+      },
+      {
+        "name": "Unio",
+        "confidence": "A-g",
+        "place": "Aphrodisias",
+        "note": "secundus palus"
+      },
+      {
+        "name": "Podenemus",
+        "confidence": "A-g",
+        "place": "Aphrodisias",
+        "note": "tertius palus"
+      },
+      {
+        "name": "Hermas",
+        "confidence": "A-g",
+        "place": "Aphrodisias",
+        "note": "quartus palus"
+      },
+      {
+        "name": "Narcissus",
+        "confidence": "A-g",
+        "place": "Aphrodisias",
+        "note": "heavily armed"
+      },
+      {
+        "name": "Euplous",
+        "confidence": "A-g",
+        "type": "murmillo",
+        "place": "Aphrodisias"
+      },
+      {
+        "name": "Eupithanus",
+        "confidence": "A-g",
+        "type": "thraex or murmillo",
+        "place": "Aphrodisias"
+      },
+      {
+        "name": "Calandio",
+        "confidence": "A-g",
+        "type": "retiarius",
+        "place": "Aphrodisias"
+      },
+      {
+        "name": "Pheropes",
+        "confidence": "A-g",
+        "type": "retiarius",
+        "place": "Aphrodisias"
+      },
+      {
+        "name": "Xanthus",
+        "confidence": "A-g",
+        "type": "retiarius",
+        "place": "Aphrodisias"
+      },
+      {
+        "name": "Patroclus",
+        "confidence": "A-g",
+        "type": "murmillo",
+        "place": "Aphrodisias"
+      },
+      {
+        "name": "Thersites",
+        "confidence": "A-g",
+        "type": "murmillo",
+        "place": "Aphrodisias"
+      },
+      {
+        "name": "Caestillus",
+        "confidence": "A-g",
+        "type": "provocator",
+        "place": "Aphrodisias"
+      },
+      {
+        "name": "Fortis",
+        "confidence": "A-g",
+        "type": "retiarius",
+        "place": "Aphrodisias"
+      },
+      {
+        "name": "Anicetus",
+        "confidence": "A-g",
+        "type": "secutor",
+        "place": "Aphrodisias"
+      },
+      {
+        "name": "Skirtos",
+        "confidence": "A-g",
+        "type": "retiarius",
+        "place": "Aphrodisias"
+      },
+      {
+        "name": "Margaretes",
+        "confidence": "A-g",
+        "type": "provocator",
+        "place": "Aphrodisias"
+      },
+      {
+        "name": "Secundus",
+        "confidence": "A-g",
+        "place": "Aphrodisias"
+      },
+      {
+        "name": "Menander",
+        "confidence": "A-g",
+        "type": "venator",
+        "place": "Aphrodisias"
+      },
+      {
+        "name": "Eirenion",
+        "confidence": "A-g",
+        "type": "essedarius",
+        "place": "Aphrodisias"
+      },
+      {
+        "name": "Melanippos",
+        "confidence": "A-g",
+        "type": "retiarius",
+        "place": "Aphrodisias"
+      },
+      {
+        "name": "Eurotas",
+        "confidence": "A-g",
+        "type": "murmillo",
+        "place": "Aphrodisias"
+      },
+      {
+        "name": "Stephanos",
+        "confidence": "A-g",
+        "type": "retiarius",
+        "place": "Halikarnassos",
+        "note": "primus palus, 8 victories"
+      },
+      {
+        "name": "Zmaragdos",
+        "confidence": "A-g",
+        "type": "murmillo",
+        "place": "Halikarnassos",
+        "note": "5 victories"
+      },
+      {
+        "name": "Marius Strenos",
+        "confidence": "A-g",
+        "type": "thraex",
+        "place": "Halikarnassos"
+      },
+      {
+        "name": "Hilaros",
+        "confidence": "A-g",
+        "type": "secutor",
+        "place": "Halikarnassos"
+      },
+      {
+        "name": "Amazon",
+        "confidence": "A-g",
+        "type": "provocator",
+        "place": "Halikarnassos",
+        "note": "female gladiator, discharged"
+      },
+      {
+        "name": "Achillia",
+        "confidence": "A-g",
+        "type": "provocator",
+        "place": "Halikarnassos",
+        "note": "female gladiator, discharged"
+      },
+      {
+        "name": "Tyrannus",
+        "confidence": "A-g",
+        "type": "murmillo",
+        "place": "Iasos",
+        "note": "28 victories, freed"
+      },
+      {
+        "name": "Halyces",
+        "confidence": "A-g",
+        "type": "essedarius",
+        "place": "Iasos",
+        "note": "20 crowns, freed"
+      },
+      {
+        "name": "Gaius",
+        "confidence": "A-g",
+        "type": "murmillo",
+        "place": "Iasos"
+      },
+      {
+        "name": "Ceramyllus",
+        "confidence": "A-g",
+        "type": "murmillo",
+        "place": "Iasos",
+        "note": "freedman, 5 victories"
+      },
+      {
+        "name": "Eucarpus",
+        "confidence": "A-g",
+        "type": "thraex",
+        "place": "Iasos",
+        "note": "left-handed"
+      },
+      {
+        "name": "Mutatus",
+        "confidence": "A-g",
+        "type": "essedarius",
+        "place": "Iasos",
+        "note": "freedman, 10 victories"
+      },
+      {
+        "name": "Peplos",
+        "confidence": "A-g",
+        "type": "murmillo",
+        "place": "Iasos",
+        "note": "freedman, 13 victories"
+      },
+      {
+        "name": "Dracon",
+        "confidence": "A-g",
+        "type": "thraex",
+        "place": "Iasos"
+      },
+      {
+        "name": "Glas",
+        "confidence": "A-g",
+        "type": "thraex",
+        "place": "Iasos",
+        "note": "freedman"
+      },
+      {
+        "name": "Rixas",
+        "confidence": "A-g",
+        "type": "thraex",
+        "place": "Iasos",
+        "note": "freedman"
+      },
+      {
+        "name": "Myrsinus",
+        "confidence": "A-g",
+        "type": "thraex",
+        "place": "Mylasa"
+      },
+      {
+        "name": "Aurigas",
+        "confidence": "A-g",
+        "type": "retiarius",
+        "place": "Mylasa"
+      },
+      {
+        "name": "Kallimorphus",
+        "confidence": "A-g",
+        "type": "murmillo",
+        "place": "Mylasa",
+        "note": "5 crowns"
+      },
+      {
+        "name": "Kaptialus",
+        "confidence": "A-g",
+        "type": "provocator",
+        "place": "Mylasa",
+        "note": "8 crowns"
+      },
+      {
+        "name": "Euprepes",
+        "confidence": "A-g",
+        "type": "provocator",
+        "place": "Mylasa",
+        "note": "11 crowns"
+      },
+      {
+        "name": "Chrysopetasus",
+        "confidence": "A-g",
+        "type": "essedarius",
+        "place": "Mylasa"
+      },
+      {
+        "name": "Mucro",
+        "confidence": "A-g",
+        "type": "provocator",
+        "place": "Mylasa"
+      },
+      {
+        "name": "Droserus",
+        "confidence": "A-g",
+        "type": "provocator",
+        "place": "Stratonikeia",
+        "note": "17 victories, killed by Achilleus"
+      },
+      {
+        "name": "Chrysus",
+        "confidence": "A-g",
+        "type": "provocator",
+        "place": "Stratonikeia",
+        "note": "10 victories"
+      },
+      {
+        "name": "Chrysopterus",
+        "confidence": "A-g",
+        "type": "secutor",
+        "place": "Stratonikeia"
+      },
+      {
+        "name": "Vitalius",
+        "confidence": "A-g",
+        "type": "murmillo",
+        "place": "Stratonikeia",
+        "note": "16 crowns, killed by Polydeukes"
+      },
+      {
+        "name": "Amaraios",
+        "confidence": "A-g",
+        "type": "provocator",
+        "place": "Stratonikeia",
+        "note": "8 crowns"
+      },
+      {
+        "name": "Eumelos",
+        "confidence": "A-g",
+        "type": "retiarius",
+        "place": "Stratonikeia",
+        "note": "9 crowns"
+      },
+      {
+        "name": "Leandros",
+        "confidence": "A-g",
+        "type": "provocator",
+        "place": "Stratonikeia"
+      },
+      {
+        "name": "Achilleus",
+        "confidence": "A-g",
+        "place": "Stratonikeia"
+      },
+      {
+        "name": "Polydeukes",
+        "confidence": "A-g",
+        "place": "Stratonikeia"
+      },
+      {
+        "name": "Neikephoros Synetus",
+        "confidence": "A-g",
+        "type": "secutor",
+        "place": "Thessalonica"
+      },
+      {
+        "name": "Narcissos",
+        "confidence": "A-g",
+        "type": "secutor",
+        "place": "Thessalonica"
+      },
+      {
+        "name": "Marcianus",
+        "confidence": "A-g",
+        "type": "secutor",
+        "place": "Marcianopolis"
+      }
+    ],
+    "byTheme": {
+      "forceAndViolence": [
+        "Ferox",
+        "Invictus",
+        "Victor",
+        "Fortis",
+        "Certus",
+        "Acer",
+        "Rapidus",
+        "Validus",
+        "Celer",
+        "Pugnax",
+        "Atrox",
+        "Saevus",
+        "Durus",
+        "Asper",
+        "Vehemens",
+        "Mucro",
+        "Rixas"
+      ],
+      "fireStormAndLight": [
+        "Flamma",
+        "Fulgur",
+        "Fulmen",
+        "Ignis",
+        "Aquilo",
+        "Boreas",
+        "Auster",
+        "Nubes",
+        "Corusco",
+        "Lucifer"
+      ],
+      "animals": [
+        "Leo",
+        "Tigris",
+        "Pardus",
+        "Pardalas",
+        "Aquila",
+        "Draco",
+        "Dracon",
+        "Lupus",
+        "Taurus",
+        "Ursus",
+        "Serpens",
+        "Columbus",
+        "Cycnus",
+        "Hirundo",
+        "Scylax",
+        "Vulpes",
+        "Aper"
+      ],
+      "mythAndHeroes": [
+        "Hercules",
+        "Achilleus",
+        "Achillia",
+        "Aiax",
+        "Patroclus",
+        "Hector",
+        "Perseus",
+        "Bellerophon",
+        "Hippolytus",
+        "Narcissus",
+        "Tantalus",
+        "Thersites",
+        "Melanippos",
+        "Polydeukes",
+        "Amazon",
+        "Memnon"
+      ],
+      "luckAndFavour": [
+        "Felix",
+        "Faustus",
+        "Fortunatus",
+        "Hilarus",
+        "Primus",
+        "Maximus",
+        "Princeps",
+        "Triumphus",
+        "Nobilior",
+        "Superbus",
+        "Auctus",
+        "Optatus"
+      ],
+      "beautyAndValue": [
+        "Unio",
+        "Zmaragdos",
+        "Chrysus",
+        "Chrysopterus",
+        "Margaretes",
+        "Kallimorphus",
+        "Euprepes",
+        "Pulcher",
+        "Decoratus"
+      ],
+      "wryAndIronic": [
+        "Peplos",
+        "Mutatus",
+        "Glas",
+        "Calandio",
+        "Astus",
+        "Iuvenis",
+        "Secundus"
+      ]
+    },
+    "ludusSuffixes": {
+      "note": "Appended to an arena name to mark the owning school; generate from the ludus name, not stored with the fighter.",
+      "attested": [
+        "Neronianus",
+        "Iulianus"
+      ],
+      "pattern": "owner nomen minus -ius, plus -ianus"
+    }
+  },
+  "lanistae": {
+    "attested": [
+      {
+        "name": "Gnaeus Cornelius Lentulus Batiatus",
+        "role": "lanista",
+        "place": "Capua",
+        "note": "Spartacus broke away from his school"
+      },
+      {
+        "name": "Gaius Aurelius Scaurus",
+        "role": "gladiatorial school owner",
+        "note": "Valerius Maximus 2.3.2 - Rutilius Rufus borrowed his trainers for the legions in 105 BC; not literally called lanista in the text"
+      },
+      {
+        "name": "Aulus Suettius Certus",
+        "role": "editor",
+        "place": "Pompeii"
+      },
+      {
+        "name": "Decimus Lucretius Satrius Valens",
+        "role": "editor",
+        "place": "Pompeii"
+      },
+      {
+        "name": "Aulus Clodius Flaccus",
+        "role": "editor",
+        "place": "Pompeii"
+      },
+      {
+        "name": "Gnaeus Alleius Nigidius Maius",
+        "role": "editor",
+        "place": "Pompeii"
+      },
+      {
+        "name": "Numerius Festius Ampliatus",
+        "role": "editor",
+        "place": "Pompeii"
+      },
+      {
+        "name": "Marcus Tullius",
+        "role": "editor",
+        "place": "Pompeii"
+      },
+      {
+        "name": "Quintus Monnius Rufus",
+        "role": "editor",
+        "place": "Pompeii"
+      },
+      {
+        "name": "Marcus Cominius Heres",
+        "role": "editor",
+        "place": "Pompeii"
+      },
+      {
+        "name": "Aulus Suettius Anteros",
+        "role": "editor",
+        "place": "Pompeii",
+        "note": "freedman-style name: Latin praenomen + nomen + Greek cognomen"
+      },
+      {
+        "name": "Numerius Popidius Rufus",
+        "role": "editor",
+        "place": "Pompeii"
+      },
+      {
+        "name": "Tiberius Claudius Verus",
+        "role": "editor",
+        "place": "Pompeii"
+      },
+      {
+        "name": "Numerius Veius Barcha",
+        "role": "editor",
+        "place": "Pompeii"
+      }
+    ],
+    "triaNomina": {
+      "praenomina": [
+        {
+          "full": "Aulus",
+          "abbr": "A."
+        },
+        {
+          "full": "Appius",
+          "abbr": "Ap."
+        },
+        {
+          "full": "Gaius",
+          "abbr": "C."
+        },
+        {
+          "full": "Gnaeus",
+          "abbr": "Cn."
+        },
+        {
+          "full": "Decimus",
+          "abbr": "D."
+        },
+        {
+          "full": "Kaeso",
+          "abbr": "K."
+        },
+        {
+          "full": "Lucius",
+          "abbr": "L."
+        },
+        {
+          "full": "Mamercus",
+          "abbr": "Mam."
+        },
+        {
+          "full": "Manius",
+          "abbr": "M'."
+        },
+        {
+          "full": "Marcus",
+          "abbr": "M."
+        },
+        {
+          "full": "Numerius",
+          "abbr": "N."
+        },
+        {
+          "full": "Publius",
+          "abbr": "P."
+        },
+        {
+          "full": "Quintus",
+          "abbr": "Q."
+        },
+        {
+          "full": "Servius",
+          "abbr": "Ser."
+        },
+        {
+          "full": "Sextus",
+          "abbr": "Sex."
+        },
+        {
+          "full": "Spurius",
+          "abbr": "Sp."
+        },
+        {
+          "full": "Titus",
+          "abbr": "T."
+        },
+        {
+          "full": "Tiberius",
+          "abbr": "Ti."
+        },
+        {
+          "full": "Vibius",
+          "abbr": "V."
+        }
+      ],
+      "nomina": [
+        "Aemilius",
+        "Alleius",
+        "Antonius",
+        "Aurelius",
+        "Caecilius",
+        "Calpurnius",
+        "Claudius",
+        "Clodius",
+        "Cominius",
+        "Cornelius",
+        "Domitius",
+        "Fabius",
+        "Festius",
+        "Flavius",
+        "Fulvius",
+        "Holconius",
+        "Istacidius",
+        "Iulius",
+        "Iunius",
+        "Licinius",
+        "Livius",
+        "Lucretius",
+        "Manlius",
+        "Marcius",
+        "Minucius",
+        "Monnius",
+        "Munatius",
+        "Naevius",
+        "Nigidius",
+        "Numisius",
+        "Octavius",
+        "Papirius",
+        "Petronius",
+        "Plautius",
+        "Pompeius",
+        "Pomponius",
+        "Popidius",
+        "Porcius",
+        "Postumius",
+        "Quinctius",
+        "Salvius",
+        "Satrius",
+        "Sempronius",
+        "Sergius",
+        "Servilius",
+        "Sextius",
+        "Statius",
+        "Suettius",
+        "Sulpicius",
+        "Terentius",
+        "Tullius",
+        "Umbricius",
+        "Valerius",
+        "Veius",
+        "Vettius",
+        "Vibius",
+        "Vipsanius"
+      ],
+      "cognomina": [
+        "Agricola",
+        "Albinus",
+        "Balbus",
+        "Barbatus",
+        "Bassus",
+        "Blandus",
+        "Brocchus",
+        "Brutus",
+        "Capito",
+        "Carbo",
+        "Celer",
+        "Cicero",
+        "Crassus",
+        "Crispinus",
+        "Crispus",
+        "Dentatus",
+        "Dives",
+        "Drusus",
+        "Faustus",
+        "Felix",
+        "Flaccus",
+        "Fronto",
+        "Fuscus",
+        "Galba",
+        "Gallus",
+        "Gemellus",
+        "Geta",
+        "Glabrio",
+        "Gracchus",
+        "Lentulus",
+        "Longinus",
+        "Longus",
+        "Lucanus",
+        "Lupus",
+        "Macer",
+        "Macrinus",
+        "Magnus",
+        "Marcellus",
+        "Maximus",
+        "Merula",
+        "Nasica",
+        "Nerva",
+        "Niger",
+        "Pansa",
+        "Paullus",
+        "Piso",
+        "Priscus",
+        "Proculus",
+        "Pulcher",
+        "Quadratus",
+        "Regulus",
+        "Rufus",
+        "Rusticus",
+        "Sabinus",
+        "Saturninus",
+        "Scaeva",
+        "Scaevola",
+        "Scaurus",
+        "Seneca",
+        "Severus",
+        "Silanus",
+        "Strabo",
+        "Sulla",
+        "Taurus",
+        "Tubero",
+        "Tullus",
+        "Varro",
+        "Varus",
+        "Vatia",
+        "Verus",
+        "Vitulus",
+        "Certus",
+        "Maius",
+        "Valens",
+        "Ampliatus",
+        "Heres",
+        "Anteros",
+        "Barcha"
+      ],
+      "freedmanCognomina": {
+        "note": "The most authentic lanista profile: the trade was infamis, so many lanistae were freedmen. Formula = Latin praenomen + former owner's nomen + own Greek slave name as cognomen.",
+        "greekCognomina": [
+          "Eros",
+          "Anteros",
+          "Diadumenus",
+          "Hermes",
+          "Onesimus",
+          "Philetus",
+          "Trophimus",
+          "Zosimus",
+          "Epaphroditus",
+          "Nicephorus",
+          "Soterichus",
+          "Agathopus",
+          "Eutyches",
+          "Isidorus",
+          "Callistus",
+          "Hilarus",
+          "Felix",
+          "Philargyrus",
+          "Alexander",
+          "Antiochus",
+          "Demetrius",
+          "Zeno",
+          "Stephanus",
+          "Narcissus",
+          "Pallas"
+        ]
+      },
+      "feminineNomina": [
+        "Lucretia",
+        "Alleia",
+        "Holconia",
+        "Istacidia",
+        "Eumachia",
+        "Vettia",
+        "Popidia",
+        "Cornelia",
+        "Valeria",
+        "Clodia"
+      ]
+    },
+    "notes": [
+      "A lanista was legally infamis, ranked with pimps and barred from civic honour - which is why so few are named.",
+      "The editor who pays for a show is a magistrate buying popularity; the lanista is the despised tradesman who supplies the men. Two different social positions.",
+      "Women could own gladiatorial familiae and finance games - Eumachia of Pompeii is the model.",
+      "Imperial ludi in Rome were state property run by an equestrian procurator familiae gladiatoriae, not a private lanista."
+    ]
+  },
+  "ludusNames": {
+    "attested": [
+      {
+        "name": "Ludus Magnus",
+        "place": "Rome",
+        "note": "the great school, tunnel-linked to the Colosseum"
+      },
+      {
+        "name": "Ludus Matutinus",
+        "place": "Rome",
+        "note": "'the morning school' - trained bestiarii for the beast-hunts"
+      },
+      {
+        "name": "Ludus Dacicus",
+        "place": "Rome"
+      },
+      {
+        "name": "Ludus Gallicus",
+        "place": "Rome"
+      },
+      {
+        "name": "Ludus Aemilius",
+        "place": "Rome",
+        "note": "older; later converted into the balneum Polycleti"
+      },
+      {
+        "name": "Ludus Iulianus",
+        "note": "gladiators appear as 'Iulianus'; Caesar kept a large ludus at Capua and the name passes to the imperial house"
+      },
+      {
+        "name": "Ludus Neronianus",
+        "note": "gladiators appear as 'Neronianus'"
+      },
+      {
+        "name": "familia gladiatoria Cn. Allei Nigidi Mai",
+        "place": "Pompeii"
+      },
+      {
+        "name": "familia gladiatoria A. Suetti Certi",
+        "place": "Pompeii"
+      },
+      {
+        "name": "school of Cn. Cornelius Lentulus Batiatus",
+        "place": "Capua"
+      }
+    ],
+    "ownerPattern": {
+      "rule": "Take the owner's nomen, drop -ius, add -ianus. Cornelius -> Ludus Cornelianus.",
+      "alternate": "Familia gladiatoria + owner's full name in the genitive, e.g. 'Familia gladiatoria M. Vetti Diadumeni'.",
+      "examples": [
+        "Ludus Cornelianus",
+        "Ludus Valerianus",
+        "Ludus Vettianus",
+        "Ludus Suettianus",
+        "Ludus Lucretianus",
+        "Ludus Alleianus",
+        "Ludus Holconianus",
+        "Ludus Popidianus",
+        "Ludus Istacidianus",
+        "Ludus Umbricianus",
+        "Ludus Salvianus",
+        "Ludus Munatianus"
+      ]
+    },
+    "locationPattern": {
+      "rule": "Ludus + the town's adjectival form.",
+      "examples": [
+        "Ludus Capuanus",
+        "Ludus Praenestinus",
+        "Ludus Pompeianus",
+        "Ludus Puteolanus",
+        "Ludus Ravennas",
+        "Ludus Tarraconensis",
+        "Ludus Lugdunensis",
+        "Ludus Alexandrinus",
+        "Ludus Pergamenus",
+        "Ludus Aquileiensis",
+        "Ludus Corduvensis",
+        "Ludus Nemausensis"
+      ]
+    },
+    "ethnicOrFunctionPattern": {
+      "rule": "A third genuine pattern - Dacicus, Gallicus and Matutinus all exist.",
+      "examples": [
+        "Ludus Thracicus",
+        "Ludus Germanicus",
+        "Ludus Britannicus",
+        "Ludus Syriacus",
+        "Ludus Numidicus",
+        "Ludus Hibernus"
+      ]
+    }
+  },
+  "places": {
+    "italy": [
+      "Roma",
+      "Capua",
+      "Praeneste",
+      "Pompeii",
+      "Herculaneum",
+      "Neapolis",
+      "Puteoli",
+      "Cumae",
+      "Nola",
+      "Misenum",
+      "Ostia",
+      "Tibur",
+      "Tusculum",
+      "Antium",
+      "Aricia",
+      "Beneventum",
+      "Brundisium",
+      "Tarentum",
+      "Croton",
+      "Rhegium",
+      "Ancona",
+      "Ariminum",
+      "Bononia",
+      "Mutina",
+      "Parma",
+      "Placentia",
+      "Ravenna",
+      "Patavium",
+      "Verona",
+      "Mediolanum",
+      "Aquileia",
+      "Cremona",
+      "Ticinum",
+      "Genua",
+      "Pisae",
+      "Florentia",
+      "Arretium",
+      "Perusia",
+      "Spoletium",
+      "Asculum",
+      "Venusia",
+      "Canusium",
+      "Luceria",
+      "Salernum",
+      "Paestum"
+    ],
+    "sicilySardiniaAfrica": [
+      "Syracusae",
+      "Panormus",
+      "Messana",
+      "Catina",
+      "Agrigentum",
+      "Lilybaeum",
+      "Caralis",
+      "Carthago",
+      "Utica",
+      "Hadrumetum",
+      "Thysdrus",
+      "Sabratha",
+      "Oea",
+      "Thugga",
+      "Cirta",
+      "Thamugadi",
+      "Lambaesis",
+      "Volubilis",
+      "Tingis",
+      "Cyrene",
+      "Alexandria",
+      "Ptolemais",
+      "Leptis Magna",
+      "Hippo Regius",
+      "Caesarea"
+    ],
+    "spainAndGaul": [
+      "Tarraco",
+      "Corduba",
+      "Hispalis",
+      "Gades",
+      "Italica",
+      "Bracara",
+      "Legio",
+      "Caesaraugusta",
+      "Valentia",
+      "Barcino",
+      "Narbo",
+      "Nemausus",
+      "Arelate",
+      "Massilia",
+      "Lugdunum",
+      "Vienna",
+      "Burdigala",
+      "Tolosa",
+      "Augustodunum",
+      "Lutetia",
+      "Durocortorum",
+      "Carthago Nova",
+      "Emerita Augusta",
+      "Augusta Treverorum"
+    ],
+    "germaniaBritanniaDanube": [
+      "Moguntiacum",
+      "Argentoratum",
+      "Vindonissa",
+      "Bonna",
+      "Novaesium",
+      "Vetera",
+      "Londinium",
+      "Eburacum",
+      "Camulodunum",
+      "Deva",
+      "Lindum",
+      "Glevum",
+      "Isca",
+      "Vindobona",
+      "Carnuntum",
+      "Aquincum",
+      "Brigetio",
+      "Poetovio",
+      "Emona",
+      "Siscia",
+      "Sirmium",
+      "Singidunum",
+      "Viminacium",
+      "Salona",
+      "Iader",
+      "Apulum",
+      "Napoca",
+      "Sarmizegetusa",
+      "Porolissum",
+      "Colonia Agrippina",
+      "Castra Regina",
+      "Aquae Sulis"
+    ],
+    "greeceBalkansEast": [
+      "Thessalonica",
+      "Philippi",
+      "Dyrrhachium",
+      "Nicopolis",
+      "Corinthus",
+      "Athenae",
+      "Patrae",
+      "Sparta",
+      "Gortyna",
+      "Byzantium",
+      "Philippopolis",
+      "Serdica",
+      "Marcianopolis",
+      "Odessus",
+      "Nicomedia",
+      "Nicaea",
+      "Ephesus",
+      "Smyrna",
+      "Pergamum",
+      "Sardis",
+      "Miletus",
+      "Halicarnassus",
+      "Aphrodisias",
+      "Stratonicea",
+      "Mylasa",
+      "Iasos",
+      "Alabanda",
+      "Laodicea",
+      "Hierapolis",
+      "Ancyra",
+      "Tarsus",
+      "Antiochia",
+      "Apamea",
+      "Berytus",
+      "Tyrus",
+      "Sidon",
+      "Palmyra",
+      "Bostra",
+      "Petra",
+      "Damascus",
+      "Emesa",
+      "Nicopolis ad Istrum",
+      "Caesarea Maritima"
+    ],
+    "provinces": [
+      "Achaea",
+      "Aegyptus",
+      "Africa",
+      "Aquitania",
+      "Arabia",
+      "Asia",
+      "Baetica",
+      "Belgica",
+      "Bithynia",
+      "Britannia",
+      "Cappadocia",
+      "Cilicia",
+      "Creta",
+      "Cyrenaica",
+      "Dacia",
+      "Dalmatia",
+      "Galatia",
+      "Iudaea",
+      "Lusitania",
+      "Lycia",
+      "Macedonia",
+      "Mauretania",
+      "Moesia",
+      "Noricum",
+      "Numidia",
+      "Pamphylia",
+      "Pannonia",
+      "Raetia",
+      "Sicilia",
+      "Syria",
+      "Thracia",
+      "Gallia Lugdunensis",
+      "Gallia Narbonensis",
+      "Germania Inferior",
+      "Germania Superior",
+      "Hispania Tarraconensis"
+    ]
+  },
+  "recordDepthSummary": {
+    "greek": "excellent - use freely, all attested for gladiators",
+    "roman": "excellent - named gladiators and owners",
+    "thracian": "very good - large onomastic corpus, compounds generate well",
+    "gallic": "very good - Caesar plus craftsmen's names; throttle -rix",
+    "syrian": "good - Palmyrene corpus is large",
+    "germanic": "moderate - elite-skewed and Latin-filtered; watch chronology",
+    "numidian": "thin - script partly undeciphered; supplement with Punic and flag uncertainty",
+    "nubian": "very thin, and zero named gladiators - use the origin-tag plus arena-name approach"
+  },
+  "sources": [
+    {
+      "title": "Ancient Graffiti Project - Gladiators",
+      "url": "https://ancientgraffiti.org/Graffiti/themes/Gladiators"
+    },
+    {
+      "title": "Streinu, Gladiators in Caria: a brief overview",
+      "url": "https://www.insegnadelgiglio.it/wp-content/uploads/2023/10/11-25.pdf"
+    },
+    {
+      "title": "Epitafios latinos de gladiadores en el Occidente romano (Veleia)",
+      "url": "https://ojs.ehu.eus/index.php/Veleia/article/download/5401/5255"
+    },
+    {
+      "title": "Spectacles in the Roman World sourcebook - Marketing and Advertising (CIL IV 2508)",
+      "url": "https://pressbooks.bccampus.ca/spectaclesintheromanworldsourcebook/chapter/marketing-and-advertising/"
+    },
+    {
+      "title": "Platner & Ashby, Gladiator Schools of Ancient Rome (LacusCurtius)",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Gazetteer/Places/Europe/Italy/Lazio/Roma/Rome/_Texts/PLATOP*/ludi.html"
+    },
+    {
+      "title": "Carter, Armorum Studium: Gladiatorial Training and the Gladiatorial Ludus (BICS)",
+      "url": "https://onlinelibrary.wiley.com/doi/full/10.1111/2041-5370.12074"
+    },
+    {
+      "title": "Mac Congail, The Thracian Myth (Pizos inscription, IGBulg III.2 1690)",
+      "url": "https://balkancelts.wordpress.com/wp-content/uploads/2013/05/the-thracian-myth.pdf"
+    },
+    {
+      "title": "Wikipedia, List of Dacian names (Egyptian ostraca cavalry names)",
+      "url": "https://en.wikipedia.org/wiki/List_of_Dacian_names"
+    },
+    {
+      "title": "Wikipedia, List of kings of Thrace and Dacia",
+      "url": "https://en.wikipedia.org/wiki/Thracian_kings"
+    },
+    {
+      "title": "Gavrielatos, Names on Gallo-Roman Terra Sigillata (PhD, Leeds)",
+      "url": "https://etheses.whiterose.ac.uk/id/eprint/4448/1/Gavrielatos_Thesis.pdf"
+    },
+    {
+      "title": "Wikipedia, Numidian language",
+      "url": "https://en.wikipedia.org/wiki/Numidian_language"
+    },
+    {
+      "title": "Rilly, Personal Markers and Verbal Number in Meroitic (Dotawo)",
+      "url": "https://pages.sandpoints.org/dotawo/article/rilly/"
+    },
+    {
+      "title": "BMCR review of Grassi, Die semitischen Personennamen ... aus Syrien und dem Libanon",
+      "url": "https://bmcr.brynmawr.edu/2025/2025.11.10/"
+    },
+    {
+      "title": "Wikipedia, Batavi (Germanic tribe)",
+      "url": "https://en.wikipedia.org/wiki/Batavi_(Germanic_tribe)"
+    }
+  ]
+}

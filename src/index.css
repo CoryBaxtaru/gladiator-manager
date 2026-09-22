@@ -1,0 +1,17 @@
+:root {
+  color-scheme: dark;
+  font: 15px/145% "Trebuchet MS", "Segoe UI", Georgia, serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  margin: 0;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4 {
+  margin: 0 0 8px;
+}
