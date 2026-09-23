@@ -125,6 +125,15 @@ export function isOverextended(state: LudusState): boolean {
   return state.overextendedUntil !== null && state.currentDay < state.overextendedUntil;
 }
 
+/**
+ * Phase 10 Part A: a level-1 Barracks comfortably houses 4; each level past that adds
+ * one more. This is a SOFT cap (see ROSTER_OVER_CAPACITY_UPKEEP_MULTIPLIER in
+ * economy.ts) -- going over is allowed, not blocked, but costs more to sustain.
+ */
+export function rosterCapacity(state: LudusState): number {
+  return 3 + state.buildings.barracks.level;
+}
+
 export interface ImbalancePenalty {
   moodDelta: number;
   flavorText: string[];

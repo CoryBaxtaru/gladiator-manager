@@ -3,7 +3,7 @@ import { COMBAT, MOOD, STAFF, CLASH_LABELS, FIGHT_ECONOMY, PERSONALITY_TRAIT_UNL
 import { randFloat, pickN } from "./rng";
 import { addMoodModifier } from "./mood";
 import { bestDoctor } from "./staff";
-import { effectiveStats } from "./rating";
+import { effectiveStats, averageStats } from "./rating";
 
 type ClashKey = StatKey | "composite";
 
@@ -118,22 +118,30 @@ export function resolveFight(
 
   let goldReward: number;
   let reputationReward: number;
+  // Phase 11 Part B: reputation reward/penalty is intentionally NOT multiplied by
+  // tierMultiplier -- that multiplier was built for gold-facing numbers (see
+  // FIGHT_ECONOMY's own doc comment) and reputation already scales with tier
+  // organically through opponentPowerLevel (rival rosters get stronger at higher
+  // tiers). Applying tierMultiplier on top double-counted tier difficulty and, on
+  // losses specifically, produced -24 to -35 rep at Rival tier for the same margin
+  // of defeat that cost -6 to -8 at Local -- far more than "scaled by how decisive
+  // it was" (margin, the intended lever) was ever meant to produce.
   if (outcome === "win") {
     goldReward = Math.round(basePurse * performanceMultiplier);
-    reputationReward = Math.round((4 + matchup.opponentPowerLevel * 0.1) * tierMultiplier * performanceMultiplier);
+    reputationReward = Math.round((4 + matchup.opponentPowerLevel * 0.1) * performanceMultiplier);
     if (isPridefulForReward) {
       reputationReward = Math.round(reputationReward * COMBAT.pridefulWinReputationMultiplier);
     }
   } else if (outcome === "draw") {
     goldReward = Math.round(basePurse * FIGHT_ECONOMY.drawFraction);
-    reputationReward = Math.round(2 * tierMultiplier);
+    reputationReward = 2;
   } else {
     goldReward = Math.round(basePurse * FIGHT_ECONOMY.lossFraction);
     // A loss now costs real reputation instead of a small consolation gain, scaled by
     // how decisive it was (a narrow loss barely stings, a clean sweep hurts). The gold
     // consolation above is unaffected -- a bad stretch should be felt in both numbers.
     const lossPenaltyMultiplier = COMBAT.lossRepPenaltyBaseMultiplier + COMBAT.lossRepPenaltyPerMarginMultiplier * marginFactor;
-    reputationReward = -Math.round((3 + matchup.opponentPowerLevel * 0.08) * tierMultiplier * lossPenaltyMultiplier);
+    reputationReward = -Math.round((3 + matchup.opponentPowerLevel * 0.08) * lossPenaltyMultiplier);
   }
 
   let injury: CombatResult["injury"] = null;
@@ -205,6 +213,18 @@ export function resolveFight(
  */
 export function applyCombatResultToGladiator(gladiator: Gladiator, result: CombatResult, currentDay: number, isLastActiveGladiator = false): Gladiator {
   const marginFactor = result.margin / CLASH_SEQUENCE.length;
+  // Combat-driven showmanship gains must respect Potential Ability the same way
+  // trainStat's roomToGrow check does (see training.ts) -- otherwise a gladiator who
+  // keeps winning fights could climb past his PA even though training alone can't.
+  // Backed off point by point (gains are small) so the exact averageStats rounding
+  // behavior in currentAbilityOf is honored rather than approximated.
+  let cappedShowmanship = Math.min(99, gladiator.stats.showmanship + result.showmanshipGain);
+  while (
+    cappedShowmanship > gladiator.stats.showmanship &&
+    averageStats(effectiveStats({ ...gladiator, stats: { ...gladiator.stats, showmanship: cappedShowmanship } })) > gladiator.potentialAbility
+  ) {
+    cappedShowmanship -= 1;
+  }
   let updated: Gladiator = {
     ...gladiator,
     record: {
@@ -215,7 +235,7 @@ export function applyCombatResultToGladiator(gladiator: Gladiator, result: Comba
     },
     stats: {
       ...gladiator.stats,
-      showmanship: Math.min(99, gladiator.stats.showmanship + result.showmanshipGain),
+      showmanship: cappedShowmanship,
     },
   };
 

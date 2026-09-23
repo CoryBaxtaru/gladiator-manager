@@ -1,7 +1,8 @@
 import type { CombatResult, FightMatchup, FightTier, LudusState, PromotionOutcome, RivalGladiator, RivalLudus } from "../types";
-import { PROMOTION, REPUTATION_BANDS_BY_TIER } from "../config";
+import { PROMOTION, PROMOTION_READINESS, REPUTATION_BANDS_BY_TIER } from "../config";
 import { rivalLudiForTier } from "./rivalLudi";
 import { resolveFight, applyCombatResultToGladiator } from "./combat";
+import { currentAbilityOf } from "./rating";
 import { nextId } from "./rng";
 
 const TIER_ORDER: FightTier[] = ["local", "provincial", "rival", "colosseum"];
@@ -22,12 +23,45 @@ export function promotionOnCooldown(state: LudusState): boolean {
   return state.promotionCooldownUntilDay !== null && state.currentDay < state.promotionCooldownUntilDay;
 }
 
-/** Reputation has reached the cap for the current tier, there's a tier left to earn,
- * and no cooldown from a recent loss is still active. */
+export interface PromotionReadiness {
+  ok: boolean;
+  avgBuildingLevel: number;
+  requiredBuildingLevel: number;
+  avgRosterCA: number;
+  requiredRosterCA: number;
+}
+
+/** Whether the ludus is actually built/trained for the tier it's about to enter, as a
+ * check separate from (and in addition to) the reputation cap. See PROMOTION_READINESS. */
+export function promotionReadiness(state: LudusState): PromotionReadiness | null {
+  const next = nextTierOf(state.unlockedTier);
+  if (!next) return null;
+  const required = PROMOTION_READINESS[next];
+
+  const buildingLevels = Object.values(state.buildings).map((b) => b.level);
+  const avgBuildingLevel = buildingLevels.reduce((sum, l) => sum + l, 0) / buildingLevels.length;
+
+  const active = state.gladiators.filter((g) => g.status === "active");
+  const avgRosterCA = active.length === 0 ? 0 : active.reduce((sum, g) => sum + currentAbilityOf(g), 0) / active.length;
+
+  return {
+    ok: avgBuildingLevel >= required.minAvgBuildingLevel && avgRosterCA >= required.minAvgRosterCA,
+    avgBuildingLevel,
+    requiredBuildingLevel: required.minAvgBuildingLevel,
+    avgRosterCA,
+    requiredRosterCA: required.minAvgRosterCA,
+  };
+}
+
+/** Reputation has reached the cap for the current tier, the ludus is actually ready
+ * for the next one (see promotionReadiness), there's a tier left to earn, and no
+ * cooldown from a recent loss is still active. */
 export function promotionAvailable(state: LudusState): boolean {
   if (nextTierOf(state.unlockedTier) === null) return false;
   if (promotionOnCooldown(state)) return false;
-  return state.reputation >= reputationCapFor(state);
+  if (state.reputation < reputationCapFor(state)) return false;
+  const readiness = promotionReadiness(state);
+  return readiness ? readiness.ok : true;
 }
 
 export interface PromotionChampion {
@@ -36,18 +70,29 @@ export interface PromotionChampion {
 }
 
 /**
- * The top-ranked rival ludus in the player's CURRENT tier puts forward its best
- * gladiator -- proving you belong at the next tier means beating the best of the one
- * you're leaving. Deterministic (pure function of state), so the same champion shows
- * up in the preview and in the actual resolved fight.
+ * Phase 11 Part C: previously drawn from the best gladiator of the top-ranked ludus
+ * in the player's CURRENT tier -- but the tier multiplier on the fight's purse/
+ * reputation formula already treats this as a next-tier occasion (see
+ * buildPromotionMatchup below), while the opponent himself was still only as tough as
+ * the tier being LEFT. Beating the best of a tier you already fight in every day is a
+ * formality, not a real test of whether the roster can survive the next one.
+ *
+ * Now draws a median-strength gladiator from the tier being ENTERED: every rival
+ * ludus's roster at that tier, pooled and sorted by ability, taking the middle entry.
+ * Not the tier's best (that would just move the formality one tier later) and not its
+ * weakest (that would defeat the point of a readiness test) -- a real, average
+ * representative of what the player is about to fight regularly. Deterministic (pure
+ * function of state), so the same champion shows up in the preview and the resolved
+ * fight.
  */
 export function promotionChampion(state: LudusState): PromotionChampion | null {
-  const pool = rivalLudiForTier(state, state.unlockedTier);
-  if (pool.length === 0) return null;
-  const topLudus = [...pool].sort((a, b) => b.reputation - a.reputation)[0];
-  if (topLudus.roster.length === 0) return null;
-  const gladiator = [...topLudus.roster].sort((a, b) => b.currentAbility - a.currentAbility)[0];
-  return { rivalLudus: topLudus, gladiator };
+  const next = nextTierOf(state.unlockedTier);
+  if (!next) return null;
+  const pool = rivalLudiForTier(state, next);
+  const entries = pool.flatMap((rivalLudus) => rivalLudus.roster.map((gladiator) => ({ rivalLudus, gladiator })));
+  if (entries.length === 0) return null;
+  entries.sort((a, b) => a.gladiator.currentAbility - b.gladiator.currentAbility);
+  return entries[Math.floor(entries.length / 2)];
 }
 
 /** The tier multiplier used for the promotion fight's purse/reputation formula is the

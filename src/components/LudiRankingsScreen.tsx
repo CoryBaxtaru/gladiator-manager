@@ -45,6 +45,7 @@ export function LudiRankingsScreen() {
     <div className="screen">
       <h2>Ludi Rankings</h2>
       <p className="hint">Roster strength and facility quality are shown coarsely, the same way you'd size up a rival from the outside.</p>
+      <div className="rankings-table-scroll">
       <table className="rankings-table">
         <thead>
           <tr>
@@ -67,6 +68,7 @@ export function LudiRankingsScreen() {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

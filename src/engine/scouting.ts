@@ -39,7 +39,7 @@ export function recruiterSendCost(state: LudusState, channel: RecruitChannel, ti
   return Math.round(raw * tierCfg.priceMultiplier);
 }
 
-function generateCandidate(channel: RecruitChannel, currentDay: number, tier: RecruiterTier, usedArenaNames: Set<string>): RecruitCandidate {
+function generateCandidate(channel: RecruitChannel, currentDay: number, tier: RecruiterTier, usedArenaNames: Set<string>, refundValue: number): RecruitCandidate {
   const cfg = RECRUIT_CHANNELS[channel];
   const tierCfg = RECRUITER_TIERS[tier];
   const baseStat = cfg.baseStat + tierCfg.baseStatBonus;
@@ -63,14 +63,15 @@ function generateCandidate(channel: RecruitChannel, currentDay: number, tier: Re
   });
   usedArenaNames.add(gladiator.name);
 
-  return { id: nextId("rc"), gladiator, channel };
+  return { id: nextId("rc"), gladiator, channel, refundValue };
 }
 
-function generateBatch(channel: RecruitChannel, currentDay: number, tier: RecruiterTier, rosterArenaNames: Set<string>): RecruitCandidate[] {
+function generateBatch(channel: RecruitChannel, currentDay: number, tier: RecruiterTier, rosterArenaNames: Set<string>, costPaid: number): RecruitCandidate[] {
   const cfg = RECRUIT_CHANNELS[channel];
   const size = randInt(cfg.batchMin, cfg.batchMax);
   const usedArenaNames = new Set(rosterArenaNames);
-  return Array.from({ length: size }, () => generateCandidate(channel, currentDay, tier, usedArenaNames));
+  const refundValue = Math.round((costPaid / size) * RECRUITMENT.sellOnRefundFraction);
+  return Array.from({ length: size }, () => generateCandidate(channel, currentDay, tier, usedArenaNames, refundValue));
 }
 
 /** Sends a scouting expedition: always purchasable, no staff pool or availability roll
@@ -92,6 +93,7 @@ export function sendRecruiter(state: LudusState, channel: RecruitChannel, tier: 
       channel,
       sentOnDay: state.currentDay,
       returnsOnDay: state.currentDay + cfg.tripDurationDays,
+      costPaid: cost,
     },
   };
 }
@@ -102,7 +104,7 @@ export function tickRecruiterTrip(state: LudusState): { state: LudusState; retur
   if (!trip || state.currentDay < trip.returnsOnDay) return { state, returned: false };
 
   const rosterArenaNames = new Set(state.gladiators.filter((g) => g.status === "active").map((g) => g.name));
-  const batch = generateBatch(trip.channel, state.currentDay, trip.tier, rosterArenaNames);
+  const batch = generateBatch(trip.channel, state.currentDay, trip.tier, rosterArenaNames, trip.costPaid);
 
   return {
     state: {
@@ -127,4 +129,16 @@ export function recruitGladiator(state: LudusState, candidateId: string): LudusS
 
 export function passRecruitCandidate(state: LudusState, candidateId: string): LudusState {
   return { ...state, recruitPool: state.recruitPool.filter((c) => c.id !== candidateId) };
+}
+
+/** "Sell him on" -- release a returned candidate for a partial refund instead of
+ * letting him go for nothing. See RECRUITMENT.sellOnRefundFraction. */
+export function sellOnCandidate(state: LudusState, candidateId: string): LudusState {
+  const candidate = state.recruitPool.find((c) => c.id === candidateId);
+  if (!candidate) return state;
+  return {
+    ...state,
+    gold: state.gold + candidate.refundValue,
+    recruitPool: state.recruitPool.filter((c) => c.id !== candidateId),
+  };
 }

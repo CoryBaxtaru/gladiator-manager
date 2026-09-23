@@ -14,7 +14,7 @@ const CHANNEL_ORDER: RecruitChannel[] = ["slave_market", "auction_house", "volun
 const TIER_ORDER: RecruiterTier[] = ["journeyman", "seasoned", "master"];
 
 export function RecruitmentScreen() {
-  const { state, recruit, passCandidate, sendRecruiter } = useGame();
+  const { state, recruit, passCandidate, sellOnCandidate, sendRecruiter } = useGame();
   const [selectedTier, setSelectedTier] = useState<RecruiterTier>("journeyman");
 
   return (
@@ -129,6 +129,9 @@ export function RecruitmentScreen() {
                   <div className="card-row"><span>Weekly Upkeep</span><span>{c.gladiator.weeklyUpkeep}g</span></div>
                   <div className="recruit-card-actions">
                     <button className="btn" onClick={() => passCandidate(c.id)}>Release</button>
+                    <Tooltip text="Recoup a portion of what he cost instead of releasing him for nothing.">
+                      <button className="btn" onClick={() => sellOnCandidate(c.id)}>Sell Him On ({c.refundValue}g)</button>
+                    </Tooltip>
                     <button className="btn primary" onClick={() => recruit(c.id)}>Keep</button>
                   </div>
                 </Card>

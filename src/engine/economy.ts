@@ -1,5 +1,6 @@
 import type { LudusState } from "../types";
-import { ECONOMY, FIGHT_ECONOMY } from "../config";
+import { ECONOMY, FIGHT_ECONOMY, ROSTER_OVER_CAPACITY_UPKEEP_MULTIPLIER } from "../config";
+import { rosterCapacity } from "./buildings";
 
 /**
  * The same tier multiplier that scales fight purses also scales one-time gold costs
@@ -17,9 +18,10 @@ export function tierCostMultiplier(state: LudusState): number {
 }
 
 export function weeklyGladiatorUpkeep(state: LudusState): number {
-  return state.gladiators
-    .filter((g) => g.status === "active")
-    .reduce((sum, g) => sum + g.weeklyUpkeep, 0);
+  const active = state.gladiators.filter((g) => g.status === "active");
+  const base = active.reduce((sum, g) => sum + g.weeklyUpkeep, 0);
+  const overCapacity = active.length > rosterCapacity(state);
+  return overCapacity ? Math.round(base * ROSTER_OVER_CAPACITY_UPKEEP_MULTIPLIER) : base;
 }
 
 export function weeklyBuildingUpkeep(state: LudusState): number {

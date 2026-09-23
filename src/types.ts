@@ -234,6 +234,9 @@ export interface RecruitCandidate {
   id: string;
   gladiator: Gladiator;
   channel: RecruitChannel;
+  /** Partial refund for "sell him on" instead of a plain release -- a share of what
+   * this candidate's slot in the batch cost, see engine/scouting.ts. */
+  refundValue: number;
 }
 
 export interface RecruiterTrip {
@@ -244,6 +247,9 @@ export interface RecruiterTrip {
   channel: RecruitChannel;
   sentOnDay: number;
   returnsOnDay: number;
+  /** What was actually paid upfront to send this trip -- carried through so the batch
+   * it returns can offer a partial refund ("sell him on") per candidate. */
+  costPaid: number;
 }
 
 export interface SummaryEntry {

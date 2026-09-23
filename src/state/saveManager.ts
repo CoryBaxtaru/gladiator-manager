@@ -15,12 +15,20 @@ function normalizeState(state: LudusState): LudusState {
     ...state,
     deathMatchCooldowns: state.deathMatchCooldowns ?? [],
     pendingDeathMatchChallenge: state.pendingDeathMatchChallenge ?? null,
-    recruitPool: (state.recruitPool ?? []).map((c) => ({ ...c, channel: c.channel ?? "slave_market" })),
+    // Phase 10 Part B: refundValue is new -- a candidate pool resolved before this
+    // change has no per-candidate cost share to compute it from, so it defaults to 0
+    // ("sell him on" just isn't worth anything for that already-in-flight batch).
+    recruitPool: (state.recruitPool ?? []).map((c) => ({ ...c, channel: c.channel ?? "slave_market", refundValue: c.refundValue ?? 0 })),
     // Phase 8 Part A: recruiters are no longer hired staff sent on a trip, they're a
     // one-off expedition paid for upfront. A trip in flight from before this change has
     // no tier to migrate to, so it's cleared rather than guessed at -- the player can
     // just send a fresh one, and any gold already spent is sunk either way.
-    recruiterTrip: state.recruiterTrip && "tier" in state.recruiterTrip ? state.recruiterTrip : null,
+    // Phase 10 Part B: costPaid is new -- same fallback reasoning, defaults to 0 if
+    // missing (only possible for a trip already in flight the moment this shipped).
+    recruiterTrip:
+      state.recruiterTrip && "tier" in state.recruiterTrip
+        ? { ...state.recruiterTrip, costPaid: state.recruiterTrip.costPaid ?? 0 }
+        : null,
     staff: state.staff.filter((s) => s.role === "trainer" || s.role === "doctor"),
     debtWeeksActive: state.debtWeeksActive ?? 0,
     loanPrincipal: state.loanPrincipal ?? 0,

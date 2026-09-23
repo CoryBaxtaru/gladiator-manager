@@ -348,6 +348,14 @@ export const ECONOMY = {
 };
 
 /**
+ * Phase 10 Part A: a soft cap, not a hard block -- going over Barracks capacity
+ * (see rosterCapacity() in engine/buildings.ts) is always allowed, it just costs more
+ * to sustain, so a player who overextends feels it in the weekly upkeep bill rather
+ * than being told no.
+ */
+export const ROSTER_OVER_CAPACITY_UPKEEP_MULTIPLIER = 1.5;
+
+/**
  * No hard floor at zero gold: a negative balance is allowed, and staying there gets
  * progressively worse rather than being either an impossible wall or a non-issue.
  * debtWeeksActive counts consecutive weekly upkeep payments that left gold negative,
@@ -408,8 +416,17 @@ export const LOAN = {
 export const BUILDING_SELL_REFUND_FRACTION = 0.4;
 
 export const RECRUITMENT = {
-  basePriceMultiplier: 8,
+  // Phase 10 Part B: halved from 8. At 8, recruiter trips cost 2-30 WEEKS of a typical
+  // roster's income (see docs/economy-rebalance.md's methodology) -- recruiting read as
+  // a punishing setback rather than a considered investment. Retuned alongside the
+  // channel priceMultipliers below to land in roughly 1-11 weeks depending on tier/channel.
+  basePriceMultiplier: 4,
   gemPotentialBonus: 25,
+  /** "Sell him on" a returned candidate instead of a plain release: a partial refund
+   * of the per-candidate share of what the trip cost, softening the single-upfront-
+   * payment model's risk without undoing it -- the ludus still doesn't get a full
+   * refund, just isn't left with nothing for an unwanted candidate. */
+  sellOnRefundFraction: 0.4,
 };
 
 export const POSITIVE_TRAITS: PersonalityTrait[] = ["Loyal", "Devout", "Stoic", "Vain", "Bloodthirsty", "Athletic"];
@@ -456,7 +473,8 @@ export const RECRUIT_CHANNELS: Record<
     baseStat: 14,
     statSpread: 22,
     gemChance: 0.24,
-    priceMultiplier: 0.7,
+    // Phase 10 Part B: 0.7 -> 0.6, alongside RECRUITMENT.basePriceMultiplier's halving.
+    priceMultiplier: 0.6,
     flatSigningFee: false,
     signingFeeBase: 0,
     signingFeeSpread: 0,
@@ -474,7 +492,9 @@ export const RECRUIT_CHANNELS: Record<
     baseStat: 34,
     statSpread: 10,
     gemChance: 0.05,
-    priceMultiplier: 1.8,
+    // Phase 10 Part B: 1.8 -> 0.7. This was the worst offender -- Master tier alone
+    // cost ~30 weeks of a typical roster's income at the old value.
+    priceMultiplier: 0.7,
     flatSigningFee: false,
     signingFeeBase: 0,
     signingFeeSpread: 0,
@@ -485,7 +505,10 @@ export const RECRUIT_CHANNELS: Record<
   volunteer_hall: {
     label: "Volunteer Hall",
     description: "Free citizens chasing glory rather than property bought at a price. A signing fee instead of a purchase, and they tend to arrive in better spirits.",
-    tripCost: 120,
+    // Phase 10 Part B: 120 -> 60. This channel's flat signing fee never routed through
+    // RECRUITMENT.basePriceMultiplier, so halving that alone left it untouched --
+    // needed its own retuning to land in the same 1-9 week range as the other channels.
+    tripCost: 60,
     tripDurationDays: 4,
     batchMin: 2,
     batchMax: 4,
@@ -494,8 +517,8 @@ export const RECRUIT_CHANNELS: Record<
     gemChance: 0.09,
     priceMultiplier: 1,
     flatSigningFee: true,
-    signingFeeBase: 90,
-    signingFeeSpread: 60,
+    signingFeeBase: 50,
+    signingFeeSpread: 40,
     traitBiasPositive: true,
     moodBonus: 15,
     recordBias: false,
@@ -641,6 +664,25 @@ export const PROMOTION = {
   cooldownDays: 12,
   winGoldBonusMultiplier: 2,
   winReputationBonus: 15,
+};
+
+/**
+ * Phase 11 Part C: the reputation cap alone doesn't check readiness -- a win streak
+ * against a softened early-tier matchup (see docs/difficulty-ramp.md) can hit it
+ * without the player ever touching Training, Recruitment, or the Ludus screen.
+ * Playtesting showed the same roster re-hitting the next cap 6-10 days after a
+ * promotion, no roster growth or building investment in between. This gate requires
+ * BOTH a minimum average building level and a minimum average active-roster Current
+ * Ability, keyed by the tier being entered, alongside (not instead of) the existing
+ * reputation cap -- reputation says "you've been winning", this says "you're actually
+ * built for what's next." The "local" entry is unused (nextTierOf never returns it as
+ * a target) but present so the lookup stays a total function.
+ */
+export const PROMOTION_READINESS: Record<FightTier, { minAvgBuildingLevel: number; minAvgRosterCA: number }> = {
+  local: { minAvgBuildingLevel: 0, minAvgRosterCA: 0 },
+  provincial: { minAvgBuildingLevel: 1.3, minAvgRosterCA: 18 },
+  rival: { minAvgBuildingLevel: 2, minAvgRosterCA: 30 },
+  colosseum: { minAvgBuildingLevel: 3, minAvgRosterCA: 42 },
 };
 
 export const SAVE_SLOT_COUNT = 3;

@@ -74,6 +74,7 @@ export function FightDaySelectionModal() {
                     type="checkbox"
                     checked={selected.has(g.id)}
                     onChange={() => toggle(g.id)}
+                    onClick={(e) => e.stopPropagation()}
                   />
                   <GladiatorPortrait name={g.name} origin={g.origin} condition={g.condition} size={32} variant="headshot" />
                   <span className="fighter-select-name">{g.name}</span>

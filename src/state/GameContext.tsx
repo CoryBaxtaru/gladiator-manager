@@ -7,6 +7,7 @@ import { takeLoan as engineTakeLoan } from "../engine/loan";
 import {
   recruitGladiator as engineRecruitGladiator,
   passRecruitCandidate as enginePassRecruitCandidate,
+  sellOnCandidate as engineSellOnCandidate,
   sendRecruiter as engineSendRecruiter,
 } from "../engine/scouting";
 import { matchmakeFightDay, eligibleForFightDay } from "../engine/fightday";
@@ -62,6 +63,7 @@ interface GameContextValue {
   setTrainingFocus: (gladiatorId: string, focus: TrainingFocus) => void;
   recruit: (candidateId: string) => void;
   passCandidate: (candidateId: string) => void;
+  sellOnCandidate: (candidateId: string) => void;
   sendRecruiter: (channel: RecruitChannel, tier: RecruiterTier) => void;
   setSparringPair: (gladiatorAId: string, gladiatorBId: string) => void;
   clearSparring: (gladiatorId: string) => void;
@@ -179,6 +181,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const passCandidate = useCallback((candidateId: string) => {
     setState((prev) => enginePassRecruitCandidate(prev, candidateId));
+  }, []);
+
+  const sellOnCandidate = useCallback((candidateId: string) => {
+    setState((prev) => engineSellOnCandidate(prev, candidateId));
   }, []);
 
   const sendRecruiter = useCallback((channel: RecruitChannel, tier: RecruiterTier) => {
@@ -326,6 +332,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setTrainingFocus,
       recruit,
       passCandidate,
+      sellOnCandidate,
       sendRecruiter,
       setSparringPair,
       clearSparring,
@@ -370,6 +377,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setTrainingFocus,
       recruit,
       passCandidate,
+      sellOnCandidate,
       sendRecruiter,
       setSparringPair,
       clearSparring,

@@ -24,6 +24,7 @@ import {
 import { doctorVisitCost } from "../engine/training";
 import { instantSalePrice } from "../engine/sale";
 import { riskTagFor, moodLabel } from "../engine/mood";
+import { rosterCapacity } from "../engine/buildings";
 import { Card } from "./Card";
 import { Badge } from "./Badge";
 
@@ -89,10 +90,20 @@ export function SquadScreen() {
   const feastCost = moraleEventCostFor(state);
   const bathsCost = bathsCostFor(state);
   const recognitionCost = recognitionCostFor(state);
+  const capacity = rosterCapacity(state);
+  const overCapacity = activeGladiators.length > capacity;
 
   return (
     <div className="screen squad-screen">
-      <h2>Roster</h2>
+      <h2>
+        Roster{" "}
+        <span
+          className={`roster-capacity ${overCapacity ? "roster-capacity-over" : ""}`}
+          title={overCapacity ? "Over Barracks capacity -- weekly upkeep is running higher until you're back under cap or upgrade the Barracks." : "Barracks capacity"}
+        >
+          {activeGladiators.length}/{capacity}
+        </span>
+      </h2>
       <div className="squad-layout">
         <div className="squad-list">
           {visibleGladiators.length === 0 && <p className="empty-note">No active gladiators. Recruit some.</p>}
@@ -189,188 +200,194 @@ export function SquadScreen() {
               })()}
             </div>
 
-            <div className="detail-grid">
-              <div className="detail-block">
-                <h4>Stats</h4>
-                {(() => {
-                  const indicators = statIndicators(selected);
-                  const rows: [string, keyof typeof indicators, number][] = [
-                    ["Strength", "strength", selected.stats.strength],
-                    ["Weapon Skill", "weaponSkill", selected.stats.weaponSkill],
-                    ["Endurance", "endurance", selected.stats.endurance],
-                    ["Showmanship", "showmanship", selected.stats.showmanship],
-                  ];
-                  return rows.map(([label, key, value]) => {
-                    const indicator = indicators[key];
-                    return (
-                      <div className="card-row" key={key}>
-                        <span>
-                          {label}
-                          {indicator && (
-                            <span className={`stat-indicator stat-indicator-${indicator}`}>
-                              {indicator === "boost" ? "▲" : "▼"}
-                            </span>
-                          )}
-                        </span>
-                        <span>{value}</span>
-                      </div>
-                    );
-                  });
-                })()}
-                <div className="card-row">
-                  <span>Current Ability</span>
-                  <StarRating value={currentAbilityStars(currentAbilityOf(selected))} size="sm" />
+            <div className="detail-grid detail-grid-3">
+              <div className="detail-column">
+                <div className="detail-block">
+                  <h4>Stats</h4>
+                  {(() => {
+                    const indicators = statIndicators(selected);
+                    const rows: [string, keyof typeof indicators, number][] = [
+                      ["Strength", "strength", selected.stats.strength],
+                      ["Weapon Skill", "weaponSkill", selected.stats.weaponSkill],
+                      ["Endurance", "endurance", selected.stats.endurance],
+                      ["Showmanship", "showmanship", selected.stats.showmanship],
+                    ];
+                    return rows.map(([label, key, value]) => {
+                      const indicator = indicators[key];
+                      return (
+                        <div className="card-row" key={key}>
+                          <span>
+                            {label}
+                            {indicator && (
+                              <span className={`stat-indicator stat-indicator-${indicator}`}>
+                                {indicator === "boost" ? "▲" : "▼"}
+                              </span>
+                            )}
+                          </span>
+                          <span>{value}</span>
+                        </div>
+                      );
+                    });
+                  })()}
+                  <div className="card-row">
+                    <span>Current Ability</span>
+                    <StarRating value={currentAbilityStars(currentAbilityOf(selected))} size="sm" />
+                  </div>
+                  <div className="card-row">
+                    <span>Potential</span>
+                    <Tooltip
+                      text={
+                        potential?.revealed
+                          ? "Potential fully scouted."
+                          : "Not fully scouted yet. This guess sharpens as your ludus earns more reputation."
+                      }
+                    >
+                      <span>{potential && <StarRating value={potential.stars} size="sm" />}</span>
+                    </Tooltip>
+                  </div>
+                  {potential && <div className="potential-label">{potential.label}</div>}
                 </div>
-                <div className="card-row">
-                  <span>Potential</span>
-                  <Tooltip
-                    text={
-                      potential?.revealed
-                        ? "Potential fully scouted."
-                        : "Not fully scouted yet. This guess sharpens as your ludus earns more reputation."
-                    }
-                  >
-                    <span>{potential && <StarRating value={potential.stars} size="sm" />}</span>
-                  </Tooltip>
-                </div>
-                {potential && <div className="potential-label">{potential.label}</div>}
               </div>
 
-              <div className="detail-block">
-                <h4>Record</h4>
-                <div className="card-row"><span>Fights</span><span>{selected.record.fights}</span></div>
-                <div className="card-row"><span>Wins</span><span>{selected.record.wins}</span></div>
-                <div className="card-row"><span>Losses</span><span>{selected.record.losses}</span></div>
-                <div className="card-row"><span>Near Deaths</span><span>{selected.record.nearDeaths}</span></div>
-                <div className="card-row"><span>Weekly Upkeep</span><span>{selected.weeklyUpkeep}g</span></div>
-                <div className="card-row"><span>Mood</span><span>{moodLabel(selected.mood)}</span></div>
+              <div className="detail-column">
+                <div className="detail-block">
+                  <h4>Record</h4>
+                  <div className="card-row"><span>Fights</span><span>{selected.record.fights}</span></div>
+                  <div className="card-row"><span>Wins</span><span>{selected.record.wins}</span></div>
+                  <div className="card-row"><span>Losses</span><span>{selected.record.losses}</span></div>
+                  <div className="card-row"><span>Near Deaths</span><span>{selected.record.nearDeaths}</span></div>
+                  <div className="card-row"><span>Weekly Upkeep</span><span>{selected.weeklyUpkeep}g</span></div>
+                </div>
+              </div>
+
+              <div className="detail-column">
+                {selected.status !== "active" ? (
+                  <div className="detail-block">
+                    <p className="empty-note">
+                      {selected.status === "dead"
+                        ? `${selected.name} did not survive. He is no longer part of the roster.`
+                        : `${selected.name} escaped and is no longer part of the roster.`}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="detail-block">
+                    <h4>Mood</h4>
+                    <div className="card-row"><span>Current Mood</span><span>{moodLabel(selected.mood)}</span></div>
+                    {selected.moodModifiers.length === 0 ? (
+                      <p className="empty-note">Nothing actively affecting his mood right now.</p>
+                    ) : (
+                      <div className="mood-breakdown">
+                        {selected.moodModifiers.map((m) => (
+                          <div className="mood-breakdown-row" key={m.id}>
+                            <span className={m.magnitude >= 0 ? "mood-positive" : "mood-negative"}>
+                              {m.magnitude >= 0 ? "+" : ""}{m.magnitude}
+                            </span>
+                            <span>{m.source}</span>
+                            <span className="mood-breakdown-days">{Math.max(0, m.expiresOnDay - state.currentDay)}d left</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="mood-actions">
+                      <button
+                        className="btn small"
+                        disabled={!canGiveEncouragement(selected, state.currentDay)}
+                        onClick={() => giveEncouragement(selected.id)}
+                        title="Free, always available, a small and short boost. The one mood tool that never costs gold, for when nothing else is affordable."
+                      >
+                        Word of Encouragement
+                      </button>
+                      <button
+                        className="btn small"
+                        disabled={!canGiveLeave(selected, state.currentDay)}
+                        onClick={() => giveLeave(selected.id)}
+                        title="Free. Puts him on Rest training focus for a couple of days on top of the mood boost -- a real rest, not just a number."
+                      >
+                        Grant a Day of Leave
+                      </button>
+                      <button
+                        className="btn small"
+                        disabled={state.gold < bathsCost || !canVisitBaths(selected, state.currentDay)}
+                        onClick={() => visitBaths(selected.id)}
+                        title={`Costs ${bathsCost}g. Effectiveness scales with the Quarters building's level.`}
+                      >
+                        Evening at the Baths ({bathsCost}g)
+                      </button>
+                      <button
+                        className="btn small"
+                        disabled={state.gold < recognitionCost || !canGivePublicRecognition(selected, state.currentDay)}
+                        onClick={() => givePublicRecognition(selected.id)}
+                        title={`Costs ${recognitionCost}g. The boost scales with his showmanship -- crowd favorites benefit more.`}
+                      >
+                        Public Recognition ({recognitionCost}g)
+                      </button>
+                      <button
+                        className="btn small"
+                        disabled={state.gold < feastCost || !canTriggerMoraleEvent(selected, state.currentDay)}
+                        onClick={() => triggerMoraleEvent(selected.id)}
+                        title={`Costs ${feastCost}g, a few days between uses`}
+                      >
+                        Throw a Feast ({feastCost}g)
+                      </button>
+                      {selected.personalityTraits.includes("Devout") && (
+                        <button
+                          className="btn small"
+                          disabled={!canPerformRitual(selected, state.currentDay)}
+                          onClick={() => performRitual(selected.id)}
+                        >
+                          Observe Pre-Fight Ritual
+                        </button>
+                      )}
+                      {selected.personalityTraits.includes("Greedy") && (
+                        <button
+                          className="btn small"
+                          disabled={state.gold < bonusCutCost(selected) || !canGiveBonusCut(selected, state.currentDay)}
+                          onClick={() => giveBonusCut(selected.id)}
+                        >
+                          Give Bigger Cut ({bonusCutCost(selected)}g)
+                        </button>
+                      )}
+                      {selected.personalityTraits.includes("Prideful") && (
+                        <button
+                          className="btn small"
+                          disabled={!canBoastPride(selected, state.currentDay)}
+                          onClick={() => boastPride(selected.id)}
+                          title="Free. Lets him hold court and boast of his own glory."
+                        >
+                          Let Him Boast
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
-            {selected.status !== "active" ? (
+            {selected.status === "active" && selected.injuryDaysRemaining > 0 && (
               <div className="detail-block">
-                <p className="empty-note">
-                  {selected.status === "dead"
-                    ? `${selected.name} did not survive. He is no longer part of the roster.`
-                    : `${selected.name} escaped and is no longer part of the roster.`}
+                <h4>Recovery</h4>
+                <p className="hint">
+                  Resting under the Infirmary's care, {selected.injuryDaysRemaining} day(s) remaining. Paying for a
+                  doctor visit cuts this recovery time significantly, right now. A doctor on staff doesn't speed
+                  recovery just by existing, but makes every visit cheaper and more effective.
                 </p>
+                <button
+                  className="btn small"
+                  disabled={state.gold < doctorVisitCost(selected, state)}
+                  onClick={() => payForDoctorVisit(selected.id)}
+                >
+                  Pay for a Doctor Visit ({doctorVisitCost(selected, state)}g)
+                </button>
               </div>
-            ) : (
-              <>
-                <div className="detail-block">
-                  <h4>Mood Breakdown</h4>
-                  {selected.moodModifiers.length === 0 ? (
-                    <p className="empty-note">Nothing actively affecting his mood right now.</p>
-                  ) : (
-                    <div className="mood-breakdown">
-                      {selected.moodModifiers.map((m) => (
-                        <div className="mood-breakdown-row" key={m.id}>
-                          <span className={m.magnitude >= 0 ? "mood-positive" : "mood-negative"}>
-                            {m.magnitude >= 0 ? "+" : ""}{m.magnitude}
-                          </span>
-                          <span>{m.source}</span>
-                          <span className="mood-breakdown-days">{Math.max(0, m.expiresOnDay - state.currentDay)}d left</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+            )}
 
-                  <div className="mood-actions">
-                    <button
-                      className="btn small"
-                      disabled={!canGiveEncouragement(selected, state.currentDay)}
-                      onClick={() => giveEncouragement(selected.id)}
-                      title="Free, always available, a small and short boost. The one mood tool that never costs gold, for when nothing else is affordable."
-                    >
-                      Word of Encouragement
-                    </button>
-                    <button
-                      className="btn small"
-                      disabled={!canGiveLeave(selected, state.currentDay)}
-                      onClick={() => giveLeave(selected.id)}
-                      title="Free. Puts him on Rest training focus for a couple of days on top of the mood boost -- a real rest, not just a number."
-                    >
-                      Grant a Day of Leave
-                    </button>
-                    <button
-                      className="btn small"
-                      disabled={state.gold < bathsCost || !canVisitBaths(selected, state.currentDay)}
-                      onClick={() => visitBaths(selected.id)}
-                      title={`Costs ${bathsCost}g. Effectiveness scales with the Quarters building's level.`}
-                    >
-                      Evening at the Baths ({bathsCost}g)
-                    </button>
-                    <button
-                      className="btn small"
-                      disabled={state.gold < recognitionCost || !canGivePublicRecognition(selected, state.currentDay)}
-                      onClick={() => givePublicRecognition(selected.id)}
-                      title={`Costs ${recognitionCost}g. The boost scales with his showmanship -- crowd favorites benefit more.`}
-                    >
-                      Public Recognition ({recognitionCost}g)
-                    </button>
-                    <button
-                      className="btn small"
-                      disabled={state.gold < feastCost || !canTriggerMoraleEvent(selected, state.currentDay)}
-                      onClick={() => triggerMoraleEvent(selected.id)}
-                      title={`Costs ${feastCost}g, a few days between uses`}
-                    >
-                      Throw a Feast ({feastCost}g)
-                    </button>
-                    {selected.personalityTraits.includes("Devout") && (
-                      <button
-                        className="btn small"
-                        disabled={!canPerformRitual(selected, state.currentDay)}
-                        onClick={() => performRitual(selected.id)}
-                      >
-                        Observe Pre-Fight Ritual
-                      </button>
-                    )}
-                    {selected.personalityTraits.includes("Greedy") && (
-                      <button
-                        className="btn small"
-                        disabled={state.gold < bonusCutCost(selected) || !canGiveBonusCut(selected, state.currentDay)}
-                        onClick={() => giveBonusCut(selected.id)}
-                      >
-                        Give Bigger Cut ({bonusCutCost(selected)}g)
-                      </button>
-                    )}
-                    {selected.personalityTraits.includes("Prideful") && (
-                      <button
-                        className="btn small"
-                        disabled={!canBoastPride(selected, state.currentDay)}
-                        onClick={() => boastPride(selected.id)}
-                        title="Free. Lets him hold court and boast of his own glory."
-                      >
-                        Let Him Boast
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {selected.injuryDaysRemaining > 0 && (
-                  <div className="detail-block">
-                    <h4>Recovery</h4>
-                    <p className="hint">
-                      Resting under the Infirmary's care, {selected.injuryDaysRemaining} day(s) remaining. Paying for a
-                      doctor visit cuts this recovery time significantly, right now. A doctor on staff doesn't speed
-                      recovery just by existing, but makes every visit cheaper and more effective.
-                    </p>
-                    <button
-                      className="btn small"
-                      disabled={state.gold < doctorVisitCost(selected, state)}
-                      onClick={() => payForDoctorVisit(selected.id)}
-                    >
-                      Pay for a Doctor Visit ({doctorVisitCost(selected, state)}g)
-                    </button>
-                  </div>
-                )}
-
-                <div className="detail-actions">
-                  <button className="btn danger-outline" onClick={() => setConfirmingSell(selected.id)}>
-                    Release / Sell ({instantSalePrice(currentAbilityOf(selected))}g)
-                  </button>
-                </div>
-              </>
+            {selected.status === "active" && (
+              <div className="detail-actions">
+                <button className="btn danger-outline" onClick={() => setConfirmingSell(selected.id)}>
+                  Release / Sell ({instantSalePrice(currentAbilityOf(selected))}g)
+                </button>
+              </div>
             )}
           </Card>
         )}
