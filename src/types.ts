@@ -127,6 +127,9 @@ export interface Gladiator {
   lastBonusCutDay: number | null;
   lastPrideBoastDay: number | null;
   lastEncouragementDay: number | null;
+  lastLeaveDay: number | null;
+  lastBathsDay: number | null;
+  lastRecognitionDay: number | null;
   /**
    * Fixed random offset assigned at generation, used to fuzz the displayed Potential
    * Ability star rating the same way a trainer's displayed rating is fuzzed. Optional
@@ -314,6 +317,11 @@ export interface PendingDeathMatchChallenge {
 
 export interface DeathMatchOutcome {
   declined: boolean;
+  /** Only meaningful when declined is true: who backed down -- the rival declining
+   * the player's own issued challenge, or the player declining an incoming one. The
+   * two read very differently ("they backed down" vs "you backed down") and only the
+   * latter now costs reputation. */
+  declinedBy?: "player" | "rival";
   rivalLudusName: string;
   combat?: CombatResult;
   reputationTransferred?: number;

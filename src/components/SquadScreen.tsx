@@ -15,6 +15,11 @@ import {
   moraleEventCostFor,
   canBoastPride,
   canGiveEncouragement,
+  canGiveLeave,
+  canVisitBaths,
+  bathsCostFor,
+  canGivePublicRecognition,
+  recognitionCostFor,
 } from "../engine/moodActions";
 import { doctorVisitCost } from "../engine/training";
 import { instantSalePrice } from "../engine/sale";
@@ -51,7 +56,19 @@ const CONDITION_TOOLTIPS: Record<Gladiator["condition"], string> = {
 };
 
 export function SquadScreen() {
-  const { state, sellGladiator, triggerMoraleEvent, performRitual, giveBonusCut, boastPride, giveEncouragement, payForDoctorVisit } = useGame();
+  const {
+    state,
+    sellGladiator,
+    triggerMoraleEvent,
+    performRitual,
+    giveBonusCut,
+    boastPride,
+    giveEncouragement,
+    giveLeave,
+    visitBaths,
+    givePublicRecognition,
+    payForDoctorVisit,
+  } = useGame();
   const [selectedId, setSelectedId] = useState<string | null>(
     state.gladiators.find((g) => g.status === "active")?.id ?? null
   );
@@ -70,6 +87,8 @@ export function SquadScreen() {
   const selected = visibleGladiators.find((g) => g.id === selectedId) ?? activeGladiators[0] ?? null;
   const potential = selected ? potentialStarDisplay(selected, state.reputation) : null;
   const feastCost = moraleEventCostFor(state);
+  const bathsCost = bathsCostFor(state);
+  const recognitionCost = recognitionCostFor(state);
 
   return (
     <div className="screen squad-screen">
@@ -86,26 +105,31 @@ export function SquadScreen() {
                 selected={selected?.id === g.id}
                 onClick={() => setSelectedId(g.id)}
               >
-                <GladiatorPortrait name={g.name} origin={g.origin} condition={g.condition} size={36} />
-                <div className="squad-list-item-text">
-                  <div className="squad-list-item-name">{g.name}</div>
-                  <div className="squad-list-item-sub">
-                    {isGone ? (
-                      <span className="squad-list-condition">{g.status === "dead" ? "Dead" : "Escaped"}</span>
-                    ) : (
-                      <>
-                        <StarRating value={currentAbilityStars(currentAbilityOf(g))} size="sm" />
-                        <span className="squad-list-condition">
-                          {CONDITION_LABELS[g.condition]}
-                          {g.injuryDaysRemaining > 0 ? ` (${g.injuryDaysRemaining}d)` : ""}
-                        </span>
-                      </>
-                    )}
-                  </div>
+                <div className="squad-list-item-portrait">
+                  <GladiatorPortrait name={g.name} origin={g.origin} condition={g.condition} size={56} variant="headshot" />
+                </div>
+                <div className="squad-list-item-name">{g.name}</div>
+                <div className="squad-list-item-stars">
+                  {!isGone && <StarRating value={currentAbilityStars(currentAbilityOf(g))} size="sm" />}
+                </div>
+                <div className="squad-list-item-mood-row">
                   {!isGone && (
-                    <div className={`mood-bar ${moodColor(g.mood)}`}>
-                      <div className="mood-bar-fill" style={{ width: `${g.mood}%` }} />
-                    </div>
+                    <>
+                      <span className="squad-mood-label">Mood</span>
+                      <div className={`mood-bar ${moodColor(g.mood)}`} title={`Mood: ${g.mood}/100`}>
+                        <div className="mood-bar-fill" style={{ width: `${g.mood}%` }} />
+                      </div>
+                    </>
+                  )}
+                </div>
+                <div className="squad-list-item-condition">
+                  {isGone ? (
+                    <span className="squad-list-condition">{g.status === "dead" ? "Dead" : "Escaped"}</span>
+                  ) : (
+                    <span className="squad-list-condition">
+                      {CONDITION_LABELS[g.condition]}
+                      {g.injuryDaysRemaining > 0 ? ` (${g.injuryDaysRemaining}d)` : ""}
+                    </span>
                   )}
                 </div>
               </Card>
@@ -116,7 +140,7 @@ export function SquadScreen() {
         {selected && (
           <Card className="gladiator-detail">
             <div className="gladiator-detail-header">
-              <GladiatorPortrait name={selected.name} origin={selected.origin} condition={selected.condition} size={64} />
+              <GladiatorPortrait name={selected.name} origin={selected.origin} condition={selected.condition} size={112} variant="full" />
               <div>
                 <h3>{selected.name}</h3>
                 <span>{selected.origin}, age {selected.age}</span>
@@ -259,6 +283,30 @@ export function SquadScreen() {
                       title="Free, always available, a small and short boost. The one mood tool that never costs gold, for when nothing else is affordable."
                     >
                       Word of Encouragement
+                    </button>
+                    <button
+                      className="btn small"
+                      disabled={!canGiveLeave(selected, state.currentDay)}
+                      onClick={() => giveLeave(selected.id)}
+                      title="Free. Puts him on Rest training focus for a couple of days on top of the mood boost -- a real rest, not just a number."
+                    >
+                      Grant a Day of Leave
+                    </button>
+                    <button
+                      className="btn small"
+                      disabled={state.gold < bathsCost || !canVisitBaths(selected, state.currentDay)}
+                      onClick={() => visitBaths(selected.id)}
+                      title={`Costs ${bathsCost}g. Effectiveness scales with the Quarters building's level.`}
+                    >
+                      Evening at the Baths ({bathsCost}g)
+                    </button>
+                    <button
+                      className="btn small"
+                      disabled={state.gold < recognitionCost || !canGivePublicRecognition(selected, state.currentDay)}
+                      onClick={() => givePublicRecognition(selected.id)}
+                      title={`Costs ${recognitionCost}g. The boost scales with his showmanship -- crowd favorites benefit more.`}
+                    >
+                      Public Recognition ({recognitionCost}g)
                     </button>
                     <button
                       className="btn small"

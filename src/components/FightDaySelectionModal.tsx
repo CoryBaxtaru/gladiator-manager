@@ -7,6 +7,7 @@ import { moodLabel } from "../engine/mood";
 import { GladiatorHoverCard, hoverDataFromGladiator } from "./GladiatorHoverCard";
 import { WinChanceBadge } from "./WinChanceBadge";
 import { StarRating } from "./StarRating";
+import { GladiatorPortrait } from "./GladiatorPortrait";
 
 const TIER_LABELS: Record<string, string> = {
   local: "Local Arena",
@@ -59,6 +60,7 @@ export function FightDaySelectionModal() {
           <>
             <div className="fighter-select-header">
               <span className="fsh-checkbox" />
+              <span className="fsh-portrait" />
               <span className="fsh-name">Name</span>
               <span className="fsh-ability">Ability</span>
               <span className="fsh-mood">Mood</span>
@@ -73,6 +75,7 @@ export function FightDaySelectionModal() {
                     checked={selected.has(g.id)}
                     onChange={() => toggle(g.id)}
                   />
+                  <GladiatorPortrait name={g.name} origin={g.origin} condition={g.condition} size={32} variant="headshot" />
                   <span className="fighter-select-name">{g.name}</span>
                   <span className="fighter-select-sub">
                     <StarRating value={currentAbilityStars(currentAbilityOf(g))} size="sm" />

@@ -195,6 +195,9 @@ export function generateGladiator(currentDay: number, options: GenerateOptions =
     lastBonusCutDay: null,
     lastPrideBoastDay: null,
     lastEncouragementDay: null,
+    lastLeaveDay: null,
+    lastBathsDay: null,
+    lastRecognitionDay: null,
     potentialNoiseSeed: randFloat(-STAFF.ratingNoiseMax, STAFF.ratingNoiseMax),
     sparringPartnerId: null,
   };

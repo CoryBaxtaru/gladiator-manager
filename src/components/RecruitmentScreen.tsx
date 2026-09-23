@@ -23,7 +23,7 @@ export function RecruitmentScreen() {
 
       {state.recruiterTrip && (
         <div className="banner">
-          {state.recruiterTrip.recruiterName} ({RECRUITER_TIERS[state.recruiterTrip.tier].label}) is scouting the{" "}
+          {state.recruiterTrip.recruiterName} ({RECRUITER_TIERS[state.recruiterTrip.tier].label}) is working the{" "}
           {RECRUIT_CHANNELS[state.recruiterTrip.channel].label}, back on day {state.recruiterTrip.returnsOnDay}.
         </div>
       )}
@@ -31,12 +31,13 @@ export function RecruitmentScreen() {
       {!state.recruiterTrip && (
         <>
           <p className="hint">
-            Send a scout on an expedition. There's always one available to send -- pick a channel for the profile of
-            fighter you want, and a tier for how good one turns up. The full cost is paid now; when the scout
-            returns, it's a straight keep-or-release choice on whoever he brings back, no more gold changes hands.
+            Send a procurator on an expedition. There's always one available to send -- pick a channel for the
+            profile of fighter you want, and a tier for how good one turns up. The full cost is paid now; when the
+            procurator returns, it's a straight keep-or-release choice on whoever he brings back, no more gold
+            changes hands.
           </p>
 
-          <h3>Scout Tier</h3>
+          <h3>Procurator Tier</h3>
           <div className="recruiter-tier-picker">
             {TIER_ORDER.map((tier) => {
               const cfg = RECRUITER_TIERS[tier];
@@ -90,7 +91,7 @@ export function RecruitmentScreen() {
               return (
                 <Card key={c.id}>
                   <div className="recruit-card-header">
-                    <GladiatorPortrait name={c.gladiator.name} origin={c.gladiator.origin} condition="healthy" size={48} />
+                    <GladiatorPortrait name={c.gladiator.name} origin={c.gladiator.origin} condition="healthy" size={72} variant="full" />
                     <div>
                       <h3>{c.gladiator.name}</h3>
                       <span className="recruit-origin">{c.gladiator.origin}, age {c.gladiator.age}</span>
@@ -120,7 +121,7 @@ export function RecruitmentScreen() {
                   </div>
                   <div className="card-row">
                     <span>Potential</span>
-                    <Tooltip text="A scout's best guess. Not fully reliable at low reputation.">
+                    <Tooltip text="A procurator's best guess. Not fully reliable at low reputation.">
                       <span><StarRating value={potential.stars} size="sm" /></span>
                     </Tooltip>
                   </div>

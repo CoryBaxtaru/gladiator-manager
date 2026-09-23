@@ -10,7 +10,18 @@ export function DeathMatchResultModal() {
       <div className="modal summary-modal">
         <h2>Death Match</h2>
         {deathMatchOutcome.declined ? (
-          <p className="empty-note">{deathMatchOutcome.rivalLudusName} declined the challenge.</p>
+          deathMatchOutcome.declinedBy === "player" ? (
+            <>
+              <p className="empty-note">Your ludus backed down from {deathMatchOutcome.rivalLudusName}'s challenge.</p>
+              {deathMatchOutcome.reputationTransferred && (
+                <p className="hint">
+                  Your ludus lost {Math.abs(deathMatchOutcome.reputationTransferred)} reputation for backing down.
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="empty-note">{deathMatchOutcome.rivalLudusName} declined the challenge.</p>
+          )
         ) : (
           deathMatchOutcome.combat && (
             <>

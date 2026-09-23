@@ -3,7 +3,7 @@ import { BUILDING_DEFAULTS, ECONOMY, FIGHT_DAY } from "../config";
 import { generateGladiator } from "../engine/generator";
 import { generateStaffPool } from "../engine/staff";
 import { generateAllRivalLudi } from "../engine/rivalLudi";
-import { generateLudusName } from "../engine/names";
+import { generateLudusName, generateRomanCitizenName } from "../engine/names";
 
 function makeStartingBuildings(): Record<BuildingId, Building> {
   const buildings = {} as Record<BuildingId, Building>;
@@ -56,7 +56,9 @@ export function createInitialState(ludusName?: string): LudusState {
     promotionCooldownUntilDay: null,
     lastSummary: null,
     history: [],
-    founderName: "Retired Legionary",
+    // The trade was legally infamis, so many lanistae were freedmen: Latin praenomen,
+    // former owner's nomen, own Greek slave name as cognomen (see generateRomanCitizenName).
+    founderName: generateRomanCitizenName({ freedman: true }),
     ludusName: ludusName?.trim() || generateLudusName(),
   };
 }

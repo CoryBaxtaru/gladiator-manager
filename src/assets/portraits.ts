@@ -1,38 +1,42 @@
-// Placeholder art lookup layer. Nothing here draws real art yet: it hands back a
-// color and initial keyed by origin and condition so the UI has something to show.
-// When real sprites exist, swap the implementation of getPortrait to return image
-// paths (ideally keyed by gladiator id, falling back to this archetype lookup for
-// anyone without bespoke art) without touching any calling component.
+// Real sprite lookup, keyed by origin and condition (Phase 9 Part C). The 32 source
+// images live in public/sprites -- Vite serves anything under public/ unchanged at
+// the site root in both dev and a production build, the same convention already used
+// for favicon.svg/icons.svg (see DEPLOY.md), so a root-relative path here works in
+// both without any bundler config.
 import type { GladiatorCondition, Origin } from "../types";
 
-const ORIGIN_COLORS: Record<Origin, string> = {
-  Thracian: "#7a3b2e",
-  Gaul: "#3b5c3f",
-  Nubian: "#4a3b6b",
-  Roman: "#8a2f2f",
-  Numidian: "#6b5122",
-  Germanic: "#2f4f5c",
-  Syrian: "#7a5a2b",
-  Greek: "#2e5f6b",
+const ORIGIN_FILE: Record<Origin, string> = {
+  Thracian: "thracian",
+  Gaul: "gaul",
+  Nubian: "nubian",
+  Roman: "roman",
+  Numidian: "numidian",
+  Germanic: "germanic",
+  Syrian: "syrian",
+  Greek: "greek",
 };
 
-const CONDITION_BORDER: Record<GladiatorCondition, string> = {
-  healthy: "#5a9e5a",
-  bruised: "#c9a227",
-  injured: "#c0392b",
-  gravely_injured: "#7a1f1f",
+const CONDITION_FILE: Record<GladiatorCondition, string> = {
+  healthy: "healthy",
+  bruised: "lightly_wounded",
+  injured: "badly_wounded",
+  gravely_injured: "near_death",
 };
 
-export interface PortraitDescriptor {
-  initial: string;
-  baseColor: string;
-  borderColor: string;
+/**
+ * Gear is fixed per origin, not per individual, so two gladiators sharing an origin
+ * and condition share a portrait -- intended scope, not a bug (see Phase 9 Part C).
+ */
+export function getPortraitSrc(origin: Origin, condition: GladiatorCondition): string {
+  return `/sprites/${ORIGIN_FILE[origin]}_${CONDITION_FILE[condition]}.png`;
 }
 
-export function getPortrait(name: string, origin: Origin, condition: GladiatorCondition): PortraitDescriptor {
-  return {
-    initial: name.charAt(0).toUpperCase(),
-    baseColor: ORIGIN_COLORS[origin],
-    borderColor: CONDITION_BORDER[condition],
-  };
+/**
+ * Standalone head-and-shoulders portraits (a later addition), used for the Roster
+ * list's compact "headshot" variant instead of a CSS crop of the full-body image --
+ * these are purpose-composed close-ups, not derived from the same source art, so
+ * they live in their own public/sprites/heads folder with a "head_" filename prefix.
+ */
+export function getHeadshotSrc(origin: Origin, condition: GladiatorCondition): string {
+  return `/sprites/heads/head_${ORIGIN_FILE[origin]}_${CONDITION_FILE[condition]}.png`;
 }

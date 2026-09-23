@@ -19,6 +19,9 @@ import {
   giveBonusCut as engineGiveBonusCut,
   boastPride as engineBoastPride,
   giveEncouragement as engineGiveEncouragement,
+  giveLeave as engineGiveLeave,
+  visitBaths as engineVisitBaths,
+  givePublicRecognition as engineGivePublicRecognition,
 } from "../engine/moodActions";
 import { payForDoctorVisit as enginePayForDoctorVisit } from "../engine/training";
 import { setSparringPair as engineSetSparringPair, clearSparring as engineClearSparring } from "../engine/sparring";
@@ -70,6 +73,9 @@ interface GameContextValue {
   giveBonusCut: (gladiatorId: string) => void;
   boastPride: (gladiatorId: string) => void;
   giveEncouragement: (gladiatorId: string) => void;
+  giveLeave: (gladiatorId: string) => void;
+  visitBaths: (gladiatorId: string) => void;
+  givePublicRecognition: (gladiatorId: string) => void;
   payForDoctorVisit: (gladiatorId: string) => void;
   eligibleChallengeTargets: () => RivalLudus[];
   issueChallenge: (rivalLudusId: string, gladiatorId: string) => void;
@@ -219,6 +225,18 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setState((prev) => engineGiveEncouragement(prev, gladiatorId));
   }, []);
 
+  const giveLeave = useCallback((gladiatorId: string) => {
+    setState((prev) => engineGiveLeave(prev, gladiatorId));
+  }, []);
+
+  const visitBaths = useCallback((gladiatorId: string) => {
+    setState((prev) => engineVisitBaths(prev, gladiatorId));
+  }, []);
+
+  const givePublicRecognition = useCallback((gladiatorId: string) => {
+    setState((prev) => engineGivePublicRecognition(prev, gladiatorId));
+  }, []);
+
   const payForDoctorVisit = useCallback((gladiatorId: string) => {
     setState((prev) => enginePayForDoctorVisit(prev, gladiatorId));
   }, []);
@@ -319,6 +337,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       giveBonusCut,
       boastPride,
       giveEncouragement,
+      giveLeave,
+      visitBaths,
+      givePublicRecognition,
       payForDoctorVisit,
       eligibleChallengeTargets,
       issueChallenge,
@@ -360,6 +381,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       giveBonusCut,
       boastPride,
       giveEncouragement,
+      giveLeave,
+      visitBaths,
+      givePublicRecognition,
       payForDoctorVisit,
       eligibleChallengeTargets,
       issueChallenge,

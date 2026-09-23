@@ -1,5 +1,5 @@
 import type { CombatLogRound, CombatResult, FightMatchup, Gladiator, GladiatorStats, LudusState, StatKey } from "../types";
-import { COMBAT, MOOD, STAFF, CLASH_LABELS, FIGHT_ECONOMY, PERSONALITY_TRAIT_UNLOCK, ALL_PERSONALITY_TRAITS } from "../config";
+import { COMBAT, MOOD, STAFF, CLASH_LABELS, FIGHT_ECONOMY, PERSONALITY_TRAIT_UNLOCK, ALL_PERSONALITY_TRAITS, BRONZE_CROWN } from "../config";
 import { randFloat, pickN } from "./rng";
 import { addMoodModifier } from "./mood";
 import { bestDoctor } from "./staff";
@@ -265,6 +265,20 @@ export function applyCombatResultToGladiator(gladiator: Gladiator, result: Comba
   }
 
   return updated;
+}
+
+/**
+ * Phase 9 Part B: a clean sweep (every clash won) or a win pulled off as a Heavy
+ * Underdog (see WinChanceBadge's classify(), same 0.25 cutoff as BRONZE_CROWN's
+ * underdogWinRateMax) is a "particularly notable win" -- earns an automatic bronze
+ * crown (mood + reputation) on top of the normal win rewards. preFightWinRate is the
+ * estimateWinChance() reading taken for that matchup before it was actually resolved.
+ */
+export function checkBronzeCrown(result: CombatResult, preFightWinRate: number | null): boolean {
+  if (result.outcome !== "win") return false;
+  const cleanSweep = result.margin === CLASH_SEQUENCE.length;
+  const underdogUpset = preFightWinRate !== null && preFightWinRate < BRONZE_CROWN.underdogWinRateMax;
+  return cleanSweep || underdogUpset;
 }
 
 export interface WinChanceEstimate {

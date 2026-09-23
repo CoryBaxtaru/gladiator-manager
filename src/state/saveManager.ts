@@ -1,6 +1,7 @@
 import type { LudusState } from "../types";
 import { SAVE_SLOT_COUNT } from "../config";
 import { tierForReputation } from "../engine/rivalLudi";
+import { generateRomanCitizenName } from "../engine/names";
 
 export const AUTOSAVE_KEY = "gladiator-manager-autosave-v2";
 
@@ -38,11 +39,18 @@ function normalizeState(state: LudusState): LudusState {
     // Saves from before Phase 8 Part F never had a chosen ludus name -- fall back to
     // the same "{founder}'s Ludus" pattern they always displayed.
     ludusName: state.ludusName ?? `${state.founderName}'s Ludus`,
+    // Every save ever created before Phase 9 Part A had this exact hardcoded
+    // placeholder (founderName was never actually generated) -- give it a real
+    // freedman-lanista name now that the title is surfaced prominently in the UI.
+    founderName: state.founderName === "Retired Legionary" ? generateRomanCitizenName({ freedman: true }) : state.founderName,
     gladiators: state.gladiators.map((g) => ({
       ...g,
       sparringPartnerId: g.sparringPartnerId ?? null,
       lastPrideBoastDay: g.lastPrideBoastDay ?? null,
       lastEncouragementDay: g.lastEncouragementDay ?? null,
+      lastLeaveDay: g.lastLeaveDay ?? null,
+      lastBathsDay: g.lastBathsDay ?? null,
+      lastRecognitionDay: g.lastRecognitionDay ?? null,
       // Saves from before Phase 8 Part E had no body-type archetype; a fixed
       // deterministic fallback (rather than a fresh random roll on every load) so it
       // doesn't reshuffle a fighter's build/CA each time the save is reopened.

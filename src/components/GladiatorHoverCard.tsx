@@ -68,20 +68,24 @@ interface Props {
   data: HoverCardData;
   reputation: number;
   children: ReactNode;
+  /** Extra class(es) on the trigger wrapper -- the wrapper is inline-flex and sizes to
+   * its trigger content by default, so a trigger that's meant to fill/center within a
+   * wider parent (see the Promotion screen's Champion card) needs this to override. */
+  triggerClassName?: string;
 }
 
 /** Hover-triggered popup with the same summary info as the Squad detail view: portrait,
  * CA/PA stars, attributes, traits, and a bio snippet. Works for both the player's own
  * gladiators and rival gladiators once their identity is known. */
-export function GladiatorHoverCard({ data, reputation, children }: Props) {
+export function GladiatorHoverCard({ data, reputation, children, triggerClassName }: Props) {
   const potentialStars = fuzzyPotentialStars(data.potentialAbility, data.potentialNoiseSeed, reputation, data.potentialRevealed);
 
   return (
-    <span className="hover-card-wrap">
+    <span className={`hover-card-wrap ${triggerClassName ?? ""}`}>
       {children}
       <div className="hover-card-popup card">
         <div className="hover-card-header">
-          <GladiatorPortrait name={data.name} origin={data.origin} condition={data.condition ?? "healthy"} size={44} />
+          <GladiatorPortrait name={data.name} origin={data.origin} condition={data.condition ?? "healthy"} size={84} variant="full" />
           <div>
             <div className="hover-card-name">{data.name}</div>
             <div className="hover-card-origin">{data.origin}</div>

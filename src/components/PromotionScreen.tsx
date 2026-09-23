@@ -17,6 +17,7 @@ import { Card } from "./Card";
 import { GladiatorHoverCard, hoverDataFromGladiator, hoverDataFromRival } from "./GladiatorHoverCard";
 import { WinChanceBadge } from "./WinChanceBadge";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { GladiatorPortrait } from "./GladiatorPortrait";
 
 /**
  * Tier-up is gated behind an optional, player-timed Promotion Fight against the best
@@ -81,8 +82,13 @@ export function PromotionScreen() {
         <>
           <Card accent="gold">
             <h3>The Champion</h3>
-            <GladiatorHoverCard data={hoverDataFromRival(champion.gladiator)} reputation={state.reputation}>
+            <GladiatorHoverCard
+              data={hoverDataFromRival(champion.gladiator)}
+              reputation={state.reputation}
+              triggerClassName="champion-trigger"
+            >
               <div className="matchup-preview-side">
+                <GladiatorPortrait name={champion.gladiator.name} origin={champion.gladiator.origin} condition="healthy" size={100} variant="full" />
                 <div className="matchup-preview-name">{champion.gladiator.name}</div>
                 <div className="hint">Best of the {champion.rivalLudus.name}</div>
               </div>
@@ -103,6 +109,7 @@ export function PromotionScreen() {
           ) : (
             <>
               <div className="fighter-select-header">
+                <span className="fsh-portrait" />
                 <span className="fsh-name">Name</span>
                 <span className="fsh-ability">Ability</span>
                 <span className="fsh-mood">Mood</span>
@@ -116,6 +123,7 @@ export function PromotionScreen() {
                 return (
                   <GladiatorHoverCard data={hoverDataFromGladiator(g)} reputation={state.reputation} key={g.id}>
                     <div className="fighter-select-row">
+                      <GladiatorPortrait name={g.name} origin={g.origin} condition={g.condition} size={32} variant="headshot" />
                       <span className="fighter-select-name">{g.name}</span>
                       <span className="fighter-select-sub">
                         <StarRating value={currentAbilityStars(currentAbilityOf(g))} size="sm" />

@@ -3,7 +3,8 @@ import { tickBuildQueue, computeImbalance } from "./buildings";
 import { recomputeMood, resolveBreak, addMoodModifier } from "./mood";
 import { applyDailyTraining, maybeRevealPotential, tickInjuryRecovery, tickAgeAndDecline } from "./training";
 import { applySparringTraining } from "./sparring";
-import { resolveFight, applyCombatResultToGladiator } from "./combat";
+import { resolveFight, applyCombatResultToGladiator, estimateWinChance, checkBronzeCrown } from "./combat";
+import { BRONZE_CROWN } from "../config";
 import { weeklyGladiatorUpkeep, weeklyBuildingUpkeep, weeklyLudusOverhead } from "./economy";
 import { tickRecruiterTrip } from "./scouting";
 import { maybeRefreshStaffPool, weeklyStaffSalaries, bestDoctor } from "./staff";
@@ -41,13 +42,21 @@ export function advanceDay(
     if (gladiator.status !== "active") continue;
 
     const isLastActiveGladiator = gladiators.filter((g) => g.status === "active").length === 1;
-    const result = resolveFight(matchup, gladiator, working, nextDay);
+    const preFightWinRate = estimateWinChance(gladiator, matchup, working, nextDay).winRate;
+    let result = resolveFight(matchup, gladiator, working, nextDay);
+    let updatedGladiator = applyCombatResultToGladiator(gladiator, result, nextDay, isLastActiveGladiator);
+    if (checkBronzeCrown(result, preFightWinRate)) {
+      updatedGladiator = addMoodModifier(updatedGladiator, "Awarded a bronze crown", BRONZE_CROWN.moodBoost, nextDay, BRONZE_CROWN.moodDurationDays);
+      result = { ...result, reputationReward: result.reputationReward + BRONZE_CROWN.reputationBonus };
+      entries.push({ category: "fight", text: `${gladiator.name} was awarded a bronze crown for a performance the crowd won't forget.` });
+    }
     combatResults.push(result);
     goldFromFights += result.goldReward;
     reputationFromFights += result.reputationReward;
-    gladiators[idx] = applyCombatResultToGladiator(gladiator, result, nextDay, isLastActiveGladiator);
+    gladiators[idx] = updatedGladiator;
     // Fight results are shown as their own result cards (see FightResultCard /
-    // SummaryModal), not duplicated here as a text entry.
+    // SummaryModal), not duplicated here as a text entry (the bronze crown note above
+    // is the one deliberate exception, since it's a rare, separate occasion).
   }
   // A purse-cut sponsorship (see engine/loan.ts) skims its redirect fraction off
   // fight winnings before they ever reach the player's pocket.
@@ -191,7 +200,7 @@ export function advanceDay(
   if (tripResult.returned) {
     entries.push({
       category: "recruitment",
-      text: `Your recruiter returned with ${working.recruitPool.length} candidate(s) to review.`,
+      text: `Your procurator returned with ${working.recruitPool.length} candidate(s) to review.`,
     });
   }
 

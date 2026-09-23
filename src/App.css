@@ -435,37 +435,9 @@ body {
   gap: 8px;
 }
 
-.squad-list-item {
-  text-align: left;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 10px 12px;
-  cursor: pointer;
-  color: var(--text);
-}
-
-.squad-list-item.selected {
-  border-color: var(--accent-bright);
-  background: #3a2417;
-}
-
 .squad-list-item-gone {
   opacity: 0.5;
   filter: grayscale(1);
-}
-
-.squad-list-item-name {
-  font-weight: bold;
-}
-
-.squad-list-item-sub {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.75rem;
-  color: var(--text-dim);
-  margin: 4px 0 6px;
 }
 
 .squad-list-condition {
@@ -838,28 +810,105 @@ body {
   color: var(--color-text-muted);
 }
 
-/* Portraits */
+/* Portraits (Phase 9 Part C: real sprites, keyed by origin + condition) */
 .gladiator-portrait {
-  border-radius: 50%;
-  border: 2px solid;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  color: #fff;
+  border: 2px solid var(--border);
+  overflow: hidden;
   flex-shrink: 0;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  position: relative;
+  background: #1a140f;
+}
+
+.gladiator-portrait-full {
+  border-radius: 8px;
+}
+
+.gladiator-portrait-headshot {
+  border-radius: 50%;
+}
+
+.gladiator-portrait-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Standalone head-and-shoulders portraits (public/sprites/heads): purpose-composed
+   close-ups, square and already well-framed, so cover just needs to guarantee a full
+   fill with no letterboxing rather than doing any real cropping work. */
+.gladiator-portrait-headshot .gladiator-portrait-img {
+  object-fit: cover;
 }
 
 .squad-list-item {
-  display: flex;
-  gap: 10px;
+  /* Portrait top-left, spanning both rows of the header block; name beside it;
+     current-ability stars top-right; a labeled mood bar underneath spanning the
+     full card; condition tucked bottom-right. Explicit grid placement (not named
+     areas) since the portrait/mood-row shapes aren't expressible as valid areas. */
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  column-gap: 10px;
+  row-gap: 6px;
   align-items: center;
+  transition: transform 0.12s;
 }
 
-.squad-list-item-text {
-  flex: 1;
+.squad-list-item.card-clickable:hover {
+  transform: translateX(2px);
+}
+
+.squad-list-item.card-selected {
+  box-shadow: 0 0 0 1px var(--color-border-accent), var(--shadow-card);
+}
+
+.squad-list-item-portrait {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.squad-list-item-name {
+  grid-column: 2;
+  grid-row: 1;
+  color: var(--gold);
+  font-size: var(--text-base);
+  font-weight: bold;
+}
+
+.squad-list-item-stars {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+}
+
+.squad-list-item-mood-row {
+  grid-column: 1 / 3;
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   min-width: 0;
+}
+
+.squad-mood-label {
+  flex-shrink: 0;
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-dim);
+}
+
+.squad-list-item-mood-row .mood-bar {
+  flex: 1;
+}
+
+.squad-list-item-condition {
+  grid-column: 3;
+  grid-row: 2;
+  justify-self: end;
+  font-size: var(--text-xs);
+  color: var(--text-dim);
+  white-space: nowrap;
 }
 
 .gladiator-detail-header {
@@ -1207,7 +1256,7 @@ body {
 
 /* Fight day modal */
 .fight-day-modal {
-  max-width: 480px;
+  max-width: 522px;
 }
 
 .fighter-select-list {
@@ -1281,6 +1330,10 @@ body {
   flex: 0 0 13px;
 }
 
+.fighter-select-header .fsh-portrait {
+  flex: 0 0 32px;
+}
+
 .fighter-select-header .fsh-name {
   flex: 0 0 98px;
 }
@@ -1315,6 +1368,21 @@ body {
 .matchup-preview-side {
   text-align: center;
   padding: var(--space-2);
+}
+
+.matchup-preview-side .gladiator-portrait {
+  margin: 0 auto var(--space-2);
+}
+
+/* The Champion card (Promotion screen): the hover-card trigger is inline-flex and
+   shrink-wraps to its content by default, which left the portrait+name hugging the
+   left edge of the wider gold card. Stretching it to a centered flex row fixes that
+   without touching hover-card-wrap's default (shrink-wrap) behavior everywhere else
+   it's used, like the compact fighter-select rows. */
+.champion-trigger {
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
 
 .matchup-preview-name {

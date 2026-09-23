@@ -109,3 +109,78 @@ export function giveEncouragement(state: LudusState, gladiatorId: string): Ludus
     return { ...boosted, lastEncouragementDay: state.currentDay };
   });
 }
+
+export function canGiveLeave(gladiator: Gladiator, currentDay: number): boolean {
+  if (gladiator.lastLeaveDay === null) return true;
+  return currentDay - gladiator.lastLeaveDay >= MOOD_ACTIONS.leaveCooldownDays;
+}
+
+/**
+ * Free, no gold cost, never tier-scaled -- a real rest period, not a token nudge: on
+ * top of its own mood boost, it puts the gladiator on Rest training focus (the
+ * existing manual "rest" option) for a couple of days, so a player actually gives up
+ * training time to use it rather than getting a free number with no cost at all.
+ */
+export function giveLeave(state: LudusState, gladiatorId: string): LudusState {
+  const gladiator = state.gladiators.find((g) => g.id === gladiatorId);
+  if (!gladiator || !canGiveLeave(gladiator, state.currentDay)) return state;
+  return replaceGladiator(state, gladiatorId, (g) => {
+    const boosted = addMoodModifier(g, "A day of leave", MOOD_ACTIONS.leaveBoost, state.currentDay, MOOD_ACTIONS.leaveDurationDays);
+    return { ...boosted, trainingFocus: "rest", lastLeaveDay: state.currentDay };
+  });
+}
+
+/** Local-tier baseline scaled by the ludus's current tier, same convention as the Feast cost. */
+export function bathsCostFor(state: LudusState): number {
+  return Math.round(MOOD_ACTIONS.bathsCostBase * tierCostMultiplier(state));
+}
+
+export function canVisitBaths(gladiator: Gladiator, currentDay: number): boolean {
+  if (gladiator.lastBathsDay === null) return true;
+  return currentDay - gladiator.lastBathsDay >= MOOD_ACTIONS.bathsCooldownDays;
+}
+
+/** Gold cost; effectiveness scales with the Quarters building level, the one mood
+ * action tied to an existing building rather than a flat number. */
+export function visitBaths(state: LudusState, gladiatorId: string): LudusState {
+  const gladiator = state.gladiators.find((g) => g.id === gladiatorId);
+  const cost = bathsCostFor(state);
+  if (!gladiator || state.gold < cost) return state;
+  if (!canVisitBaths(gladiator, state.currentDay)) return state;
+
+  const boostMagnitude = MOOD_ACTIONS.bathsBoostBase + state.buildings.quarters.level * MOOD_ACTIONS.bathsBoostPerQuartersLevel;
+  const withGold = { ...state, gold: state.gold - cost };
+  return replaceGladiator(withGold, gladiatorId, (g) => {
+    const boosted = addMoodModifier(g, "An evening at the baths", boostMagnitude, state.currentDay, MOOD_ACTIONS.bathsDurationDays);
+    return { ...boosted, lastBathsDay: state.currentDay };
+  });
+}
+
+/** Local-tier baseline scaled by the ludus's current tier, same convention as the Feast cost. */
+export function recognitionCostFor(state: LudusState): number {
+  return Math.round(MOOD_ACTIONS.recognitionCostBase * tierCostMultiplier(state));
+}
+
+export function canGivePublicRecognition(gladiator: Gladiator, currentDay: number): boolean {
+  if (gladiator.lastRecognitionDay === null) return true;
+  return currentDay - gladiator.lastRecognitionDay >= MOOD_ACTIONS.recognitionCooldownDays;
+}
+
+/** The gold cost is flat like the others, but the boost itself scales with the
+ * gladiator's showmanship, so a crowd favorite gets more out of public praise than a
+ * quiet fighter does. */
+export function givePublicRecognition(state: LudusState, gladiatorId: string): LudusState {
+  const gladiator = state.gladiators.find((g) => g.id === gladiatorId);
+  const cost = recognitionCostFor(state);
+  if (!gladiator || state.gold < cost) return state;
+  if (!canGivePublicRecognition(gladiator, state.currentDay)) return state;
+
+  const boostMagnitude = Math.round(
+    MOOD_ACTIONS.recognitionBoostBase + gladiator.stats.showmanship * MOOD_ACTIONS.recognitionBoostPerShowmanship
+  );
+  const withGold = { ...state, gold: state.gold - cost };
+  return replaceGladiator(withGold, gladiatorId, (g) => {
+    const boosted = addMoodModifier(g, "Publicly praised before the crowd", boostMagnitude, state.currentDay, MOOD_ACTIONS.recognitionDurationDays);
+    return { ...boosted, lastRecognitionDay: state.currentDay };
+  });
+}

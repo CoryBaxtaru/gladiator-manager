@@ -44,6 +44,43 @@ export const MOOD_ACTIONS = {
   encouragementBoost: 20,
   encouragementDurationDays: 3,
   encouragementCooldownDays: 4,
+  // Phase 9 Part B additions, calibrated against the Feast numbers above rather than
+  // a separate scale (moraleEventBoost 60 over 5 days = ~9 immediate, ~45 lifetime).
+  // Free, no gold cost, ever tier-scaled: forces a couple of days of Rest training
+  // focus (the existing manual "rest" option, see TRAINING) on top of its own boost,
+  // so the real effect is genuinely losing training days, not just a number appearing.
+  leaveBoost: 30,
+  leaveDurationDays: 3,
+  leaveRestDays: 2,
+  leaveCooldownDays: 6,
+  // Gold cost; effectiveness scales with the Quarters building level, tying an
+  // existing building into this system in a way it currently isn't.
+  bathsCostBase: 70,
+  bathsBoostBase: 25,
+  bathsBoostPerQuartersLevel: 6,
+  bathsDurationDays: 4,
+  bathsCooldownDays: 6,
+  // Flat gold cost like the others, but the boost itself scales with showmanship, so
+  // a crowd favorite gets more out of public praise than a quiet fighter does.
+  recognitionCostBase: 90,
+  recognitionBoostBase: 15,
+  recognitionBoostPerShowmanship: 0.5,
+  recognitionDurationDays: 4,
+  recognitionCooldownDays: 7,
+};
+
+/**
+ * Phase 9 Part B: automatic, not purchasable -- a small celebratory mood +
+ * reputation bump for a fight-day win pulled off as a clean sweep, or as a Heavy
+ * Underdog per WinChanceBadge's classify() bands (underdogWinRateMax kept in sync
+ * with that 0.25 "Heavy Underdog" cutoff by hand). No cooldown: the trigger
+ * condition itself is rare enough not to need spam control.
+ */
+export const BRONZE_CROWN = {
+  underdogWinRateMax: 0.25,
+  moodBoost: 40,
+  moodDurationDays: 5,
+  reputationBonus: 8,
 };
 
 export const BUILDING_MATERIAL_TIME: Record<
@@ -284,7 +321,10 @@ export const DEATH_MATCH = {
   minReputationTransfer: 15,
   goldWagerPurseMultiplier: 4, // a death match wager is a high-stakes multiple of a normal tier purse
   cooldownDays: 20,
-  rivalChallengeDailyChance: 0.015,
+  // Halved from 0.015: backing down from an incoming challenge now has a real cost
+  // (see declineReputationPenalty* below), so the event itself needs to stay rare
+  // enough that the penalty doesn't turn into a frequent, unavoidable rep drain.
+  rivalChallengeDailyChance: 0.008,
   // Decline chance for the challenged side, based on the challenger's best gladiator's
   // CA versus the challenged roster's average CA. Never 0 or 1, so a bold accept or an
   // unexpected decline both stay possible at any skill gap.
@@ -292,6 +332,13 @@ export const DEATH_MATCH = {
   declineRatioWeight: 0.6,
   declineFloor: 0.05,
   declineCeiling: 0.92,
+  // Backing down from an INCOMING challenge (the rival ludus challenged the player,
+  // not the other way around) now costs real reputation -- a smaller, softer cost
+  // than actually losing the death match (reputationTransferPercent/minReputationTransfer
+  // above), but no longer free. Scales off the player's own current reputation, same
+  // convention as the loss-transfer formula.
+  declineReputationPenaltyPercent: 0.05,
+  minDeclineReputationPenalty: 5,
 };
 
 export const ECONOMY = {
@@ -336,7 +383,13 @@ export const LOAN = {
   baseAmount: 150,
   amountPerReputation: 1.5,
   weeklyInterestRate: 0.08,
-  garnishFraction: 0.5,
+  // Halved from 0.5: at 50%, a player who simply fought every fight day as normal
+  // cleared a typical sponsorship in ~4-4.5 weeks, comfortably inside defaultAfterWeeks
+  // below -- so the collateral choice never actually mattered for anyone playing at a
+  // normal pace (confirmed in playtesting). At 25%, repayment takes roughly twice as
+  // long, so a normal-size sponsorship now has a real chance of crossing the default
+  // threshold and the collateral choice made at signup has real stakes again.
+  garnishFraction: 0.25,
   defaultAfterWeeks: 5,
   defaultRepeatEveryWeeks: 5,
   /** Building collateral: dropped by this many levels (floored at 1) each time the
@@ -458,10 +511,13 @@ export const RECRUIT_CHANNELS: Record<
  * into one number, see recruiterSendCost in engine/scouting.ts) so the return trip is
  * a pure keep-or-release choice with no more gold changing hands.
  */
+// Phase 9 Part A: "Procurator" is flavor naming, not a historical claim the way
+// "doctor" is attested for a trainer -- a reasonable general Roman term for someone
+// handling business on another's behalf, standing in for the old generic "recruiter".
 export const RECRUITER_TIERS: Record<RecruiterTier, { label: string; stars: number; priceMultiplier: number; baseStatBonus: number; gemChanceBonus: number }> = {
-  journeyman: { label: "Journeyman Scout", stars: 2, priceMultiplier: 1, baseStatBonus: 0, gemChanceBonus: 0 },
-  seasoned: { label: "Seasoned Scout", stars: 3.5, priceMultiplier: 1.9, baseStatBonus: 6, gemChanceBonus: 0.04 },
-  master: { label: "Master Scout", stars: 5, priceMultiplier: 3.4, baseStatBonus: 14, gemChanceBonus: 0.08 },
+  journeyman: { label: "Journeyman Procurator", stars: 2, priceMultiplier: 1, baseStatBonus: 0, gemChanceBonus: 0 },
+  seasoned: { label: "Seasoned Procurator", stars: 3.5, priceMultiplier: 1.9, baseStatBonus: 6, gemChanceBonus: 0.04 },
+  master: { label: "Master Procurator", stars: 5, priceMultiplier: 3.4, baseStatBonus: 14, gemChanceBonus: 0.08 },
 };
 
 export const SPARRING = {

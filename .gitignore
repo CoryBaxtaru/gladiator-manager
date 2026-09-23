@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Raw sprite source dumps -- duplicated in public/sprites (the copy the app actually
+# serves), keeping both would double the repo size for no functional benefit.
+/sprites
+/head-sprites

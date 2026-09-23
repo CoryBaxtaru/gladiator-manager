@@ -4,7 +4,7 @@ import { generateGladiator, VOLUNTEER_BACKSTORY_TEMPLATES } from "./generator";
 import { tierCostMultiplier } from "./economy";
 import { nextId, pick, randInt, randFloat } from "./rng";
 
-const SCOUT_NAMES = [
+const PROCURATOR_NAMES = [
   "Marcus Trebius", "Appius Naso", "Cnaeus Silo", "Servius Pico", "Lucius Mercator",
   "Gaius Vendex", "Titus Lanio", "Quintus Praeco",
 ];
@@ -88,7 +88,7 @@ export function sendRecruiter(state: LudusState, channel: RecruitChannel, tier: 
     recruiterTrip: {
       id: nextId("trip"),
       tier,
-      recruiterName: pick(SCOUT_NAMES),
+      recruiterName: pick(PROCURATOR_NAMES),
       channel,
       sentOnDay: state.currentDay,
       returnsOnDay: state.currentDay + cfg.tripDurationDays,

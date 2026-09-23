@@ -9,6 +9,7 @@ import { StarRating } from "./StarRating";
 import { Card } from "./Card";
 import { GladiatorHoverCard, hoverDataFromGladiator, hoverDataFromRival } from "./GladiatorHoverCard";
 import { WinChanceBadge } from "./WinChanceBadge";
+import { GladiatorPortrait } from "./GladiatorPortrait";
 
 export function ChallengesScreen() {
   const { state, eligibleChallengeTargets, issueChallenge } = useGame();
@@ -84,6 +85,7 @@ export function ChallengesScreen() {
               Whoever you send to challenge {pickingLudus.name} risks his life. If he loses, he dies.
             </p>
             <div className="fighter-select-header">
+              <span className="fsh-portrait" />
               <span className="fsh-name">Name</span>
               <span className="fsh-ability">Ability</span>
               <span className="fsh-mood">Mood</span>
@@ -93,6 +95,7 @@ export function ChallengesScreen() {
               {eligibleGladiators.map((g) => (
                 <GladiatorHoverCard data={hoverDataFromGladiator(g)} reputation={state.reputation} key={g.id}>
                   <div className="fighter-select-row">
+                    <GladiatorPortrait name={g.name} origin={g.origin} condition={g.condition} size={32} variant="headshot" />
                     <span className="fighter-select-name">{g.name}</span>
                     <span className="fighter-select-sub">
                       <StarRating value={currentAbilityStars(currentAbilityOf(g))} size="sm" />

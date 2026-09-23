@@ -156,7 +156,7 @@ export function issueChallenge(
   const decline = declineChance(currentAbilityOf(gladiator), rivalLudus.roster.map((r) => r.currentAbility));
   if (chance(decline)) {
     const declinedState = setCooldown(state, rivalLudusId);
-    return { state: declinedState, outcome: { declined: true, rivalLudusName: rivalLudus.name } };
+    return { state: declinedState, outcome: { declined: true, declinedBy: "rival", rivalLudusName: rivalLudus.name } };
   }
 
   return fightDeathMatch(state, gladiator, rivalLudus);
@@ -184,7 +184,12 @@ export function maybeRivalInitiatesChallenge(state: LudusState): LudusState {
   };
 }
 
-/** Player responds to an incoming challenge. Declining costs nothing but the cooldown. */
+/**
+ * Player responds to an incoming challenge. Declining now costs real reputation (a
+ * smaller, softer cost than actually losing the death match) rather than being free --
+ * backing down from a fight your own ludus was challenged into should sting a little,
+ * same "real, felt effect" standard as every other consequence in this system.
+ */
 export function respondToChallenge(
   state: LudusState,
   accept: boolean,
@@ -197,8 +202,18 @@ export function respondToChallenge(
   if (!rivalLudus) return { state: cleared, outcome: null };
 
   if (!accept || !gladiatorId) {
-    const declinedState = setCooldown(cleared, rivalLudus.id);
-    return { state: declinedState, outcome: { declined: true, rivalLudusName: rivalLudus.name } };
+    const penalty = Math.max(
+      DEATH_MATCH.minDeclineReputationPenalty,
+      Math.round(cleared.reputation * DEATH_MATCH.declineReputationPenaltyPercent)
+    );
+    const declinedState = setCooldown(
+      { ...cleared, reputation: Math.max(0, cleared.reputation - penalty) },
+      rivalLudus.id
+    );
+    return {
+      state: declinedState,
+      outcome: { declined: true, declinedBy: "player", rivalLudusName: rivalLudus.name, reputationTransferred: -penalty },
+    };
   }
 
   const gladiator = state.gladiators.find((g) => g.id === gladiatorId);

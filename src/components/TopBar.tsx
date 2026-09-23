@@ -21,8 +21,8 @@ export function TopBar() {
   return (
     <header className="topbar">
       <div className="topbar-title">
-        <h1>Ludus Manager</h1>
-        <span className="topbar-founder">{state.ludusName}</span>
+        <h1>{state.ludusName}</h1>
+        <span className="topbar-founder">Lanista {state.founderName}</span>
       </div>
       <div className="topbar-stats">
         <div className="stat">

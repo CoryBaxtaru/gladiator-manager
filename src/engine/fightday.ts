@@ -49,6 +49,12 @@ export function computeNextFightDay(fromDay: number): number {
 export function matchmakeFightDay(state: LudusState, selectedGladiatorIds: string[]): FightMatchup[] {
   const playerTier = state.unlockedTier;
   const matchups: FightMatchup[] = [];
+  // Tracks rival gladiators already drafted elsewhere in this same fight day's batch,
+  // so the same named individual doesn't appear to fight (and lose to) two different
+  // player gladiators on the same day -- confirmed happening repeatedly in playtesting
+  // once the roster passed ~5 fighters, since each matchup used to be picked in
+  // isolation with no memory of what the earlier iterations of this loop had already used.
+  const usedRivalGladiatorIds = new Set<string>();
 
   for (const gladiatorId of selectedGladiatorIds) {
     const gladiator = state.gladiators.find((g) => g.id === gladiatorId);
@@ -62,9 +68,15 @@ export function matchmakeFightDay(state: LudusState, selectedGladiatorIds: strin
     if (rivalLudus.roster.length === 0) continue;
 
     const gladiatorCA = currentAbilityOf(gladiator);
-    const closest = [...rivalLudus.roster].sort(
+    // Prefer an opponent not already booked today; if this ludus's whole roster is
+    // already spoken for (a very small roster relative to the player's), fall back to
+    // reusing one rather than skipping the matchup outright.
+    const available = rivalLudus.roster.filter((r) => !usedRivalGladiatorIds.has(r.id));
+    const pool = available.length > 0 ? available : rivalLudus.roster;
+    const closest = [...pool].sort(
       (a, b) => Math.abs(a.currentAbility - gladiatorCA) - Math.abs(b.currentAbility - gladiatorCA)
     )[0];
+    usedRivalGladiatorIds.add(closest.id);
 
     matchups.push({
       id: nextId("fm"),
