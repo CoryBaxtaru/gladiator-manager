@@ -1,9 +1,12 @@
-// Real sprite lookup, keyed by origin and condition (Phase 9 Part C). The 32 source
-// images live in public/sprites -- Vite serves anything under public/ unchanged at
-// the site root in both dev and a production build, the same convention already used
-// for favicon.svg/icons.svg (see DEPLOY.md), so a root-relative path here works in
-// both without any bundler config.
+// Real sprite lookup, keyed by origin and condition (Phase 9 Part C). The source
+// images live in public/sprites -- Vite serves anything under public/ unchanged,
+// same convention as favicon.svg/icons.svg (see DEPLOY.md). Paths are built off
+// import.meta.env.BASE_URL rather than a hardcoded leading slash: a root deploy has
+// BASE_URL "/", but a subpath deploy (e.g. GitHub Pages at /repo-name/) does not, and
+// a hardcoded "/sprites/..." would 404 there since it skips the subpath entirely.
 import type { GladiatorCondition, Origin } from "../types";
+
+const BASE = import.meta.env.BASE_URL;
 
 const ORIGIN_FILE: Record<Origin, string> = {
   Thracian: "thracian",
@@ -28,7 +31,7 @@ const CONDITION_FILE: Record<GladiatorCondition, string> = {
  * and condition share a portrait -- intended scope, not a bug (see Phase 9 Part C).
  */
 export function getPortraitSrc(origin: Origin, condition: GladiatorCondition): string {
-  return `/sprites/${ORIGIN_FILE[origin]}_${CONDITION_FILE[condition]}.png`;
+  return `${BASE}sprites/${ORIGIN_FILE[origin]}_${CONDITION_FILE[condition]}.png`;
 }
 
 /**
@@ -38,5 +41,5 @@ export function getPortraitSrc(origin: Origin, condition: GladiatorCondition): s
  * they live in their own public/sprites/heads folder with a "head_" filename prefix.
  */
 export function getHeadshotSrc(origin: Origin, condition: GladiatorCondition): string {
-  return `/sprites/heads/head_${ORIGIN_FILE[origin]}_${CONDITION_FILE[condition]}.png`;
+  return `${BASE}sprites/heads/head_${ORIGIN_FILE[origin]}_${CONDITION_FILE[condition]}.png`;
 }
