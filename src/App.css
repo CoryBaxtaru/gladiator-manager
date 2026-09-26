@@ -1017,6 +1017,14 @@ body {
   white-space: nowrap;
 }
 
+/* Phase 16 Part B: a break/escape risk tag, visible at a glance across the whole
+   roster (not just once a gladiator is selected) -- the top playtest-requested fix,
+   since finding out about a crisis meant clicking into each gladiator individually. */
+.squad-list-item-risk {
+  grid-column: 1 / 4;
+  grid-row: 3;
+}
+
 .recruit-card-header {
   display: flex;
   gap: 10px;

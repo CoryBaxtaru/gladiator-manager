@@ -115,6 +115,7 @@ export function SquadScreen() {
           {visibleGladiators.length === 0 && <p className="empty-note">No active gladiators. Recruit some.</p>}
           {visibleGladiators.map((g) => {
             const isGone = g.status !== "active";
+            const listRisk = isGone ? null : riskTagFor(g);
             return (
               <Card
                 key={g.id}
@@ -151,6 +152,13 @@ export function SquadScreen() {
                     </span>
                   )}
                 </div>
+                {listRisk && (
+                  <div className="squad-list-item-risk">
+                    <Badge tone={listRisk.tone} title={listRisk.tooltip}>
+                      {listRisk.label}
+                    </Badge>
+                  </div>
+                )}
               </Card>
             );
           })}
