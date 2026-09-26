@@ -30,8 +30,12 @@ import {
   eligibleChallengeTargets as engineEligibleChallengeTargets,
   issueChallenge as engineIssueChallenge,
   respondToChallenge as engineRespondToChallenge,
+  resolveSelfChallenge as engineResolveSelfChallenge,
+  drawSelfChallengeOpponent as engineDrawSelfChallengeOpponent,
 } from "../engine/deathMatch";
 import { resolvePromotionFight as engineResolvePromotionFight } from "../engine/promotion";
+import { resolveFateDecision as engineResolveFateDecision } from "../engine/combat";
+import { resolvePraetorianFinale as engineResolvePraetorianFinale, type PraetorianFinaleOutcome } from "../engine/colosseumFinale";
 import {
   loadAutosave,
   saveAutosave,
@@ -43,9 +47,16 @@ import {
   type SaveSlotMeta,
 } from "./saveManager";
 
-function loadState(): LudusState {
+interface InitialLoad {
+  state: LudusState;
+  /** True only when no autosave existed at all -- a genuine first launch, not a
+   * reload of an existing game (Phase 12 Part N). */
+  isFirstLaunch: boolean;
+}
+
+function loadInitial(): InitialLoad {
   const saved = loadAutosave();
-  return saved ?? createInitialState();
+  return saved ? { state: saved, isFirstLaunch: false } : { state: createInitialState(), isFirstLaunch: true };
 }
 
 interface GameContextValue {
@@ -68,6 +79,8 @@ interface GameContextValue {
   setSparringPair: (gladiatorAId: string, gladiatorBId: string) => void;
   clearSparring: (gladiatorId: string) => void;
   sellGladiator: (gladiatorId: string, saleType: SaleType) => void;
+  auctionResult: { gladiatorName: string; price: number } | null;
+  clearAuctionResult: () => void;
   hireStaff: (candidateId: string) => void;
   dismissStaff: (staffId: string) => void;
   triggerMoraleEvent: (gladiatorId: string) => void;
@@ -82,12 +95,20 @@ interface GameContextValue {
   eligibleChallengeTargets: () => RivalLudus[];
   issueChallenge: (rivalLudusId: string, gladiatorId: string) => void;
   respondToChallenge: (accept: boolean, gladiatorId?: string) => void;
+  issueSelfChallenge: (gladiatorId: string) => void;
+  previewSelfChallenge: (gladiatorId: string) => void;
   deathMatchOutcome: DeathMatchOutcome | null;
   clearDeathMatchOutcome: () => void;
   attemptPromotion: (gladiatorId: string) => void;
   promotionOutcome: PromotionOutcome | null;
   clearPromotionOutcome: () => void;
-  newGame: (ludusName: string) => void;
+  resolveFateDecision: (gladiatorId: string, sponsor: boolean) => void;
+  resolvePraetorianFinale: (selectedGladiatorIds: string[]) => void;
+  praetorianFinaleOutcome: PraetorianFinaleOutcome | null;
+  clearPraetorianFinaleOutcome: () => void;
+  newGame: (ludusName: string, founderName?: string) => void;
+  isFirstLaunch: boolean;
+  completeFounding: (founderName: string, ludusName: string) => void;
   saveGame: (slot: number) => void;
   loadGame: (slot: number) => void;
   deleteSave: (slot: number) => void;
@@ -97,7 +118,13 @@ interface GameContextValue {
 const GameContext = createContext<GameContextValue | null>(null);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<LudusState>(loadState);
+  const [initial] = useState(loadInitial);
+  const [state, setState] = useState<LudusState>(initial.state);
+  // Phase 12 Part N: on a genuine first launch (no autosave found at all), the shell
+  // shows a blocking FoundingModal so the player can pick their own founder/ludus name
+  // instead of one being silently generated. Cleared for good once they submit it or
+  // once any other new game starts.
+  const [isFirstLaunch, setIsFirstLaunch] = useState(initial.isFirstLaunch);
   const [latestSummaries, setLatestSummaries] = useState<DaySummary[]>([]);
   const [pendingFightDay, setPendingFightDay] = useState(false);
   const [pendingIntermediateSummaries, setPendingIntermediateSummaries] = useState<DaySummary[]>([]);
@@ -199,9 +226,22 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setState((prev) => engineClearSparring(prev, gladiatorId));
   }, []);
 
-  const sellGladiator = useCallback((gladiatorId: string, saleType: SaleType) => {
-    setState((prev) => engineSellGladiator(prev, gladiatorId, saleType));
-  }, []);
+  const [auctionResult, setAuctionResult] = useState<{ gladiatorName: string; price: number } | null>(null);
+  const clearAuctionResult = useCallback(() => setAuctionResult(null), []);
+
+  // Auction pricing uses Math.random() (see sale.ts), so read state from the closure
+  // and commit once, same reasoning as advanceDay above.
+  const sellGladiator = useCallback(
+    (gladiatorId: string, saleType: SaleType) => {
+      const gladiator = state.gladiators.find((g) => g.id === gladiatorId);
+      const result = engineSellGladiator(state, gladiatorId, saleType);
+      setState(result.state);
+      if (result.auctionPrice !== null && gladiator) {
+        setAuctionResult({ gladiatorName: gladiator.name, price: result.auctionPrice });
+      }
+    },
+    [state]
+  );
 
   const hireStaff = useCallback((candidateId: string) => {
     setState((prev) => engineHireStaff(prev, candidateId));
@@ -271,6 +311,49 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     [state]
   );
 
+  const issueSelfChallenge = useCallback(
+    (gladiatorId: string) => {
+      const result = engineResolveSelfChallenge(state, gladiatorId);
+      if (!result) return;
+      setState(result.state);
+      setDeathMatchOutcome(result.outcome);
+    },
+    [state]
+  );
+
+  // Phase 13 Part B: generates (and locks in) today's self-challenge opponent the
+  // first time it's requested for a gladiator; a later call the same day is a no-op
+  // (drawSelfChallengeOpponent returns the same state reference). Uses Math.random()
+  // on a fresh draw, so read state from the closure and commit once, same reasoning
+  // as every other randomness-using action here.
+  const previewSelfChallenge = useCallback(
+    (gladiatorId: string) => {
+      const result = engineDrawSelfChallengeOpponent(state, gladiatorId);
+      if (result.state !== state) setState(result.state);
+    },
+    [state]
+  );
+
+  const resolveFateDecision = useCallback(
+    (gladiatorId: string, sponsor: boolean) => {
+      setState((prev) => engineResolveFateDecision(prev, gladiatorId, sponsor));
+    },
+    []
+  );
+
+  const [praetorianFinaleOutcome, setPraetorianFinaleOutcome] = useState<PraetorianFinaleOutcome | null>(null);
+  const clearPraetorianFinaleOutcome = useCallback(() => setPraetorianFinaleOutcome(null), []);
+
+  const resolvePraetorianFinale = useCallback(
+    (selectedGladiatorIds: string[]) => {
+      const result = engineResolvePraetorianFinale(state, selectedGladiatorIds);
+      if (!result) return;
+      setState(result.state);
+      setPraetorianFinaleOutcome(result.outcome);
+    },
+    [state]
+  );
+
   const [promotionOutcome, setPromotionOutcome] = useState<PromotionOutcome | null>(null);
   const clearPromotionOutcome = useCallback(() => setPromotionOutcome(null), []);
 
@@ -286,12 +369,25 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     [state]
   );
 
-  const newGame = useCallback((ludusName: string) => {
+  const newGame = useCallback((ludusName: string, founderName?: string) => {
     clearAutosave();
-    setState(createInitialState(ludusName));
+    setState(createInitialState(ludusName, founderName));
+    setIsFirstLaunch(false);
     setLatestSummaries([]);
     setPendingFightDay(false);
     setPendingIntermediateSummaries([]);
+  }, []);
+
+  // Phase 12 Part N: applies the player's chosen names to the auto-generated first-
+  // launch state in place, rather than regenerating a whole new game (which would
+  // reroll the starting roster the player has already seen).
+  const completeFounding = useCallback((founderName: string, ludusName: string) => {
+    setState((prev) => ({
+      ...prev,
+      founderName: founderName.trim() || prev.founderName,
+      ludusName: ludusName.trim() || prev.ludusName,
+    }));
+    setIsFirstLaunch(false);
   }, []);
 
   const saveGame = useCallback(
@@ -305,6 +401,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     const loaded = loadFromSlot(slot);
     if (!loaded) return;
     setState(loaded);
+    setIsFirstLaunch(false);
     setLatestSummaries([]);
     setPendingFightDay(false);
     setPendingIntermediateSummaries([]);
@@ -337,6 +434,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setSparringPair,
       clearSparring,
       sellGladiator,
+      auctionResult,
+      clearAuctionResult,
       hireStaff,
       dismissStaff,
       triggerMoraleEvent,
@@ -351,12 +450,20 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       eligibleChallengeTargets,
       issueChallenge,
       respondToChallenge,
+      issueSelfChallenge,
+      previewSelfChallenge,
       deathMatchOutcome,
       clearDeathMatchOutcome,
       attemptPromotion,
       promotionOutcome,
       clearPromotionOutcome,
+      resolveFateDecision,
+      resolvePraetorianFinale,
+      praetorianFinaleOutcome,
+      clearPraetorianFinaleOutcome,
       newGame,
+      isFirstLaunch,
+      completeFounding,
       saveGame,
       loadGame,
       deleteSave,
@@ -382,6 +489,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setSparringPair,
       clearSparring,
       sellGladiator,
+      auctionResult,
+      clearAuctionResult,
       hireStaff,
       dismissStaff,
       triggerMoraleEvent,
@@ -396,12 +505,20 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       eligibleChallengeTargets,
       issueChallenge,
       respondToChallenge,
+      issueSelfChallenge,
+      previewSelfChallenge,
       deathMatchOutcome,
       clearDeathMatchOutcome,
       attemptPromotion,
       promotionOutcome,
       clearPromotionOutcome,
+      resolveFateDecision,
+      resolvePraetorianFinale,
+      praetorianFinaleOutcome,
+      clearPraetorianFinaleOutcome,
       newGame,
+      isFirstLaunch,
+      completeFounding,
       saveGame,
       loadGame,
       deleteSave,

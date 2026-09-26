@@ -1,6 +1,6 @@
 import type { Gladiator, LudusState, StatKey, TrainingFocus } from "../types";
 import { isOverextended } from "./buildings";
-import { MOOD, OVEREXTENSION, TRAINING } from "../config";
+import { MOOD, OVEREXTENSION, TRAINING, STAT_SPREAD_PENALTY } from "../config";
 import { addMoodModifier } from "./mood";
 import { bestTrainerFor, bestDoctor } from "./staff";
 import { tierCostMultiplier } from "./economy";
@@ -20,6 +20,23 @@ export function markStatChange(gladiator: Gladiator, stat: StatKey, delta: numbe
   const marker = { stat, delta, expiresOnDay: currentDay + TRAINING.statChangeIndicatorDays };
   const filtered = gladiator.recentStatChanges.filter((m) => m.stat !== stat);
   return { ...gladiator, recentStatChanges: [...filtered, marker] };
+}
+
+/**
+ * Phase 12 Part I (exploratory): a stat that's pulled far ahead of a gladiator's other
+ * three trains more slowly, both from deliberate training and from combat-driven gains
+ * (see combat.ts's applyCombatResultToGladiator), so growth naturally rebalances
+ * toward an even spread instead of compounding an existing skew. Compares the target
+ * stat against the average of the OTHER three, not the gladiator's own history, so it
+ * reacts to whatever shape his attributes are actually in right now.
+ */
+export function statSpreadMultiplier(gladiator: Gladiator, statKey: StatKey): number {
+  const others = ALL_STATS.filter((s) => s !== statKey).map((s) => gladiator.stats[s]);
+  const avgOthers = others.reduce((sum, v) => sum + v, 0) / others.length;
+  const lead = gladiator.stats[statKey] - avgOthers;
+  const over = lead - STAT_SPREAD_PENALTY.tolerance;
+  if (over <= 0) return 1;
+  return Math.max(STAT_SPREAD_PENALTY.minMultiplier, 1 - over * STAT_SPREAD_PENALTY.penaltyPerPoint);
 }
 
 function baseEffectiveness(gladiator: Gladiator, state: LudusState): number {
@@ -48,6 +65,11 @@ export function trainStat(
   if (trainer) {
     effectiveness += trainer.trueSkill * TRAINING.trainerBonusPerSkillPoint;
   }
+  // Applied to the FULL effectiveness (yard/mood base plus any trainer bonus), not just
+  // the base -- otherwise a dedicated specialist trainer's bonus alone could still
+  // power straight through the penalty, defeating the point (see Part I's own worked
+  // example: a gladiator ground under one for a long stretch).
+  effectiveness *= statSpreadMultiplier(gladiator, statKey);
 
   const roomToGrow = gladiator.potentialAbility - currentAbilityOf(gladiator);
   if (roomToGrow <= 0 || !chance(effectiveness)) return gladiator;

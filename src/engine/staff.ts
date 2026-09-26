@@ -1,5 +1,5 @@
 import type { LudusState, Staff, StaffCandidate, StaffRole, TrainingFocus } from "../types";
-import { STAFF, REPUTATION_STAR_SCALE_MAX } from "../config";
+import { STAFF, REPUTATION_STAR_SCALE_MAX, TRAINER_STAT_COVERAGE_TIERS } from "../config";
 import { nextId, pick, randInt, randFloat } from "./rng";
 
 const TRAINER_NAMES = [
@@ -92,8 +92,40 @@ export function dismissStaff(state: LudusState, staffId: string): LudusState {
   return { ...state, staff: state.staff.filter((s) => s.id !== staffId) };
 }
 
+/** Fixed cycle order a trainer's coverage extends through, starting at his specialty. */
+const SPECIALTY_CYCLE: Exclude<TrainingFocus, "balanced" | "rest">[] = ["strength", "weaponSkill", "endurance", "showmanship"];
+
+/**
+ * How many stats a trainer's hidden skill lets him cover, per TRAINER_STAT_COVERAGE_TIERS
+ * (Phase 12 Part B): a weak trainer still covers just his one assigned specialty, a
+ * top one covers two or three, cycling forward through the fixed stat order above so
+ * coverage is deterministic rather than needing its own stored/randomized state.
+ */
+export function trainerStatCount(trueSkill: number): number {
+  return TRAINER_STAT_COVERAGE_TIERS.find((t) => trueSkill >= t.minSkill)!.statCount;
+}
+
+export function trainerCoversStat(trainer: Staff, stat: TrainingFocus): boolean {
+  if (trainer.role !== "trainer" || !trainer.specialty) return false;
+  if (stat === "balanced" || stat === "rest") return false;
+  const count = trainerStatCount(trainer.trueSkill);
+  const startIdx = SPECIALTY_CYCLE.indexOf(trainer.specialty);
+  for (let i = 0; i < count; i++) {
+    if (SPECIALTY_CYCLE[(startIdx + i) % SPECIALTY_CYCLE.length] === stat) return true;
+  }
+  return false;
+}
+
+/** The stats a trainer currently covers, specialty first -- for display. */
+export function trainerCoveredStats(trainer: Staff): TrainingFocus[] {
+  if (trainer.role !== "trainer" || !trainer.specialty) return [];
+  const count = trainerStatCount(trainer.trueSkill);
+  const startIdx = SPECIALTY_CYCLE.indexOf(trainer.specialty);
+  return Array.from({ length: count }, (_, i) => SPECIALTY_CYCLE[(startIdx + i) % SPECIALTY_CYCLE.length]);
+}
+
 export function bestTrainerFor(state: LudusState, focus: TrainingFocus): Staff | null {
-  const trainers = state.staff.filter((s) => s.role === "trainer" && s.specialty === focus);
+  const trainers = state.staff.filter((s) => s.role === "trainer" && trainerCoversStat(s, focus));
   if (trainers.length === 0) return null;
   return trainers.reduce((best, t) => (t.trueSkill > best.trueSkill ? t : best), trainers[0]);
 }

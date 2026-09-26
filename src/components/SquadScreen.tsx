@@ -5,7 +5,6 @@ import { potentialStarDisplay, currentAbilityStars, currentAbilityOf, statIndica
 import { TRAITS, PHYSICAL_TRAITS, PERSONALITY_TRAIT_UNLOCK, ROSTER_DEATH_GRACE_DAYS } from "../config";
 import { StarRating } from "./StarRating";
 import { Tooltip } from "./Tooltip";
-import { ConfirmDialog } from "./ConfirmDialog";
 import { GladiatorPortrait } from "./GladiatorPortrait";
 import {
   canTriggerMoraleEvent,
@@ -27,6 +26,8 @@ import { riskTagFor, moodLabel } from "../engine/mood";
 import { rosterCapacity } from "../engine/buildings";
 import { Card } from "./Card";
 import { Badge } from "./Badge";
+import { SaleChoiceModal } from "./SaleChoiceModal";
+import { AuctionResultModal } from "./AuctionResultModal";
 
 const CONDITION_BADGE_TONE: Record<Gladiator["condition"], "success" | "warning" | "danger"> = {
   healthy: "success",
@@ -59,7 +60,6 @@ const CONDITION_TOOLTIPS: Record<Gladiator["condition"], string> = {
 export function SquadScreen() {
   const {
     state,
-    sellGladiator,
     triggerMoraleEvent,
     performRitual,
     giveBonusCut,
@@ -385,7 +385,7 @@ export function SquadScreen() {
             {selected.status === "active" && (
               <div className="detail-actions">
                 <button className="btn danger-outline" onClick={() => setConfirmingSell(selected.id)}>
-                  Release / Sell ({instantSalePrice(currentAbilityOf(selected))}g)
+                  Release / Sell (from {instantSalePrice(currentAbilityOf(selected))}g)
                 </button>
               </div>
             )}
@@ -393,18 +393,13 @@ export function SquadScreen() {
         )}
       </div>
 
-      {confirmingSell && (
-        <ConfirmDialog
-          title="Sell gladiator?"
-          message={`Are you sure you want to sell ${activeGladiators.find((g) => g.id === confirmingSell)?.name}? This cannot be undone.`}
-          confirmLabel="Sell"
-          onConfirm={() => {
-            sellGladiator(confirmingSell, "instant");
-            setConfirmingSell(null);
-          }}
-          onCancel={() => setConfirmingSell(null)}
-        />
-      )}
+      {confirmingSell &&
+        (() => {
+          const sellTarget = activeGladiators.find((g) => g.id === confirmingSell);
+          if (!sellTarget) return null;
+          return <SaleChoiceModal gladiator={sellTarget} onClose={() => setConfirmingSell(null)} />;
+        })()}
+      <AuctionResultModal />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useGame } from "../state/GameContext";
-import { REPUTATION_TIER_LABELS, PROMOTION } from "../config";
+import { REPUTATION_TIER_LABELS, PROMOTION, REPUTATION_BANDS_BY_TIER } from "../config";
 import {
   promotionAvailable,
   promotionOnCooldown,
@@ -10,11 +10,13 @@ import {
   nextTierOf,
   buildPromotionMatchup,
 } from "../engine/promotion";
-import { estimateWinChance } from "../engine/combat";
+import { praetorianFinaleAvailable, praetorianFinaleOnCooldown } from "../engine/colosseumFinale";
+import { estimateWinChance, canFight } from "../engine/combat";
 import { currentAbilityStars, currentAbilityOf } from "../engine/rating";
 import { moodLabel } from "../engine/mood";
 import { StarRating } from "./StarRating";
 import { Card } from "./Card";
+import { Badge } from "./Badge";
 import { GladiatorHoverCard, hoverDataFromGladiator, hoverDataFromRival } from "./GladiatorHoverCard";
 import { WinChanceBadge } from "./WinChanceBadge";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -29,8 +31,9 @@ import { GladiatorPortrait } from "./GladiatorPortrait";
  * still gets a real prep window before committing.
  */
 export function PromotionScreen() {
-  const { state, attemptPromotion } = useGame();
+  const { state, attemptPromotion, resolvePraetorianFinale } = useGame();
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [finaleSelection, setFinaleSelection] = useState<Set<string>>(new Set());
 
   const nextTier = nextTierOf(state.unlockedTier);
   const cap = reputationCapFor(state);
@@ -39,16 +42,109 @@ export function PromotionScreen() {
   const champion = promotionChampion(state);
   const readiness = promotionReadiness(state);
   const repReady = state.reputation >= cap;
-  const eligibleGladiators = state.gladiators.filter((g) => g.status === "active" && g.injuryDaysRemaining === 0);
+  const eligibleGladiators = state.gladiators.filter(canFight);
   const confirmingGladiator = eligibleGladiators.find((g) => g.id === confirmingId) ?? null;
 
   if (!nextTier) {
+    const finaleAvailable = praetorianFinaleAvailable(state);
+    const finaleOnCooldown = praetorianFinaleOnCooldown(state);
+    const colosseumCap = REPUTATION_BANDS_BY_TIER.colosseum.max;
+
+    const toggleFinaleFighter = (id: string) => {
+      setFinaleSelection((prev) => {
+        const next = new Set(prev);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        return next;
+      });
+    };
+
     return (
       <div className="screen">
         <h2>Promotion</h2>
-        <p className="empty-note">
-          The ludus has reached the Colosseum, the highest tier there is. There's no one left to be promoted past.
+        <p className="hint">
+          The ludus has reached the Colosseum, the highest tier there is -- no one left to be promoted past. What's
+          left is the closest thing this game has to an ending.
         </p>
+
+        <Card accent={finaleAvailable ? "gold" : "none"}>
+          <h3>The Emperor's Praetorian Guard</h3>
+          {state.praetorianVictories > 0 && <Badge tone="gold">Defeated {state.praetorianVictories} time(s)</Badge>}
+          <p className="hint">
+            A genuine capstone, not just another fight day: the Emperor fields a squad matching the size of your
+            active roster, each one significantly stronger than an ordinary Colosseum-tier opponent. A real test of
+            a well-developed ludus, with a real conclusive payoff for winning.
+          </p>
+
+          {!finaleAvailable && !finaleOnCooldown && (
+            <>
+              <div className="card-row">
+                <span>Reputation</span>
+                <span>{state.reputation} / {colosseumCap}</span>
+              </div>
+              <div className="progress-bar">
+                <div className="progress-bar-fill" style={{ width: `${Math.min(100, Math.round((state.reputation / colosseumCap) * 100))}%` }} />
+              </div>
+              <p className="hint">Max out reputation at the Colosseum to summon the Guard.</p>
+            </>
+          )}
+
+          {finaleOnCooldown && (
+            <div className="banner warning">
+              The Guard won't be summoned again until day {state.praetorianCooldownUntilDay}. Ordinary fighting,
+              training, and recruiting continue as normal in the meantime.
+            </div>
+          )}
+
+          {finaleAvailable && (
+            <>
+              <p className="hint">Choose who stands with you. A bruised gladiator can still go; anyone more seriously hurt cannot.</p>
+              {eligibleGladiators.length === 0 ? (
+                <p className="empty-note">No one is fit to fight right now.</p>
+              ) : (
+                <>
+                  <div className="fighter-select-header">
+                    <span className="fsh-checkbox" />
+                    <span className="fsh-portrait" />
+                    <span className="fsh-name">Name</span>
+                    <span className="fsh-ability">Ability</span>
+                    <span className="fsh-mood">Mood</span>
+                  </div>
+                  <div className="fighter-select-list">
+                    {eligibleGladiators.map((g) => (
+                      <GladiatorHoverCard data={hoverDataFromGladiator(g)} reputation={state.reputation} key={g.id}>
+                        <label className="fighter-select-row">
+                          <input
+                            type="checkbox"
+                            checked={finaleSelection.has(g.id)}
+                            onChange={() => toggleFinaleFighter(g.id)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                          <GladiatorPortrait name={g.name} origin={g.origin} condition={g.condition} size={32} variant="headshot" />
+                          <span className="fighter-select-name">{g.name}</span>
+                          <span className="fighter-select-sub">
+                            <StarRating value={currentAbilityStars(currentAbilityOf(g))} size="sm" />
+                            <span className="fighter-select-mood">{moodLabel(g.mood)}</span>
+                          </span>
+                        </label>
+                      </GladiatorHoverCard>
+                    ))}
+                  </div>
+                  <button
+                    className="btn primary"
+                    disabled={finaleSelection.size === 0}
+                    onClick={() => {
+                      resolvePraetorianFinale(Array.from(finaleSelection));
+                      setFinaleSelection(new Set());
+                    }}
+                  >
+                    Summon the Guard with {finaleSelection.size} fighter(s)
+                  </button>
+                </>
+              )}
+            </>
+          )}
+        </Card>
       </div>
     );
   }

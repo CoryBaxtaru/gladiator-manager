@@ -248,6 +248,10 @@ export const ORIGIN_STAT_LEAN: Record<Origin, Partial<Record<"strength" | "weapo
   Germanic: { strength: 4, endurance: 1 },
   Syrian: { weaponSkill: 3, showmanship: 3 },
   Greek: { showmanship: 4, weaponSkill: 2 },
+  // Not used by ordinary generation (Makasimus's stats are hand-set, see
+  // generator.ts's maybeGenerateMakasimus) -- present only so this remains a total
+  // record over Origin.
+  Iberian: { strength: 2, weaponSkill: 2 },
 };
 
 // Clash-based combat: a fight is a fixed set of stat-vs-stat comparisons (a "card
@@ -260,7 +264,9 @@ export const COMBAT = {
   homeArenaBonusPerLevel: 0.5,
   armoryBonusPerLevel: 0.4,
   baseInjuryChanceOnLoss: 0.35,
-  baseDeathChanceOnGraveInjury: 0.12,
+  // Death used to be gated behind this (chance of dying ONLY once already
+  // gravely-injured) -- superseded by the direct DEATH_ON_DEFEAT roll, see its doc
+  // comment for why the old chained version diluted to under 1% in practice.
   narrowLossInjuryMarginBonus: 0.2, // added to injury chance at a full clean-sweep loss
   drawInjuryChanceMultiplier: 0.4,
   winMoodBase: 8,
@@ -288,6 +294,90 @@ export const COMBAT = {
   // on a loss/bench instead of being lose-lose with no counterplay.
   pridefulWinReputationMultiplier: 1.35,
   pridefulWinMoodBonus: 10,
+};
+
+/**
+ * Phase 12 Part A diagnostic: the old death-on-defeat path chained THREE independent
+ * rolls -- injury happens (~25-35% after infirmary/doctor), THEN severity rolls
+ * "gravely_injured" (~15-32% of that, worse at high margin), THEN a separate death
+ * roll off baseDeathChanceOnGraveInjury (~10-12% of THAT, reduced further by
+ * infirmary/doctor). Multiplied out, the real chance of dying on an ordinary loss came
+ * out under 1% in practice (roughly 0.3%-0.8% depending on infirmary/doctor level),
+ * nowhere near the "12%" a reader would assume from the headline number -- the same
+ * multiplicative-stacking failure mode this project already hit once with mood/
+ * showmanship modifiers. Death is now a single, direct roll on any loss (not gated
+ * behind injury-happens or severity first), with a real ~20% baseline that additive
+ * modifiers can shift by double digits but can never chain down to near-zero. See
+ * combat.ts's resolveFight and the new sponsor-or-let-die choice in applyCombatResultToGladiator.
+ */
+export const DEATH_ON_DEFEAT = {
+  baseChance: 0.2,
+  minChance: 0.05,
+  maxChance: 0.6,
+  infirmaryReductionPerLevel: 0.02,
+  doctorSkillReduction: 0.0012,
+  // A clean-sweep loss is worse odds than a narrow one.
+  marginBonus: 0.15,
+  // Prideful refuses to yield even in a losing fight -- raises death/injury risk, per
+  // its own description; Coward flees/yields early -- survives more.
+  pridefulBonus: 0.06,
+  cowardReduction: 0.08,
+};
+
+/**
+ * Phase 13 Part A diagnostic: the Phase 12 formula (CA * 8 * tierMultiplier) double-
+ * counted tier the same way the Phase 11 reputation-loss bug did -- a gladiator's CA
+ * already climbs as the tier does (roster development IS what lets a player reach a
+ * tier), so multiplying by tierMultiplier on top charged for the same signal twice.
+ * Reusing the Phase 5 economy-rebalance reference (docs/economy-rebalance.md): a
+ * 5-gladiator CA-25 roster at Local tier targets ~205g/week income against a 186g/week
+ * burn -- treasury stays in the low hundreds by design, it's not meant to pile up.
+ * Income scales by tierMultiplier (basePurse does), so a comparable roster's target
+ * income is roughly 205g at Local, ~510g at Provincial, ~1020g at Rival -- but the OLD
+ * formula's cost at CA 25 was 200g / 500g / 1000g at those same tiers respectively
+ * BEFORE even accounting for the CA a fighter actually reaches by the time a ludus is
+ * playing at that tier (30+ at Rival per PROMOTION_READINESS), which pushed real costs
+ * to 1200g+ against that same ~1020g/week income. Empirically (Round 6 playtest, Rival
+ * tier): sponsoring was asked for 3 times, cost 960g/1520g/1080g against a treasury
+ * that ranged 353g-993g the whole session -- unaffordable in all three real cases, for
+ * fighters ranging from a barely-trained CA 24 recruit to a middling CA 38 veteran.
+ *
+ * Fix: drop the redundant tierMultiplier entirely -- CA alone already reflects
+ * development, tier doesn't need to scale it again. Retuned costPerCA so a fighter's
+ * cost lands well inside a typical same-tier treasury instead of consuming most or all
+ * of it: CA 25 -> 250g, CA 38 -> 380g, CA 50 -> 500g, CA 70 -> 700g. Real money (roughly
+ * 1-2 weeks of Local-tier burn even at the high end), but no longer unaffordable by
+ * default regardless of who it is.
+ */
+export const SPONSOR_SURVIVAL = {
+  costPerCA: 10,
+};
+
+/**
+ * Phase 12 Part G: an injured gladiator carries a chance to flat-out miss a clash --
+ * an automatic loss of that clash regardless of the stat comparison -- on top of the
+ * existing flat stat penalty in situationalBonus (combat.ts). Scales with severity, and
+ * feeds naturally into estimateWinChance/WinChanceBadge since it lives inside the same
+ * resolveFight() every trial already runs.
+ */
+export const INJURY_MISS_CHANCE: Partial<Record<"bruised" | "injured" | "gravely_injured", number>> = {
+  bruised: 0.04,
+  injured: 0.1,
+  gravely_injured: 0.22,
+};
+
+/**
+ * Phase 12 Part I (exploratory): a stat pulled far ahead of a gladiator's other three
+ * trains more slowly -- both from deliberate training and from combat-driven
+ * showmanship gains -- so growth naturally rebalances toward an even spread rather than
+ * compounding an existing skew. `tolerance` is how far a stat can lead the average of
+ * the other three before any penalty applies; past that, effectiveness drops off but
+ * never to zero (minMultiplier), so an extreme runaway stat still creeps, just slowly.
+ */
+export const STAT_SPREAD_PENALTY = {
+  tolerance: 12,
+  penaltyPerPoint: 0.03,
+  minMultiplier: 0.15,
 };
 
 export const CLASH_LABELS: Record<"strength" | "weaponSkill" | "endurance" | "showmanship" | "composite", string> = {
@@ -339,6 +429,26 @@ export const DEATH_MATCH = {
   // convention as the loss-transfer formula.
   declineReputationPenaltyPercent: 0.05,
   minDeclineReputationPenalty: 5,
+};
+
+/**
+ * Phase 12 Part C: a second, self-directed Challenge mode alongside the lethal
+ * ludus-vs-ludus death match above -- the player picks one of their own gladiators and
+ * an opponent is generated scaled around THAT gladiator's own current ability (with
+ * real random spread, not a fixed even matchup), rather than being limited to
+ * challenging a specific higher-reputation rival ludus's champion. Non-lethal (reuses
+ * the ordinary resolveFight path, same as a fight day), so it also
+ * doubles as the primary fix for Part D: a way to arrange a winnable, appropriately-
+ * scaled match for a freshly recruited gladiator well below the roster's current tier.
+ */
+export const SELF_CHALLENGE = {
+  // Symmetric random spread around the gladiator's own CA -- sometimes favorable,
+  // sometimes a real risk, never a guaranteed win.
+  opponentSpread: 16,
+  // The opponent's average is shaded a little below the gladiator's own CA so this
+  // reads as "a winnable match you arranged", not just another coin flip.
+  opponentCAOffset: -6,
+  cooldownDays: 3,
 };
 
 export const ECONOMY = {
@@ -537,10 +647,27 @@ export const RECRUIT_CHANNELS: Record<
 // Phase 9 Part A: "Procurator" is flavor naming, not a historical claim the way
 // "doctor" is attested for a trainer -- a reasonable general Roman term for someone
 // handling business on another's behalf, standing in for the old generic "recruiter".
-export const RECRUITER_TIERS: Record<RecruiterTier, { label: string; stars: number; priceMultiplier: number; baseStatBonus: number; gemChanceBonus: number }> = {
-  journeyman: { label: "Journeyman Procurator", stars: 2, priceMultiplier: 1, baseStatBonus: 0, gemChanceBonus: 0 },
-  seasoned: { label: "Seasoned Procurator", stars: 3.5, priceMultiplier: 1.9, baseStatBonus: 6, gemChanceBonus: 0.04 },
-  master: { label: "Master Procurator", stars: 5, priceMultiplier: 3.4, baseStatBonus: 14, gemChanceBonus: 0.08 },
+/**
+ * Phase 12 Part K diagnostic: checked whether a separate promotion-tier-based scaling
+ * of recruit quality exists alongside procurator tier -- it does not. generateCandidate
+ * (scouting.ts) never reads state.unlockedTier or state.reputation; baseStat/gemChance
+ * come ONLY from the channel (RECRUIT_CHANNELS) and procurator tier (here), flat for
+ * the whole game. The only thing that scales with unlockedTier is COST
+ * (tierCostMultiplier, via recruiterSendCost) -- so the reported "procurator tier feels
+ * pointless" wasn't recruit quality secretly following promotion tier, it was the old
+ * flat baseStatBonus (0/+6/+14) staying a small ABSOLUTE amount while its COST
+ * multiplied 1x/1.9x/3.4x on top of the tier cost multiplier: at Colosseum tier, Master
+ * cost several times more for a bonus that had shrunk to a rounding error against the
+ * roster/opponent CA the player actually needed. Changed baseStatBonus to a fraction OF
+ * the channel's own baseStat, so a tier's edge stays proportionally meaningful at every
+ * stage instead of being a fixed number that's diluted by everything else that scales.
+ * (Recruits themselves still don't scale with promotion tier at all -- a separate,
+ * bigger balance question flagged in Part J's note, not decided here.)
+ */
+export const RECRUITER_TIERS: Record<RecruiterTier, { label: string; stars: number; priceMultiplier: number; baseStatBonusFraction: number; gemChanceBonus: number }> = {
+  journeyman: { label: "Journeyman Procurator", stars: 2, priceMultiplier: 1, baseStatBonusFraction: 0, gemChanceBonus: 0 },
+  seasoned: { label: "Seasoned Procurator", stars: 3.5, priceMultiplier: 1.9, baseStatBonusFraction: 0.22, gemChanceBonus: 0.04 },
+  master: { label: "Master Procurator", stars: 5, priceMultiplier: 3.4, baseStatBonusFraction: 0.45, gemChanceBonus: 0.08 },
 };
 
 export const SPARRING = {
@@ -616,8 +743,30 @@ export const STAFF = {
   doctorInjuryChanceReductionPerSkillPoint: 0.0015,
 };
 
+/**
+ * Phase 12 Part B diagnostic: checked whether a trainer's trueSkill is ever mutated
+ * after generateStaff() assigns it -- it isn't (grepped every reference; the only other
+ * reads are display fuzz on ratingNoiseSeed, which sharpens the DISPLAYED guess as
+ * reputation grows without touching the underlying true value, same mechanic as
+ * Potential Ability's fuzzy display). So there was no drift bug to remove; a trainer's
+ * true skill is already fixed for life at hire, same as an EU4 advisor. What WAS
+ * missing: a trainer only ever helped his own single specialty stat, with no way for a
+ * highly skilled one to do more. Coverage now scales with trueSkill -- a weak trainer
+ * still covers just his specialty, a top one covers two or three stats, cycling
+ * forward from his specialty through the fixed stat order below.
+ */
+export const TRAINER_STAT_COVERAGE_TIERS: { minSkill: number; statCount: number }[] = [
+  { minSkill: 75, statCount: 3 },
+  { minSkill: 50, statCount: 2 },
+  { minSkill: 0, statCount: 1 },
+];
+
 export const SALE = {
   instantPriceMultiplierOfCA: 6,
+  // Phase 12 Part H: auction is a real gamble around the instant-sell value, not a
+  // strictly-better or strictly-worse option -- risk in both directions.
+  auctionMinFraction: 0.55,
+  auctionMaxFraction: 1.7,
 };
 
 export const FIGHT_DAY = {
@@ -694,4 +843,36 @@ export const TRAINING_FOCUS_LABELS: Record<TrainingFocus, string> = {
   showmanship: "Showmanship",
   balanced: "Balanced",
   rest: "Rest",
+};
+
+/**
+ * Phase 12 Part L: a genuine capstone once the player has both reached Colosseum tier
+ * AND maxed its reputation band -- a squad matching the size of the active roster,
+ * each opponent significantly stronger than an ordinary Colosseum-tier fighter. Reuses
+ * the ordinary (non-lethal) resolveFight path per gladiator, same reasoning as
+ * Promotion Fight: the stakes come from the opponents' own strength and the occasion
+ * framing, not from a separate permadeath rule bolted on top.
+ */
+export const COLOSSEUM_FINALE = {
+  opponentCAMultiplier: 1.45,
+  opponentStatSpread: 12,
+  cooldownDays: 15,
+  winGoldBonus: 4000,
+  winReputationBonus: 40,
+};
+
+/**
+ * Phase 12 Part O: an ultra-rare (1 in 10000) unique gladiator who can turn up from any
+ * recruiting channel, at any procurator tier -- a small easter egg, not a balance
+ * lever. Historically, "Iberia" in the Caucasus (roughly modern Georgia, distinct from
+ * the Iberian Peninsula) was a real kingdom with attested contact with Rome; the name
+ * "Makasimus" is a Latinized flourish rather than an attested Caucasian name, same
+ * spirit as an arena name assigned on enrolment.
+ */
+export const MAKASIMUS = {
+  chance: 1 / 10000,
+  name: "Makasimus",
+  minStat: 78,
+  statSpread: 14,
+  minPotential: 95,
 };

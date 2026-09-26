@@ -1,7 +1,7 @@
 import type { CombatResult, FightMatchup, FightTier, LudusState, PromotionOutcome, RivalGladiator, RivalLudus } from "../types";
 import { PROMOTION, PROMOTION_READINESS, REPUTATION_BANDS_BY_TIER } from "../config";
 import { rivalLudiForTier } from "./rivalLudi";
-import { resolveFight, applyCombatResultToGladiator } from "./combat";
+import { resolveFight, applyCombatResultToGladiator, canFight } from "./combat";
 import { currentAbilityOf } from "./rating";
 import { nextId } from "./rng";
 
@@ -127,7 +127,7 @@ export function resolvePromotionFight(
   currentDay: number
 ): { state: LudusState; outcome: PromotionOutcome } | null {
   const gladiator = state.gladiators.find((g) => g.id === gladiatorId);
-  if (!gladiator || gladiator.status !== "active" || gladiator.injuryDaysRemaining > 0) return null;
+  if (!gladiator || !canFight(gladiator)) return null;
   if (!promotionAvailable(state)) return null;
 
   const matchup = buildPromotionMatchup(state, gladiatorId);

@@ -1,6 +1,6 @@
 // Gladiator generation: names, origins, backstories, starting stats, CA/PA.
 import type { Gladiator, GladiatorRecord, GladiatorStats, Origin, PersonalityTrait, PhysicalTrait } from "../types";
-import { MOOD, ORIGIN_STAT_LEAN, RECRUITMENT, STAFF, PERSONALITY_TRAIT_UNLOCK, ALL_PERSONALITY_TRAITS } from "../config";
+import { MOOD, ORIGIN_STAT_LEAN, RECRUITMENT, STAFF, PERSONALITY_TRAIT_UNLOCK, ALL_PERSONALITY_TRAITS, POSITIVE_TRAITS, MAKASIMUS } from "../config";
 import { nextId, pick, pickN, randInt, randFloat, chance } from "./rng";
 import { generateFighterName, originDescriptor, pickOrigin } from "./names";
 import { averageStats } from "./rating";
@@ -185,7 +185,7 @@ export function generateGladiator(currentDay: number, options: GenerateOptions =
     weeklyUpkeep,
     status: "active",
     statusChangedOnDay: null,
-    trainingFocus: "strength",
+    trainingFocus: "balanced",
     injuryDaysRemaining: 0,
     hotStreakUntilDay: null,
     hireDay: currentDay,
@@ -198,7 +198,72 @@ export function generateGladiator(currentDay: number, options: GenerateOptions =
     lastLeaveDay: null,
     lastBathsDay: null,
     lastRecognitionDay: null,
+    lastSelfChallengeDay: null,
     potentialNoiseSeed: randFloat(-STAFF.ratingNoiseMax, STAFF.ratingNoiseMax),
+    sparringPartnerId: null,
+  };
+}
+
+/**
+ * Phase 12 Part O: an ultra-rare (1 in 10000) unique gladiator, rollable from any
+ * recruiting channel at any procurator tier -- a small easter egg, not a balance lever.
+ * "Iberia" here is the Caucasian kingdom (roughly modern Georgia), not the Iberian
+ * Peninsula -- a real but easily-confused historical namesake, called out explicitly in
+ * his own backstory so the distinction isn't lost. No sprite art exists for a new
+ * origin, so he displays with the Greek portrait set (see the Origin type's own note);
+ * his name, stats, and record are hand-set rather than randomly generated like an
+ * ordinary recruit.
+ */
+export function maybeGenerateMakasimus(currentDay: number): Gladiator | null {
+  if (!chance(MAKASIMUS.chance)) return null;
+
+  const stats: GladiatorStats = {
+    strength: MAKASIMUS.minStat + randInt(0, MAKASIMUS.statSpread),
+    weaponSkill: MAKASIMUS.minStat + randInt(0, MAKASIMUS.statSpread),
+    endurance: MAKASIMUS.minStat + randInt(0, MAKASIMUS.statSpread),
+    showmanship: MAKASIMUS.minStat + randInt(0, MAKASIMUS.statSpread),
+  };
+  const initialAbility = averageStats(stats);
+  const potentialAbility = Math.max(MAKASIMUS.minPotential, Math.min(99, initialAbility + randInt(0, 4)));
+  const fights = randInt(20, 40);
+  const wins = Math.round(fights * randFloat(0.75, 0.92));
+
+  return {
+    id: nextId("g"),
+    name: MAKASIMUS.name,
+    birthName: MAKASIMUS.name,
+    arenaName: MAKASIMUS.name,
+    age: randInt(24, 32),
+    origin: "Iberian",
+    backstory:
+      "A legend even among lanistae, whispered about long before he ever reaches your gate: born in the kingdom of Iberia in the Caucasus, far to the east in what is now Georgia -- no relation to the Iberian Peninsula, whatever the market traders assume when they hear the name. Marched the length of the empire before anyone thought to ask his name twice. No arena has yet seen him lose.",
+    physicalTrait: pick(ALL_PHYSICAL_TRAITS),
+    personalityTraits: pickN(POSITIVE_TRAITS, 2),
+    mood: MOOD.start + 15,
+    moodModifiers: [],
+    potentialAbility,
+    potentialRevealed: "exact",
+    stats,
+    condition: "healthy",
+    record: { fights, wins, losses: fights - wins, nearDeaths: 0 },
+    weeklyUpkeep: Math.max(6, Math.round(8 + initialAbility * 0.3)),
+    status: "active",
+    statusChangedOnDay: null,
+    trainingFocus: "balanced",
+    injuryDaysRemaining: 0,
+    hotStreakUntilDay: null,
+    hireDay: currentDay,
+    recentStatChanges: [],
+    lastMoraleEventDay: null,
+    lastRitualDay: null,
+    lastBonusCutDay: null,
+    lastPrideBoastDay: null,
+    lastEncouragementDay: null,
+    lastLeaveDay: null,
+    lastBathsDay: null,
+    lastRecognitionDay: null,
+    lastSelfChallengeDay: null,
+    potentialNoiseSeed: 0,
     sparringPartnerId: null,
   };
 }

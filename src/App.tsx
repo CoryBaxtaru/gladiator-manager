@@ -15,13 +15,18 @@ import { FightDaySelectionModal } from "./components/FightDaySelectionModal";
 import { IncomingChallengeModal } from "./components/IncomingChallengeModal";
 import { DeathMatchResultModal } from "./components/DeathMatchResultModal";
 import { PromotionResultModal } from "./components/PromotionResultModal";
+import { FateDecisionModal } from "./components/FateDecisionModal";
+import { PraetorianFinaleResultModal } from "./components/PraetorianFinaleResultModal";
+import { FoundingModal } from "./components/FoundingModal";
 import { promotionAvailable } from "./engine/promotion";
 
 type Tab = "squad" | "training" | "ludus" | "recruitment" | "rankings" | "challenges" | "history" | "promotion";
 
 function GameShell() {
   const [tab, setTab] = useState<Tab>("squad");
-  const { state, latestSummaries, pendingFightDay, deathMatchOutcome, promotionOutcome } = useGame();
+  const { state, latestSummaries, pendingFightDay, deathMatchOutcome, promotionOutcome, praetorianFinaleOutcome, isFirstLaunch } = useGame();
+
+  const awaitingFateGladiator = state.gladiators.find((g) => g.status === "active" && g.awaitingFateDecision);
 
   return (
     <div className="app-shell">
@@ -62,8 +67,14 @@ function GameShell() {
         {tab === "history" && <HistoryScreen />}
         {tab === "promotion" && <PromotionScreen />}
       </main>
-      {pendingFightDay ? (
+      {isFirstLaunch ? (
+        <FoundingModal />
+      ) : pendingFightDay ? (
         <FightDaySelectionModal />
+      ) : awaitingFateGladiator ? (
+        <FateDecisionModal />
+      ) : praetorianFinaleOutcome ? (
+        <PraetorianFinaleResultModal />
       ) : promotionOutcome ? (
         <PromotionResultModal />
       ) : deathMatchOutcome ? (

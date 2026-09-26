@@ -1,9 +1,11 @@
 import type { DeathMatchOutcome, FightMatchup, Gladiator, LudusState, RivalGladiator, RivalLudus } from "../types";
-import { DEATH_MATCH, FIGHT_ECONOMY } from "../config";
-import { resolveFight, applyCombatResultToGladiator } from "./combat";
+import { DEATH_MATCH, FIGHT_ECONOMY, SELF_CHALLENGE } from "../config";
+import { resolveFight, applyCombatResultToGladiator, canFight } from "./combat";
 import { reputationCapFor } from "./promotion";
 import { nextId, pick, chance } from "./rng";
-import { currentAbilityOf } from "./rating";
+import { currentAbilityOf, effectiveStats } from "./rating";
+import { generateGladiator } from "./generator";
+import { generateArenaName } from "./names";
 
 function average(values: number[]): number {
   if (values.length === 0) return 1;
@@ -136,6 +138,7 @@ function fightDeathMatch(
       combat,
       reputationTransferred: playerWon ? transferred : -transferred,
       goldDelta: playerWon ? wager : -wager,
+      mode: "ludus",
     },
   };
 }
@@ -151,7 +154,7 @@ export function issueChallenge(
   if (!rivalLudus || !gladiator) return null;
   if (rivalLudus.reputation <= state.reputation) return null;
   if (cooldownActive(state, rivalLudusId)) return null;
-  if (gladiator.status !== "active" || gladiator.injuryDaysRemaining > 0) return null;
+  if (!canFight(gladiator)) return null;
 
   const decline = declineChance(currentAbilityOf(gladiator), rivalLudus.roster.map((r) => r.currentAbility));
   if (chance(decline)) {
@@ -217,10 +220,123 @@ export function respondToChallenge(
   }
 
   const gladiator = state.gladiators.find((g) => g.id === gladiatorId);
-  if (!gladiator || gladiator.status !== "active" || gladiator.injuryDaysRemaining > 0) {
+  if (!gladiator || !canFight(gladiator)) {
     return { state: cleared, outcome: null };
   }
 
   const result = fightDeathMatch(cleared, gladiator, rivalLudus);
   return result;
+}
+
+/**
+ * Phase 12 Part C/D: a second, self-directed Challenge mode -- the player picks one of
+ * their OWN gladiators and an opponent is generated scaled around THAT gladiator's own
+ * ability, rather than being limited to challenging a specific higher-reputation rival
+ * ludus. Non-lethal (ordinary resolveFight, same as a fight day), so a bad roll costs
+ * the same real stakes an ordinary loss does (injury, and now a real death risk with a
+ * sponsor-or-let-die choice, see combat.ts) but never an automatic kill. This is also
+ * the primary fix for underleveled recruits: a way to arrange a winnable, appropriately
+ * scaled match for one specific fighter instead of hoping ordinary tier-scaled fight
+ * days happen to suit him.
+ */
+export function canSelfChallenge(gladiator: Gladiator, currentDay: number): boolean {
+  if (!canFight(gladiator)) return false;
+  return !gladiator.lastSelfChallengeDay || currentDay - gladiator.lastSelfChallengeDay >= SELF_CHALLENGE.cooldownDays;
+}
+
+/** Pure random generation -- used by drawSelfChallengeOpponent, never called directly
+ * by the UI anymore (Phase 13 Part B), so a preview can't reroll by re-invoking this. */
+function generateSelfChallengeOpponent(gladiator: Gladiator): RivalGladiator {
+  const gladiatorCA = currentAbilityOf(gladiator);
+  const base = Math.max(3, gladiatorCA + SELF_CHALLENGE.opponentCAOffset);
+  const full = generateGladiator(1, { baseStatOverride: Math.round(base), statSpreadOverride: SELF_CHALLENGE.opponentSpread });
+  return {
+    id: full.id,
+    name: `${generateArenaName()}, an arranged opponent`,
+    origin: full.origin,
+    currentAbility: currentAbilityOf(full),
+    stats: effectiveStats(full),
+    potentialAbility: full.potentialAbility,
+    potentialNoiseSeed: full.potentialNoiseSeed ?? 0,
+    physicalTrait: full.physicalTrait,
+    personalityTraits: full.personalityTraits,
+    backstory: full.backstory,
+  };
+}
+
+/**
+ * Phase 13 Part B: an opponent, once drawn for a gladiator, is locked in for the day
+ * it was drawn rather than rerolled every time the preview is opened -- closing and
+ * reopening the picker (or even the whole screen) the same day returns the exact same
+ * opponent. Time actually has to pass (a new day) before a fresh draw happens; the
+ * player can still decline and walk away without committing, they just can't fish for
+ * a better one for free. Not a pure function (mutates state on a fresh draw), so the
+ * caller commits the result the same way any other Math.random()-using action does.
+ */
+export function drawSelfChallengeOpponent(state: LudusState, gladiatorId: string): { state: LudusState; opponent: RivalGladiator | null } {
+  const existing = state.selfChallengeDraws[gladiatorId];
+  if (existing && existing.generatedOnDay === state.currentDay) {
+    return { state, opponent: existing.opponent };
+  }
+
+  const gladiator = state.gladiators.find((g) => g.id === gladiatorId);
+  if (!gladiator) return { state, opponent: null };
+
+  const opponent = generateSelfChallengeOpponent(gladiator);
+  return {
+    state: {
+      ...state,
+      selfChallengeDraws: { ...state.selfChallengeDraws, [gladiatorId]: { opponent, generatedOnDay: state.currentDay } },
+    },
+    opponent,
+  };
+}
+
+export function resolveSelfChallenge(state: LudusState, gladiatorId: string): { state: LudusState; outcome: DeathMatchOutcome } | null {
+  const gladiator = state.gladiators.find((g) => g.id === gladiatorId);
+  if (!gladiator || !canSelfChallenge(gladiator, state.currentDay)) return null;
+
+  // Reuses today's locked-in draw if the player already previewed one (the normal
+  // path); falls back to a fresh generation only if this is somehow called without a
+  // prior preview, so the function still works standalone.
+  const draw = state.selfChallengeDraws[gladiatorId];
+  const opponent = draw && draw.generatedOnDay === state.currentDay ? draw.opponent : generateSelfChallengeOpponent(gladiator);
+  const matchup: FightMatchup = {
+    id: nextId("sc"),
+    gladiatorId: gladiator.id,
+    tier: state.unlockedTier,
+    opponentName: opponent.name,
+    opponentPowerLevel: opponent.currentAbility,
+    opponentStats: opponent.stats,
+    rivalLudusName: "an arranged match",
+  };
+
+  const activeCount = state.gladiators.filter((g) => g.status === "active").length;
+  const combat = resolveFight(matchup, gladiator, state, state.currentDay);
+  const updatedGladiator = {
+    ...applyCombatResultToGladiator(gladiator, combat, state.currentDay, activeCount === 1),
+    lastSelfChallengeDay: state.currentDay,
+  };
+
+  const remainingDraws = Object.fromEntries(Object.entries(state.selfChallengeDraws).filter(([id]) => id !== gladiatorId));
+
+  const working: LudusState = {
+    ...state,
+    gladiators: state.gladiators.map((g) => (g.id === gladiator.id ? updatedGladiator : g)),
+    gold: state.gold + combat.goldReward,
+    reputation: Math.min(reputationCapFor(state), Math.max(0, state.reputation + combat.reputationReward)),
+    selfChallengeDraws: remainingDraws,
+  };
+
+  return {
+    state: working,
+    outcome: {
+      declined: false,
+      rivalLudusName: matchup.rivalLudusName,
+      combat,
+      goldDelta: combat.goldReward,
+      reputationTransferred: combat.reputationReward,
+      mode: "self",
+    },
+  };
 }

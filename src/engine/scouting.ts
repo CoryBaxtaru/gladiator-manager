@@ -1,6 +1,6 @@
 import type { LudusState, RecruitCandidate, RecruitChannel, RecruiterTier } from "../types";
 import { RECRUIT_CHANNELS, RECRUITER_TIERS, RECRUITMENT, POSITIVE_TRAITS } from "../config";
-import { generateGladiator, VOLUNTEER_BACKSTORY_TEMPLATES } from "./generator";
+import { generateGladiator, maybeGenerateMakasimus, VOLUNTEER_BACKSTORY_TEMPLATES } from "./generator";
 import { tierCostMultiplier } from "./economy";
 import { nextId, pick, randInt, randFloat } from "./rng";
 
@@ -40,9 +40,21 @@ export function recruiterSendCost(state: LudusState, channel: RecruitChannel, ti
 }
 
 function generateCandidate(channel: RecruitChannel, currentDay: number, tier: RecruiterTier, usedArenaNames: Set<string>, refundValue: number): RecruitCandidate {
+  // Phase 12 Part O: an ultra-rare pull, checked before ordinary generation so it can
+  // turn up from any channel at any procurator tier.
+  const legendary = maybeGenerateMakasimus(currentDay);
+  if (legendary) {
+    usedArenaNames.add(legendary.name);
+    return { id: nextId("rc"), gladiator: legendary, channel, refundValue };
+  }
+
   const cfg = RECRUIT_CHANNELS[channel];
   const tierCfg = RECRUITER_TIERS[tier];
-  const baseStat = cfg.baseStat + tierCfg.baseStatBonus;
+  // Phase 12 Part K: procurator tier's bonus is now proportional to the channel's own
+  // baseline, so it stays meaningfully differentiated at every stage instead of a flat
+  // amount that shrinks in relative terms as everything else scales (see
+  // RECRUITER_TIERS's doc comment for the full diagnosis).
+  const baseStat = cfg.baseStat * (1 + tierCfg.baseStatBonusFraction);
   const gemChance = cfg.gemChance + tierCfg.gemChanceBonus;
 
   const gladiator = generateGladiator(currentDay, {

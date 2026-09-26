@@ -17,6 +17,9 @@ const ORIGIN_FILE: Record<Origin, string> = {
   Germanic: "germanic",
   Syrian: "syrian",
   Greek: "greek",
+  // No sprite art exists for this one-off origin (see the Origin type's own note) --
+  // Caucasian Iberia had real Hellenistic cultural ties, so the Greek set stands in.
+  Iberian: "greek",
 };
 
 const CONDITION_FILE: Record<GladiatorCondition, string> = {

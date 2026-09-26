@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useGame } from "../state/GameContext";
 import { reputationToStars, currentAbilityStars, currentAbilityOf } from "../engine/rating";
-import { previewOpponent } from "../engine/deathMatch";
-import { estimateWinChance } from "../engine/combat";
+import { previewOpponent, canSelfChallenge } from "../engine/deathMatch";
+import { estimateWinChance, canFight } from "../engine/combat";
 import { moodLabel } from "../engine/mood";
 import type { FightMatchup } from "../types";
 import { StarRating } from "./StarRating";
@@ -12,14 +12,42 @@ import { WinChanceBadge } from "./WinChanceBadge";
 import { GladiatorPortrait } from "./GladiatorPortrait";
 
 export function ChallengesScreen() {
-  const { state, eligibleChallengeTargets, issueChallenge } = useGame();
+  const { state, eligibleChallengeTargets, issueChallenge, issueSelfChallenge, previewSelfChallenge } = useGame();
   const [pickingLudusId, setPickingLudusId] = useState<string | null>(null);
   const [previewGladiatorId, setPreviewGladiatorId] = useState<string | null>(null);
+  const [selfPickingId, setSelfPickingId] = useState<string | null>(null);
 
   const targets = eligibleChallengeTargets();
-  const eligibleGladiators = state.gladiators.filter((g) => g.status === "active" && g.injuryDaysRemaining === 0);
+  const eligibleGladiators = state.gladiators.filter(canFight);
+  const selfEligibleGladiators = eligibleGladiators.filter((g) => canSelfChallenge(g, state.currentDay));
   const pickingLudus = targets.find((l) => l.id === pickingLudusId) ?? null;
   const previewGladiator = eligibleGladiators.find((g) => g.id === previewGladiatorId) ?? null;
+  const selfPickingGladiator = eligibleGladiators.find((g) => g.id === selfPickingId) ?? null;
+
+  // Phase 13 Part B: the opponent is drawn (and locked in for the day) via game state
+  // at the moment a gladiator is picked (see the "Arrange Match" button below), not
+  // regenerated in a component-local memo -- closing and reopening this picker, or
+  // even leaving and returning to the screen, reuses the same locked-in draw for the
+  // rest of the day instead of rerolling.
+  const selfDraw = selfPickingId ? state.selfChallengeDraws[selfPickingId] : undefined;
+  const selfOpponent = selfDraw && selfDraw.generatedOnDay === state.currentDay ? selfDraw.opponent : null;
+  const selfWinEstimate =
+    selfPickingGladiator && selfOpponent
+      ? estimateWinChance(
+          selfPickingGladiator,
+          {
+            id: "preview",
+            gladiatorId: selfPickingGladiator.id,
+            tier: state.unlockedTier,
+            opponentName: selfOpponent.name,
+            opponentPowerLevel: selfOpponent.currentAbility,
+            opponentStats: selfOpponent.stats,
+            rivalLudusName: "an arranged match",
+          },
+          state,
+          state.currentDay
+        )
+      : null;
 
   const opponent = pickingLudus && previewGladiator ? previewOpponent(state, pickingLudus.id, previewGladiator.id) : null;
 
@@ -45,12 +73,15 @@ export function ChallengesScreen() {
   return (
     <div className="screen">
       <h2>Reputation Challenges</h2>
+
+      <h3>Challenge a Rival Ludus</h3>
       <p className="hint deathmatch-warning">
         A death match has no mercy. The loser does not walk away. Only issue a challenge you mean to see through.
       </p>
       <p className="hint">
         You can challenge any ludus with strictly higher reputation than yours. Winning takes a real cut of their
-        reputation for your own; losing costs you the same, and the gladiator you send.
+        reputation AND a real purse of gold; losing costs you the same purse in reverse, plus your reputation, plus
+        the gladiator you send.
       </p>
 
       {targets.length === 0 ? (
@@ -148,6 +179,88 @@ export function ChallengesScreen() {
                 }}
               >
                 Commit to the Death Match
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <h3>Arrange a Match</h3>
+      <p className="hint">
+        Pick one of your own gladiators and an opponent is scaled around his own current ability, with a real random
+        spread rather than a fixed even matchup -- a way to get gold and reputation on the line for a specific
+        fighter without needing an eligible rival ludus to challenge. Non-lethal: the same rules as any other loss
+        apply, not the death match's no-mercy rule.
+      </p>
+
+      {selfEligibleGladiators.length === 0 ? (
+        <p className="empty-note">No one is fit and off cooldown for an arranged match right now.</p>
+      ) : (
+        <div className="fighter-select-header">
+          <span className="fsh-portrait" />
+          <span className="fsh-name">Name</span>
+          <span className="fsh-ability">Ability</span>
+          <span className="fsh-mood">Mood</span>
+          <span className="fsh-action" />
+        </div>
+      )}
+      <div className="fighter-select-list">
+        {selfEligibleGladiators.map((g) => (
+          <GladiatorHoverCard data={hoverDataFromGladiator(g)} reputation={state.reputation} key={g.id}>
+            <div className="fighter-select-row">
+              <GladiatorPortrait name={g.name} origin={g.origin} condition={g.condition} size={32} variant="headshot" />
+              <span className="fighter-select-name">{g.name}</span>
+              <span className="fighter-select-sub">
+                <StarRating value={currentAbilityStars(currentAbilityOf(g))} size="sm" />
+                <span className="fighter-select-mood">{moodLabel(g.mood)}</span>
+              </span>
+              <button
+                className="btn small primary"
+                onClick={() => {
+                  previewSelfChallenge(g.id);
+                  setSelfPickingId(g.id);
+                }}
+              >
+                Arrange Match
+              </button>
+            </div>
+          </GladiatorHoverCard>
+        ))}
+      </div>
+
+      {selfPickingGladiator && selfOpponent && (
+        <div className="modal-backdrop" onClick={() => setSelfPickingId(null)}>
+          <div className="modal fight-day-modal" onClick={(e) => e.stopPropagation()}>
+            <h2>Arranged Match Preview</h2>
+            <p className="hint">Non-lethal, same as an ordinary fight day -- but real gold and reputation are on the line.</p>
+            <div className="matchup-preview">
+              <GladiatorHoverCard data={hoverDataFromGladiator(selfPickingGladiator)} reputation={state.reputation}>
+                <div className="matchup-preview-side">
+                  <div className="matchup-preview-name">{selfPickingGladiator.name}</div>
+                  <div className="hint">your ludus</div>
+                </div>
+              </GladiatorHoverCard>
+              <div className="matchup-preview-vs">
+                versus
+                {selfWinEstimate && <WinChanceBadge estimate={selfWinEstimate} />}
+              </div>
+              <GladiatorHoverCard data={hoverDataFromRival(selfOpponent)} reputation={state.reputation}>
+                <div className="matchup-preview-side">
+                  <div className="matchup-preview-name">{selfOpponent.name}</div>
+                  <div className="hint">arranged for the occasion</div>
+                </div>
+              </GladiatorHoverCard>
+            </div>
+            <div className="confirm-actions">
+              <button className="btn" onClick={() => setSelfPickingId(null)}>Back</button>
+              <button
+                className="btn primary"
+                onClick={() => {
+                  issueSelfChallenge(selfPickingGladiator.id);
+                  setSelfPickingId(null);
+                }}
+              >
+                Fight
               </button>
             </div>
           </div>

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useGame } from "../state/GameContext";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { clearAllSaveData } from "../state/saveManager";
-import { generateLudusName } from "../engine/names";
+import { generateLudusName, generateRomanCitizenName } from "../engine/names";
 
 type MenuView = "root" | "save" | "load" | "settings";
 
@@ -10,6 +10,7 @@ export function MainMenu({ onClose }: { onClose: () => void }) {
   const { state, newGame, saveGame, loadGame, deleteSave, saveSlots } = useGame();
   const [view, setView] = useState<MenuView>("root");
   const [namingNewGame, setNamingNewGame] = useState<string | null>(null);
+  const [namingNewGameFounder, setNamingNewGameFounder] = useState("");
   const [confirmingClearData, setConfirmingClearData] = useState(false);
   const [savedFlash, setSavedFlash] = useState<number | null>(null);
 
@@ -22,7 +23,15 @@ export function MainMenu({ onClose }: { onClose: () => void }) {
           <>
             <h2>Menu</h2>
             <div className="menu-list">
-              <button className="btn primary" onClick={() => setNamingNewGame(generateLudusName())}>New Game</button>
+              <button
+                className="btn primary"
+                onClick={() => {
+                  setNamingNewGame(generateLudusName());
+                  setNamingNewGameFounder(generateRomanCitizenName({ freedman: true }));
+                }}
+              >
+                New Game
+              </button>
               <button className="btn" onClick={() => setView("save")}>Save Game</button>
               <button className="btn" onClick={() => setView("load")}>Load Game</button>
               <button className="btn" onClick={() => setView("settings")}>Settings</button>
@@ -126,11 +135,21 @@ export function MainMenu({ onClose }: { onClose: () => void }) {
       {namingNewGame !== null && (
         <div className="modal-backdrop" onClick={() => setNamingNewGame(null)}>
           <div className="modal confirm-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Name your ludus</h3>
+            <h3>Found a new ludus</h3>
             <p>
               This starts a fresh ludus from scratch and erases your current autosaved progress. If you want to keep
               it, save to a numbered slot first.
             </p>
+            <label className="field-label" htmlFor="founder-name-input">Your name (the lanista)</label>
+            <input
+              id="founder-name-input"
+              className="text-input"
+              type="text"
+              value={namingNewGameFounder}
+              maxLength={60}
+              onChange={(e) => setNamingNewGameFounder(e.target.value)}
+              autoFocus
+            />
             <label className="field-label" htmlFor="ludus-name-input">Ludus name</label>
             <input
               id="ludus-name-input"
@@ -139,15 +158,14 @@ export function MainMenu({ onClose }: { onClose: () => void }) {
               value={namingNewGame}
               maxLength={60}
               onChange={(e) => setNamingNewGame(e.target.value)}
-              autoFocus
             />
             <div className="confirm-actions">
               <button className="btn" onClick={() => setNamingNewGame(null)}>Cancel</button>
               <button
                 className="btn primary"
-                disabled={namingNewGame.trim().length === 0}
+                disabled={namingNewGame.trim().length === 0 || namingNewGameFounder.trim().length === 0}
                 onClick={() => {
-                  newGame(namingNewGame.trim());
+                  newGame(namingNewGame.trim(), namingNewGameFounder.trim());
                   setNamingNewGame(null);
                   onClose();
                 }}

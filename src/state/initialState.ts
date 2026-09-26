@@ -20,7 +20,7 @@ function makeStartingBuildings(): Record<BuildingId, Building> {
   return buildings;
 }
 
-export function createInitialState(ludusName?: string): LudusState {
+export function createInitialState(ludusName?: string, founderName?: string): LudusState {
   const currentDay = 1;
   const usedArenaNames = new Set<string>();
   const gladiators = Array.from({ length: 4 }, () => {
@@ -58,7 +58,13 @@ export function createInitialState(ludusName?: string): LudusState {
     history: [],
     // The trade was legally infamis, so many lanistae were freedmen: Latin praenomen,
     // former owner's nomen, own Greek slave name as cognomen (see generateRomanCitizenName).
-    founderName: generateRomanCitizenName({ freedman: true }),
+    // Phase 12 Part N: was always auto-generated with no way for the player to pick
+    // their own -- now an optional override, pre-filled with a generated suggestion by
+    // the caller (see MainMenu/FoundingModal) but editable.
+    founderName: founderName?.trim() || generateRomanCitizenName({ freedman: true }),
     ludusName: ludusName?.trim() || generateLudusName(),
+    praetorianCooldownUntilDay: null,
+    praetorianVictories: 0,
+    selfChallengeDraws: {},
   };
 }

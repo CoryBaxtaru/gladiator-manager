@@ -44,6 +44,11 @@ function normalizeState(state: LudusState): LudusState {
     unlockedTier: state.unlockedTier ?? tierForReputation(state.reputation),
     promotionCooldownUntilDay: state.promotionCooldownUntilDay ?? null,
     history: state.history ?? [],
+    praetorianCooldownUntilDay: state.praetorianCooldownUntilDay ?? null,
+    praetorianVictories: state.praetorianVictories ?? 0,
+    // Phase 13 Part B: new field -- a save from before this existed just has no
+    // locked-in draws yet, which is exactly the state a fresh one starts in anyway.
+    selfChallengeDraws: state.selfChallengeDraws ?? {},
     // Saves from before Phase 8 Part F never had a chosen ludus name -- fall back to
     // the same "{founder}'s Ludus" pattern they always displayed.
     ludusName: state.ludusName ?? `${state.founderName}'s Ludus`,
@@ -59,6 +64,7 @@ function normalizeState(state: LudusState): LudusState {
       lastLeaveDay: g.lastLeaveDay ?? null,
       lastBathsDay: g.lastBathsDay ?? null,
       lastRecognitionDay: g.lastRecognitionDay ?? null,
+      lastSelfChallengeDay: g.lastSelfChallengeDay ?? null,
       // Saves from before Phase 8 Part E had no body-type archetype; a fixed
       // deterministic fallback (rather than a fresh random roll on every load) so it
       // doesn't reshuffle a fighter's build/CA each time the save is reopened.

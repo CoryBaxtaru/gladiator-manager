@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useGame } from "../state/GameContext";
 import { previewOpponent } from "../engine/deathMatch";
-import { estimateWinChance } from "../engine/combat";
+import { estimateWinChance, canFight } from "../engine/combat";
 import { currentAbilityStars, currentAbilityOf } from "../engine/rating";
 import { moodLabel } from "../engine/mood";
 import type { FightMatchup } from "../types";
@@ -18,7 +18,7 @@ export function IncomingChallengeModal() {
   const challenge = state.pendingDeathMatchChallenge;
   if (!challenge) return null;
 
-  const eligibleGladiators = state.gladiators.filter((g) => g.status === "active" && g.injuryDaysRemaining === 0);
+  const eligibleGladiators = state.gladiators.filter(canFight);
   const previewGladiator = eligibleGladiators.find((g) => g.id === previewGladiatorId) ?? null;
   const opponent = previewGladiator ? previewOpponent(state, challenge.rivalLudusId, previewGladiator.id) : null;
 

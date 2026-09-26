@@ -47,12 +47,21 @@ export function FightDaySelectionModal() {
     });
   };
 
+  // Phase 12 Part E: "who to send" stays a real, meaningful decision -- nobody is
+  // forced to send their WHOLE roster -- but a player can no longer indefinitely hide
+  // every fit gladiator from risk. At least half the fit roster (rounded up) has to
+  // fight each fight day.
+  const minimumRequired = eligible.length === 0 ? 0 : Math.max(1, Math.ceil(eligible.length / 2));
+  const meetsMinimum = selected.size >= minimumRequired;
+
   return (
     <div className="modal-backdrop">
       <div className="modal fight-day-modal">
         <h2>Fight Day, {TIER_LABELS[tier]}</h2>
         <p className="hint">
-          Choose who fights today. Injured gladiators are not eligible, and anyone left out just sits this one out.
+          Choose who fights today. A bruised gladiator can still go, at a real but small penalty -- anyone more
+          seriously hurt is not eligible.
+          {eligible.length > 0 && ` At least ${minimumRequired} of your ${eligible.length} fit fighter(s) must go -- the rest can sit this one out.`}
         </p>
         {eligible.length === 0 ? (
           <p className="empty-note">No one is fit to fight today.</p>
@@ -90,10 +99,12 @@ export function FightDaySelectionModal() {
           </>
         )}
         <div className="confirm-actions">
-          <button className="btn" onClick={() => resolveFightDay([])}>
-            Sit today out
-          </button>
-          <button className="btn primary" onClick={() => resolveFightDay(Array.from(selected))}>
+          {eligible.length === 0 && (
+            <button className="btn" onClick={() => resolveFightDay([])}>
+              Sit today out
+            </button>
+          )}
+          <button className="btn primary" disabled={!meetsMinimum} onClick={() => resolveFightDay(Array.from(selected))}>
             Send {selected.size} to the arena
           </button>
         </div>

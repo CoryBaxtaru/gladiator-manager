@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useGame } from "../state/GameContext";
 import { TRAINING_FOCUS_LABELS } from "../config";
 import type { Gladiator, StatKey, TrainingFocus } from "../types";
-import { displayedStaffStars } from "../engine/staff";
+import { displayedStaffStars, trainerCoveredStats } from "../engine/staff";
 import { StarRating } from "./StarRating";
 import { Tooltip } from "./Tooltip";
 import { Card } from "./Card";
@@ -26,7 +26,7 @@ function staffRoleLabel(role: string, specialtyLabel: string): string {
 }
 
 const STAFF_ROLE_DESCRIPTION: Record<string, (specialty: string) => string> = {
-  trainer: (specialty) => `Improves the odds of a training success for any gladiator whose focus (or a balanced session that lands on it) is ${specialty}.`,
+  trainer: (specialty) => `Improves the odds of a training success for any gladiator whose focus (or a balanced session that lands on it) is ${specialty}, or another stat within his coverage.`,
   doctor: () => "Makes every paid doctor visit cheaper and more effective. Doesn't speed recovery just by being on staff.",
 };
 
@@ -193,6 +193,9 @@ export function TrainingScreen() {
                 <span className="staff-role">{staffRoleLabel(s.role, TRAINING_FOCUS_LABELS[s.specialty ?? "balanced"])}</span>
               </div>
               <p className="hint staff-role-desc">{staffRoleDescription(s.role, TRAINING_FOCUS_LABELS[s.specialty ?? "balanced"])}</p>
+              {s.role === "trainer" && (
+                <p className="hint">Covers: {trainerCoveredStats(s).map((stat) => TRAINING_FOCUS_LABELS[stat]).join(", ")}</p>
+              )}
               <StarRating value={displayedStaffStars(s, state.reputation)} />
               <div className="staff-salary">{s.weeklySalary}g per week</div>
               <button className="btn small danger-outline" onClick={() => dismissStaff(s.id)}>Dismiss</button>
@@ -214,6 +217,9 @@ export function TrainingScreen() {
                 <span className="staff-role">{staffRoleLabel(c.staff.role, TRAINING_FOCUS_LABELS[c.staff.specialty ?? "balanced"])}</span>
               </div>
               <p className="hint staff-role-desc">{staffRoleDescription(c.staff.role, TRAINING_FOCUS_LABELS[c.staff.specialty ?? "balanced"])}</p>
+              {c.staff.role === "trainer" && (
+                <p className="hint">Covers: {trainerCoveredStats(c.staff).map((stat) => TRAINING_FOCUS_LABELS[stat]).join(", ")}</p>
+              )}
               <Tooltip text="This rating is fuzzy at low reputation and sharpens as your ludus grows more respected.">
                 <StarRating value={displayedStaffStars(c.staff, state.reputation)} />
               </Tooltip>

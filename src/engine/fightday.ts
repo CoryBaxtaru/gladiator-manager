@@ -3,6 +3,7 @@ import { FIGHT_DAY, DIFFICULTY_RAMP, REPUTATION_BANDS_BY_TIER } from "../config"
 import { rivalLudiForTier } from "./rivalLudi";
 import { nextId, pick, chance } from "./rng";
 import { currentAbilityOf } from "./rating";
+import { canFight } from "./combat";
 
 const TIER_ORDER: FightTier[] = ["local", "provincial", "rival", "colosseum"];
 
@@ -33,7 +34,7 @@ function pickMatchTier(state: LudusState, tier: FightTier): FightTier {
 }
 
 export function eligibleForFightDay(gladiators: Gladiator[]): Gladiator[] {
-  return gladiators.filter((g) => g.status === "active" && g.injuryDaysRemaining === 0);
+  return gladiators.filter(canFight);
 }
 
 export function computeNextFightDay(fromDay: number): number {

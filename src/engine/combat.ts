@@ -1,9 +1,31 @@
 import type { CombatLogRound, CombatResult, FightMatchup, Gladiator, GladiatorStats, LudusState, StatKey } from "../types";
-import { COMBAT, MOOD, STAFF, CLASH_LABELS, FIGHT_ECONOMY, PERSONALITY_TRAIT_UNLOCK, ALL_PERSONALITY_TRAITS, BRONZE_CROWN } from "../config";
+import { COMBAT, MOOD, STAFF, CLASH_LABELS, FIGHT_ECONOMY, PERSONALITY_TRAIT_UNLOCK, ALL_PERSONALITY_TRAITS, BRONZE_CROWN, DEATH_ON_DEFEAT, SPONSOR_SURVIVAL, INJURY_MISS_CHANCE } from "../config";
 import { randFloat, pickN } from "./rng";
 import { addMoodModifier } from "./mood";
 import { bestDoctor } from "./staff";
-import { effectiveStats, averageStats } from "./rating";
+import { effectiveStats, averageStats, currentAbilityOf } from "./rating";
+import { statSpreadMultiplier } from "./training";
+
+/**
+ * Phase 13 Part C: a gladiator with a light injury (bruised) can still be sent to
+ * fight -- a real but small penalty (situationalBonus's flat condition deduction, plus
+ * INJURY_MISS_CHANCE below), not full unavailability, matching what the condition's
+ * own tooltip already promised ("a small penalty in the arena, heals fast"). Only the
+ * more severe injury states sit him out entirely.
+ *
+ * Deliberately keyed on `condition`, not `injuryDaysRemaining`: those two used to
+ * always agree in practice (bruised always carried injuryDaysRemaining > 0), which is
+ * exactly why every screen gating on `injuryDaysRemaining === 0` silently excluded
+ * every non-healthy gladiator regardless of how minor the injury actually was --
+ * making both this file's condition penalty and its injury miss chance unreachable in
+ * any real fight. `injuryDaysRemaining` still ticks down and still governs when a
+ * doctor visit helps and when condition fully clears; it just isn't the fight-
+ * eligibility gate anymore.
+ */
+export function canFight(gladiator: Gladiator): boolean {
+  if (gladiator.status !== "active") return false;
+  return gladiator.condition !== "injured" && gladiator.condition !== "gravely_injured";
+}
 
 type ClashKey = StatKey | "composite";
 
@@ -62,17 +84,27 @@ export function resolveFight(
   let opponentWins = 0;
   const playerStats = effectiveStats(gladiator);
 
+  // Phase 12 Part G: an injured gladiator carries a chance to flat-out miss a clash --
+  // an automatic loss regardless of the stat comparison -- scaling with severity, on
+  // top of the existing flat stat penalty in situationalBonus. Rolled per clash (not
+  // once for the whole fight) so a lucky fighter can still salvage a clash or two.
+  const missChance = INJURY_MISS_CHANCE[gladiator.condition as keyof typeof INJURY_MISS_CHANCE] ?? 0;
+
   for (let i = 0; i < CLASH_SEQUENCE.length; i++) {
     const key = CLASH_SEQUENCE[i];
     const isLosing = opponentWins > playerWins;
+    const playerMisses = missChance > 0 && Math.random() < missChance;
     const playerBase = baseStatFor(key, playerStats) + situationalBonus(gladiator, state, currentDay, isLosing);
     const opponentBase = baseStatFor(key, matchup.opponentStats);
 
-    const playerValue = withVariance(playerBase);
+    const playerValue = playerMisses ? 0 : withVariance(playerBase);
     const opponentValue = withVariance(opponentBase);
 
     let winnerText: string;
-    if (playerValue > opponentValue) {
+    if (playerMisses) {
+      opponentWins++;
+      winnerText = `${gladiator.name} falters from his wounds, ${matchup.opponentName} wins`;
+    } else if (playerValue > opponentValue) {
       playerWins++;
       winnerText = `${gladiator.name} wins`;
     } else if (opponentValue > playerValue) {
@@ -85,7 +117,9 @@ export function resolveFight(
     if (!skipLog) {
       log.push({
         round: i + 1,
-        text: `${CLASH_LABELS[key]}: ${gladiator.name} ${Math.round(playerValue)} versus ${matchup.opponentName} ${Math.round(opponentValue)}, ${winnerText}.`,
+        text: playerMisses
+          ? `${CLASH_LABELS[key]}: ${gladiator.name} falters from his wounds and misses the clash entirely, ${matchup.opponentName} wins.`
+          : `${CLASH_LABELS[key]}: ${gladiator.name} ${Math.round(playerValue)} versus ${matchup.opponentName} ${Math.round(opponentValue)}, ${winnerText}.`,
       });
     }
   }
@@ -166,12 +200,23 @@ export function resolveFight(
       if (severityRoll < 0.5) injury = "bruised";
       else if (severityRoll < 0.85) injury = "injured";
       else injury = "gravely_injured";
+    }
 
-      if (injury === "gravely_injured") {
-        let deathChance = COMBAT.baseDeathChanceOnGraveInjury - state.buildings.infirmary.level * 0.015;
-        if (doctor) deathChance -= doctor.trueSkill * 0.001;
-        deathChance = Math.max(0.02, deathChance);
-        if (Math.random() < deathChance) died = true;
+    // Phase 12 Part A: death is now a single, direct roll on any real LOSS (a draw
+    // never carries death risk), not gated behind injury-happens AND severity-rolls-
+    // grave first -- see DEATH_ON_DEFEAT's doc comment for why the old chained version
+    // diluted to under 1% in practice. A real baseline around 20%, additive modifiers
+    // shift it but can't chain it away.
+    if (outcome === "loss") {
+      let deathChance = DEATH_ON_DEFEAT.baseChance + marginFactor * DEATH_ON_DEFEAT.marginBonus;
+      deathChance -= state.buildings.infirmary.level * DEATH_ON_DEFEAT.infirmaryReductionPerLevel;
+      if (doctor) deathChance -= doctor.trueSkill * DEATH_ON_DEFEAT.doctorSkillReduction;
+      if (isPrideful) deathChance += DEATH_ON_DEFEAT.pridefulBonus;
+      if (isCoward) deathChance -= DEATH_ON_DEFEAT.cowardReduction;
+      deathChance = Math.max(DEATH_ON_DEFEAT.minChance, Math.min(DEATH_ON_DEFEAT.maxChance, deathChance));
+      if (Math.random() < deathChance) {
+        died = true;
+        injury = "gravely_injured"; // a fatal defeat is always at least this severe
       }
     }
   }
@@ -218,7 +263,10 @@ export function applyCombatResultToGladiator(gladiator: Gladiator, result: Comba
   // keeps winning fights could climb past his PA even though training alone can't.
   // Backed off point by point (gains are small) so the exact averageStats rounding
   // behavior in currentAbilityOf is honored rather than approximated.
-  let cappedShowmanship = Math.min(99, gladiator.stats.showmanship + result.showmanshipGain);
+  // Phase 12 Part I: a stat pulled far ahead of the gladiator's other three trains
+  // more slowly, combat-driven gains included -- see statSpreadMultiplier (training.ts).
+  const spreadAdjustedGain = Math.round(result.showmanshipGain * statSpreadMultiplier(gladiator, "showmanship"));
+  let cappedShowmanship = Math.min(99, gladiator.stats.showmanship + spreadAdjustedGain);
   while (
     cappedShowmanship > gladiator.stats.showmanship &&
     averageStats(effectiveStats({ ...gladiator, stats: { ...gladiator.stats, showmanship: cappedShowmanship } })) > gladiator.potentialAbility
@@ -252,10 +300,18 @@ export function applyCombatResultToGladiator(gladiator: Gladiator, result: Comba
   }
 
   if (result.died) {
-    if (!result.isDeathMatch && isLastActiveGladiator) {
+    if (result.isDeathMatch) {
+      return { ...updated, status: "dead", condition: "gravely_injured", statusChangedOnDay: currentDay };
+    }
+    if (isLastActiveGladiator) {
       return { ...updated, condition: "gravely_injured", injuryDaysRemaining: 10 };
     }
-    return { ...updated, status: "dead", condition: "gravely_injured", statusChangedOnDay: currentDay };
+    // Phase 12 Part A: an ordinary fatal defeat is no longer resolved silently -- hold
+    // him here, gravely wounded but still nominally active, until the player chooses
+    // to sponsor his survival (see sponsorSurvivalCost/resolveFateDecision below) or
+    // let him die. The App shell surfaces this as a blocking choice ahead of the day's
+    // summary.
+    return { ...updated, condition: "gravely_injured", injuryDaysRemaining: 10, awaitingFateDecision: true };
   }
 
   if (result.injury) {
@@ -329,4 +385,47 @@ export function estimateWinChance(
     else losses++;
   }
   return { winRate: wins / trials, drawRate: draws / trials, lossRate: losses / trials };
+}
+
+/**
+ * Phase 13 Part A: the gold cost to sponsor a gladiator's survival when an ordinary
+ * defeat would otherwise kill him. Scaled off his own Current Ability alone (capped by
+ * PA, same as everywhere else) -- no separate tier multiplier, since CA already climbs
+ * with tier as a roster develops; multiplying by tier again double-counted the same
+ * signal and made the cost unaffordable in practice (see SPONSOR_SURVIVAL's doc
+ * comment in config.ts for the diagnostic). `state` is no longer needed here but kept
+ * in the signature so callers don't need to change.
+ */
+export function sponsorSurvivalCost(gladiator: Gladiator, _state: LudusState): number {
+  return Math.round(currentAbilityOf(gladiator) * SPONSOR_SURVIVAL.costPerCA);
+}
+
+/**
+ * Resolves the player's sponsor-or-let-die choice for a gladiator held in limbo by
+ * awaitingFateDecision. Sponsoring deducts the cost and clears the flag (he stays
+ * gravely_injured, already set when the fight result was applied); declining (or not
+ * being able to afford it) finalizes him as dead.
+ */
+export function resolveFateDecision(state: LudusState, gladiatorId: string, sponsor: boolean): LudusState {
+  const gladiator = state.gladiators.find((g) => g.id === gladiatorId);
+  if (!gladiator || !gladiator.awaitingFateDecision) return state;
+
+  if (sponsor) {
+    const cost = sponsorSurvivalCost(gladiator, state);
+    if (state.gold < cost) return state;
+    return {
+      ...state,
+      gold: state.gold - cost,
+      gladiators: state.gladiators.map((g) => (g.id === gladiatorId ? { ...g, awaitingFateDecision: false } : g)),
+    };
+  }
+
+  return {
+    ...state,
+    gladiators: state.gladiators.map((g) =>
+      g.id === gladiatorId
+        ? { ...g, status: "dead" as const, awaitingFateDecision: false, statusChangedOnDay: state.currentDay }
+        : g
+    ),
+  };
 }

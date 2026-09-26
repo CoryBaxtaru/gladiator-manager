@@ -1608,6 +1608,14 @@ body {
   margin-bottom: 20px;
 }
 
+/* Sale choice: instant vs. auction (Phase 12 Part H) */
+.sale-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+}
+
 .recruiter-tier-picker {
   display: flex;
   gap: 10px;

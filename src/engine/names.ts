@@ -85,6 +85,9 @@ const GROUP_KEY: Record<Origin, string> = {
   Nubian: "nubian",
   Syrian: "syrian",
   Greek: "greek",
+  // Never actually drawn -- pickOrigin() below only rolls from ORIGINS, which excludes
+  // this one-off (see the Origin type's own note). Present only for total coverage.
+  Iberian: "greek",
 };
 
 /**
@@ -100,6 +103,7 @@ const COMMONER_BUCKETS: Record<Origin, string[]> = {
   Nubian: ["commonersAttested", "postMeroiticRulersAttested"],
   Syrian: ["palmyreneAttested", "judaeanAttested"],
   Greek: ["civiliansAttested"],
+  Iberian: [], // never drawn -- see GROUP_KEY's note
 };
 
 /**
@@ -116,6 +120,7 @@ const ELITE_BUCKETS: Record<Origin, string[]> = {
   Nubian: ["royalAttested"],
   Syrian: ["dynasticAttested"],
   Greek: [],
+  Iberian: [], // never drawn -- see GROUP_KEY's note
 };
 
 /** How often a birth name is synthesised from attested name-elements rather than taken whole. */
@@ -128,6 +133,7 @@ const PROCEDURAL_CHANCE: Record<Origin, number> = {
   Nubian: 0, // the generator's Amani- element is royal-only -- see the data file's warning
   Roman: 0,
   Greek: 0,
+  Iberian: 0, // never drawn -- see GROUP_KEY's note
 };
 
 /** Chance a fighter draws from the elite pool instead of the commoner pool. */

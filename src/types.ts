@@ -29,7 +29,16 @@ export type Origin =
   | "Numidian"
   | "Germanic"
   | "Syrian"
-  | "Greek";
+  | "Greek"
+  /**
+   * Not part of the normal generation pool (see pickOrigin() in engine/names.ts) --
+   * reserved for the ultra-rare Makasimus easter egg (Phase 12 Part O). No sprite art
+   * exists for this origin, so he displays with the Greek portrait set (Caucasian
+   * Iberia had real Hellenistic cultural ties) while his name and backstory are
+   * explicit that he's from Iberia in the Caucasus, roughly modern Georgia -- not the
+   * Iberian Peninsula.
+   */
+  | "Iberian";
 
 export type GladiatorCondition =
   | "healthy"
@@ -130,6 +139,17 @@ export interface Gladiator {
   lastLeaveDay: number | null;
   lastBathsDay: number | null;
   lastRecognitionDay: number | null;
+  /** Cooldown gate for the self-directed Reputation Challenge mode (Phase 12 Part C). */
+  lastSelfChallengeDay: number | null;
+  /**
+   * Set when an ordinary (non-death-match) defeat would have killed him (see
+   * DEATH_ON_DEFEAT in config.ts) -- instead of resolving silently, he's held here,
+   * gravely wounded but still nominally active, until the player chooses to sponsor
+   * his survival for a gold cost or let him die (Phase 12 Part A). Optional so saves
+   * written before this existed still load; absent/false both read as "no decision
+   * pending".
+   */
+  awaitingFateDecision?: boolean;
   /**
    * Fixed random offset assigned at generation, used to fuzz the displayed Potential
    * Ability star rating the same way a trainer's displayed rating is fuzzed. Optional
@@ -332,6 +352,15 @@ export interface DeathMatchOutcome {
   combat?: CombatResult;
   reputationTransferred?: number;
   goldDelta?: number;
+  /**
+   * "ludus" (default when absent, for back-compat with existing callers) is the
+   * original lethal ludus-vs-ludus death match. "self" is the Phase 12 Part C
+   * self-directed mode: a non-lethal, self-arranged bout for a specific gladiator
+   * against a generated opponent scaled to his own level, used to shift the result
+   * modal's framing (no "the loser dies" language) since it reuses the same outcome
+   * shape rather than duplicating the whole result-display path.
+   */
+  mode?: "ludus" | "self";
 }
 
 /** Result of a Promotion Fight attempt (see engine/promotion.ts). */
@@ -392,4 +421,19 @@ export interface LudusState {
   /** Chosen by the player at game start (Phase 8 Part F), pre-filled with a generated
    * suggestion but editable -- no longer only ever derived from the founder's name. */
   ludusName: string;
+  /** Phase 12 Part L: the Colosseum capstone encounter. Set after a lost attempt, same
+   * cooldown convention as promotionCooldownUntilDay. Null when no attempt has failed
+   * recently. */
+  praetorianCooldownUntilDay: number | null;
+  /** How many times the Emperor's Praetorian Guard has been defeated -- the closest
+   * thing the game has to tracking "endings" reached, without blocking a repeat run. */
+  praetorianVictories: number;
+  /**
+   * Phase 13 Part B: once a self-directed Challenge opponent is generated for a
+   * gladiator, it's locked in here for the day it was drawn rather than rerolled on
+   * every preview open -- closing and reopening the preview the same day shows the
+   * same opponent; a new one is only drawn once a new day has passed (or the
+   * cooldown lapses and the entry is cleared). Keyed by gladiator id.
+   */
+  selfChallengeDraws: Record<string, { opponent: RivalGladiator; generatedOnDay: number }>;
 }
