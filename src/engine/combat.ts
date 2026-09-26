@@ -392,6 +392,19 @@ export function applyCombatResultToGladiator(gladiator: Gladiator, result: Comba
 }
 
 /**
+ * Phase 16 Part A: shared by every combat path (ordinary fight day, Promotion Fight,
+ * death match, self-challenge, Colosseum finale) so a newly-earned signature technique
+ * gets the same named-moment announcement no matter which occasion it happens to fire
+ * in -- diffs signatureTechnique before/after applyCombatResultToGladiator, same
+ * pattern tick.ts already used for the ordinary fight-day path.
+ */
+export function techniqueAnnouncementFor(before: Gladiator, after: Gladiator): string | null {
+  if (before.signatureTechnique || !after.signatureTechnique) return null;
+  const technique = SIGNATURE_TECHNIQUES[after.signatureTechnique];
+  return `${after.name} has earned a name for it: "${technique.label}." ${technique.description}`;
+}
+
+/**
  * Phase 9 Part B: a clean sweep (every clash won) or a win pulled off as a Heavy
  * Underdog (see WinChanceBadge's classify(), same 0.25 cutoff as BRONZE_CROWN's
  * underdogWinRateMax) is a "particularly notable win" -- earns an automatic bronze

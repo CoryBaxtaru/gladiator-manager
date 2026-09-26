@@ -1,7 +1,7 @@
 import type { CombatResult, FightMatchup, FightTier, LudusState, PromotionOutcome, RivalGladiator, RivalLudus } from "../types";
 import { PROMOTION, PROMOTION_READINESS, REPUTATION_BANDS_BY_TIER } from "../config";
 import { rivalLudiForTier } from "./rivalLudi";
-import { resolveFight, applyCombatResultToGladiator, canFight } from "./combat";
+import { resolveFight, applyCombatResultToGladiator, canFight, techniqueAnnouncementFor } from "./combat";
 import { currentAbilityOf } from "./rating";
 import { nextId } from "./rng";
 
@@ -136,6 +136,7 @@ export function resolvePromotionFight(
   const activeCount = state.gladiators.filter((g) => g.status === "active").length;
   const combat = resolveFight(matchup, gladiator, state, currentDay);
   const updatedGladiator = applyCombatResultToGladiator(gladiator, combat, currentDay, activeCount === 1);
+  const techniqueAnnouncement = techniqueAnnouncementFor(gladiator, updatedGladiator);
 
   let working: LudusState = {
     ...state,
@@ -162,7 +163,7 @@ export function resolvePromotionFight(
       gold: working.gold + totalGold,
       promotionCooldownUntilDay: null,
     };
-    return { state: working, outcome: { won: true, combat: displayCombat, newTier, cooldownUntilDay: null } };
+    return { state: working, outcome: { won: true, combat: displayCombat, newTier, cooldownUntilDay: null, techniqueAnnouncement } };
   }
 
   const cooldownUntilDay = currentDay + PROMOTION.cooldownDays;
@@ -172,5 +173,5 @@ export function resolvePromotionFight(
     reputation: Math.max(0, working.reputation + combat.reputationReward),
     promotionCooldownUntilDay: cooldownUntilDay,
   };
-  return { state: working, outcome: { won: false, combat, newTier: null, cooldownUntilDay } };
+  return { state: working, outcome: { won: false, combat, newTier: null, cooldownUntilDay, techniqueAnnouncement } };
 }

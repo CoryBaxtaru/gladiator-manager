@@ -7,7 +7,7 @@
 // sponsor-or-let-die choice) an ordinary loss does, no more, no less.
 import type { CombatResult, FightMatchup, Gladiator, LudusState, RivalGladiator } from "../types";
 import { COLOSSEUM_FINALE, REPUTATION_BANDS_BY_TIER } from "../config";
-import { resolveFight, applyCombatResultToGladiator, canFight } from "./combat";
+import { resolveFight, applyCombatResultToGladiator, canFight, techniqueAnnouncementFor } from "./combat";
 import { generateGladiator } from "./generator";
 import { generateArenaName } from "./names";
 import { effectiveStats, currentAbilityOf } from "./rating";
@@ -50,6 +50,10 @@ export interface PraetorianFinaleOutcome {
   gladiatorsTotal: number;
   bonusGold: number;
   bonusReputation: number;
+  /** Phase 16 Part A: see DeathMatchOutcome.techniqueAnnouncement -- one entry per
+   * gladiator sent who earned a technique in this occasion (rare, but the finale fields
+   * a whole squad, so more than one can fire at once). */
+  techniqueAnnouncements: string[];
 }
 
 /**
@@ -73,6 +77,7 @@ export function resolvePraetorianFinale(
   let gold = state.gold;
   let reputation = state.reputation;
   let wonCount = 0;
+  const techniqueAnnouncements: string[] = [];
 
   for (const fighter of fighters) {
     const idx = gladiators.findIndex((g) => g.id === fighter.id);
@@ -89,6 +94,8 @@ export function resolvePraetorianFinale(
     const activeCount = gladiators.filter((g) => g.status === "active").length;
     const combat = resolveFight(matchup, fighter, state, state.currentDay);
     const updated = applyCombatResultToGladiator(fighter, combat, state.currentDay, activeCount === 1);
+    const announcement = techniqueAnnouncementFor(fighter, updated);
+    if (announcement) techniqueAnnouncements.push(announcement);
     gladiators[idx] = updated;
     results.push(combat);
     gold += combat.goldReward;
@@ -111,6 +118,6 @@ export function resolvePraetorianFinale(
 
   return {
     state: working,
-    outcome: { results, won, gladiatorsWon: wonCount, gladiatorsTotal: fighters.length, bonusGold, bonusReputation },
+    outcome: { results, won, gladiatorsWon: wonCount, gladiatorsTotal: fighters.length, bonusGold, bonusReputation, techniqueAnnouncements },
   };
 }

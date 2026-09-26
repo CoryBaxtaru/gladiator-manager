@@ -9,7 +9,7 @@ import { Badge } from "./Badge";
 export function PraetorianFinaleResultModal() {
   const { praetorianFinaleOutcome, clearPraetorianFinaleOutcome } = useGame();
   if (!praetorianFinaleOutcome) return null;
-  const { results, won, gladiatorsWon, gladiatorsTotal, bonusGold, bonusReputation } = praetorianFinaleOutcome;
+  const { results, won, gladiatorsWon, gladiatorsTotal, bonusGold, bonusReputation, techniqueAnnouncements } = praetorianFinaleOutcome;
 
   return (
     <div className="modal-backdrop">
@@ -27,6 +27,11 @@ export function PraetorianFinaleResultModal() {
             <FightResultCard key={c.fightId} result={c} />
           ))}
         </div>
+        {techniqueAnnouncements.map((text) => (
+          <p className="hint" key={text}>
+            {text}
+          </p>
+        ))}
         <button className="btn primary" onClick={clearPraetorianFinaleOutcome}>
           Continue
         </button>

@@ -43,6 +43,7 @@ export function DeathMatchResultModal() {
                     : `Purse: ${deathMatchOutcome.goldDelta}g.`}
                 </p>
               )}
+              {deathMatchOutcome.techniqueAnnouncement && <p className="hint">{deathMatchOutcome.techniqueAnnouncement}</p>}
             </>
           )
         )}

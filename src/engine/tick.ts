@@ -3,8 +3,8 @@ import { tickBuildQueue, computeImbalance } from "./buildings";
 import { recomputeMood, resolveBreak, addMoodModifier } from "./mood";
 import { applyDailyTraining, maybeRevealPotential, tickInjuryRecovery, tickAgeAndDecline } from "./training";
 import { applySparringTraining } from "./sparring";
-import { resolveFight, applyCombatResultToGladiator, estimateWinChance, checkBronzeCrown } from "./combat";
-import { BRONZE_CROWN, SIGNATURE_TECHNIQUES } from "../config";
+import { resolveFight, applyCombatResultToGladiator, estimateWinChance, checkBronzeCrown, techniqueAnnouncementFor } from "./combat";
+import { BRONZE_CROWN } from "../config";
 import { weeklyGladiatorUpkeep, weeklyBuildingUpkeep, weeklyLudusOverhead } from "./economy";
 import { tickRecruiterTrip } from "./scouting";
 import { maybeRefreshStaffPool, weeklyStaffSalaries, bestDoctor } from "./staff";
@@ -54,13 +54,8 @@ export function advanceDay(
     // exact fight it's earned in, the same "real, visible milestone" treatment the
     // first personality trait slot doesn't get (that one's discovered on the Squad
     // screen), because this one is explicitly meant to land as a named moment.
-    if (!gladiator.signatureTechnique && updatedGladiator.signatureTechnique) {
-      const technique = SIGNATURE_TECHNIQUES[updatedGladiator.signatureTechnique];
-      entries.push({
-        category: "fight",
-        text: `${gladiator.name} has earned a name for it: "${technique.label}." ${technique.description}`,
-      });
-    }
+    const techniqueAnnouncement = techniqueAnnouncementFor(gladiator, updatedGladiator);
+    if (techniqueAnnouncement) entries.push({ category: "fight", text: techniqueAnnouncement });
     combatResults.push(result);
     goldFromFights += result.goldReward;
     reputationFromFights += result.reputationReward;

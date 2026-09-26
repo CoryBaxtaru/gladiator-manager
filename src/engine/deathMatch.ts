@@ -1,6 +1,6 @@
 import type { DeathMatchOutcome, FightMatchup, Gladiator, LudusState, RivalGladiator, RivalLudus } from "../types";
 import { DEATH_MATCH, FIGHT_ECONOMY, SELF_CHALLENGE } from "../config";
-import { resolveFight, applyCombatResultToGladiator, canFight } from "./combat";
+import { resolveFight, applyCombatResultToGladiator, canFight, techniqueAnnouncementFor } from "./combat";
 import { reputationCapFor } from "./promotion";
 import { nextId, pick, chance } from "./rng";
 import { currentAbilityOf, effectiveStats } from "./rating";
@@ -91,6 +91,7 @@ function fightDeathMatch(
 
   const combat = resolveFight(matchup, gladiator, state, state.currentDay, { lethal: true });
   const updatedGladiator = applyCombatResultToGladiator(gladiator, combat, state.currentDay);
+  const techniqueAnnouncement = techniqueAnnouncementFor(gladiator, updatedGladiator);
 
   const playerWon = combat.outcome === "win";
   const repAtStake = playerWon ? rivalLudus.reputation : state.reputation;
@@ -139,6 +140,7 @@ function fightDeathMatch(
       reputationTransferred: playerWon ? transferred : -transferred,
       goldDelta: playerWon ? wager : -wager,
       mode: "ludus",
+      techniqueAnnouncement,
     },
   };
 }
@@ -313,8 +315,10 @@ export function resolveSelfChallenge(state: LudusState, gladiatorId: string): { 
 
   const activeCount = state.gladiators.filter((g) => g.status === "active").length;
   const combat = resolveFight(matchup, gladiator, state, state.currentDay);
+  const combatUpdatedGladiator = applyCombatResultToGladiator(gladiator, combat, state.currentDay, activeCount === 1);
+  const techniqueAnnouncement = techniqueAnnouncementFor(gladiator, combatUpdatedGladiator);
   const updatedGladiator = {
-    ...applyCombatResultToGladiator(gladiator, combat, state.currentDay, activeCount === 1),
+    ...combatUpdatedGladiator,
     lastSelfChallengeDay: state.currentDay,
   };
 
@@ -337,6 +341,7 @@ export function resolveSelfChallenge(state: LudusState, gladiatorId: string): { 
       goldDelta: combat.goldReward,
       reputationTransferred: combat.reputationReward,
       mode: "self",
+      techniqueAnnouncement,
     },
   };
 }

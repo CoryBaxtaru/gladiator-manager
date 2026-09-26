@@ -418,6 +418,9 @@ export interface DeathMatchOutcome {
    * shape rather than duplicating the whole result-display path.
    */
   mode?: "ludus" | "self";
+  /** Phase 16 Part A: set when this bout is also the exact fight a signature technique
+   * was earned in, same named-moment treatment the ordinary fight-day path already gets. */
+  techniqueAnnouncement?: string | null;
 }
 
 /** Result of a Promotion Fight attempt (see engine/promotion.ts). */
@@ -426,6 +429,8 @@ export interface PromotionOutcome {
   combat: CombatResult;
   newTier: FightTier | null;
   cooldownUntilDay: number | null;
+  /** Phase 16 Part A: see DeathMatchOutcome.techniqueAnnouncement. */
+  techniqueAnnouncement?: string | null;
 }
 
 export interface LudusState {
