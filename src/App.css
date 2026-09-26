@@ -728,6 +728,28 @@ body {
   gap: var(--space-3);
 }
 
+/* Phase 16 Part C: the permanent milestone log, kept separate from the rolling
+   day-by-day list below it -- a plain scrollable row list rather than day-grouped
+   cards, since the whole point is a quick scan across a potentially long save. */
+.history-milestone-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 320px;
+  overflow-y: auto;
+  margin-bottom: var(--space-4);
+  padding: var(--space-2);
+  background: #1a140f;
+  border-radius: 4px;
+}
+
+.history-milestone-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+
 .history-day h4 {
   margin: 0;
   color: var(--gold);

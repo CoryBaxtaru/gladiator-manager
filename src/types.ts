@@ -504,4 +504,22 @@ export interface LudusState {
    * anything, same spirit as praetorianVictories.
    */
   bankruptcyCount: number;
+  /**
+   * Phase 16 Part C: a permanent record of the significant events -- deaths, escapes,
+   * retirements, promotions, bankruptcies, signature-technique unlocks -- kept
+   * separately from `history` above, which only holds the most recent 60 day
+   * summaries and rolls the rest off. Capped generously (see engine/milestones.ts),
+   * not tightly like `history`, since the whole point is surviving well past a
+   * Week Summary modal being dismissed or the rolling window moving on.
+   */
+  milestones: MilestoneEntry[];
+}
+
+export type MilestoneCategory = "death" | "escape" | "retirement" | "promotion" | "bankruptcy" | "technique";
+
+export interface MilestoneEntry {
+  id: string;
+  day: number;
+  category: MilestoneCategory;
+  text: string;
 }

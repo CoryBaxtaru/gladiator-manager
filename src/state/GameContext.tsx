@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import type { BuildingId, DaySummary, DeathMatchOutcome, LudusState, PromotionOutcome, RecruitChannel, RecruiterTier, RivalLudus, SaleType, SponsorshipCollateral, TrainingFocus, WeaponType } from "../types";
 import { createInitialState } from "./initialState";
 import { advanceDay as engineAdvanceDay } from "../engine/tick";
+import { withMilestones } from "../engine/milestones";
 import { queueUpgrade as engineQueueUpgrade, sellBuildingLevel as engineSellBuildingLevel } from "../engine/buildings";
 import { takeLoan as engineTakeLoan } from "../engine/loan";
 import {
@@ -121,7 +122,18 @@ const GameContext = createContext<GameContextValue | null>(null);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [initial] = useState(loadInitial);
-  const [state, setState] = useState<LudusState>(initial.state);
+  const [state, setStateRaw] = useState<LudusState>(initial.state);
+  // Phase 16 Part C: every state-mutating action in this file goes through this one
+  // wrapper (a drop-in replacement for useState's own setter, same call shapes) so the
+  // permanent milestone log stays populated no matter which of the many engine call
+  // sites caused a death/escape/retirement/promotion/bankruptcy/technique unlock --
+  // see engine/milestones.ts's withMilestones for the diff itself.
+  const setState = useCallback((updater: LudusState | ((prev: LudusState) => LudusState)) => {
+    setStateRaw((prev) => {
+      const next = typeof updater === "function" ? (updater as (p: LudusState) => LudusState)(prev) : updater;
+      return next === prev ? next : withMilestones(prev, next);
+    });
+  }, []);
   // Phase 12 Part N: on a genuine first launch (no autosave found at all), the shell
   // shows a blocking FoundingModal so the player can pick their own founder/ludus name
   // instead of one being silently generated. Cleared for good once they submit it or

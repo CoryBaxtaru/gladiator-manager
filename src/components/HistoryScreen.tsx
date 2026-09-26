@@ -1,4 +1,4 @@
-import type { CombatResult, DaySummary } from "../types";
+import type { CombatResult, DaySummary, MilestoneCategory } from "../types";
 import { useGame } from "../state/GameContext";
 import { Card } from "./Card";
 import { Badge } from "./Badge";
@@ -17,6 +17,24 @@ const CATEGORY_ICONS: Record<string, string> = {
 function CategoryIcon({ category }: { category: DaySummary["entries"][number]["category"] }) {
   return <span className="entry-icon">{CATEGORY_ICONS[category] ?? "•"}</span>;
 }
+
+const MILESTONE_ICONS: Record<MilestoneCategory, string> = {
+  death: "\u{1F480}",
+  escape: "\u{1F3C3}",
+  retirement: "\u{1F396}",
+  promotion: "\u{1F3C6}",
+  bankruptcy: "\u{1F4B8}",
+  technique: "\u{2694}",
+};
+
+const MILESTONE_TONE: Record<MilestoneCategory, "success" | "warning" | "danger" | "gold" | "neutral"> = {
+  death: "danger",
+  escape: "danger",
+  retirement: "neutral",
+  promotion: "gold",
+  bankruptcy: "danger",
+  technique: "gold",
+};
 
 function signed(n: number): string {
   return n >= 0 ? `+${n}` : `${n}`;
@@ -48,12 +66,34 @@ function CompactFightLine({ result }: { result: CombatResult }) {
 export function HistoryScreen() {
   const { state } = useGame();
   const days = [...state.history].reverse();
+  const milestones = [...state.milestones].reverse();
 
   return (
     <div className="screen">
       <h2>Ludus History</h2>
+
+      <h3>Milestones</h3>
+      <p className="hint">
+        The significant moments -- deaths, escapes, retirements, promotions, bankruptcies, signature techniques --
+        kept permanently, well past the rolling day-by-day log below.
+      </p>
+      {milestones.length === 0 && <p className="empty-note">Nothing significant has happened yet.</p>}
+      {milestones.length > 0 && (
+        <div className="history-milestone-list">
+          {milestones.map((m) => (
+            <div className="history-milestone-row" key={m.id}>
+              <span className="entry-icon">{MILESTONE_ICONS[m.category]}</span>
+              <Badge tone={MILESTONE_TONE[m.category]}>Day {m.day}</Badge>
+              <span>{m.text}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <h3>Day by Day</h3>
       <p className="hint">
         Everything that's happened, most recent first, so a moment doesn't vanish once its summary is dismissed.
+        Only the last 60 days are kept here -- see Milestones above for the permanent record.
       </p>
       {days.length === 0 && <p className="empty-note">Nothing has happened yet.</p>}
       <div className="history-list">

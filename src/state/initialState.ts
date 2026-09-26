@@ -67,5 +67,6 @@ export function createInitialState(ludusName?: string, founderName?: string): Lu
     praetorianVictories: 0,
     selfChallengeDraws: {},
     bankruptcyCount: 0,
+    milestones: [],
   };
 }
