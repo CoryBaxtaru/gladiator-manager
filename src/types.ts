@@ -436,4 +436,10 @@ export interface LudusState {
    * cooldown lapses and the entry is cleared). Keyed by gladiator id.
    */
   selfChallengeDraws: Record<string, { opponent: RivalGladiator; generatedOnDay: number }>;
+  /**
+   * Phase 14 Part B: how many times this ludus has gone bankrupt -- the debt-spiral
+   * circuit breaker in engine/debt.ts. Purely a record of disgrace, doesn't gate
+   * anything, same spirit as praetorianVictories.
+   */
+  bankruptcyCount: number;
 }

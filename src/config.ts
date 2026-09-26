@@ -481,6 +481,37 @@ export const DEBT = {
 };
 
 /**
+ * Phase 14 Part B diagnostic: weeklyInterestRate compounds directly on the current
+ * negative balance with no cap, and the only counterweight is the severe consequence
+ * above (seize a gladiator, or a staff member quits) -- which correctly refuses to
+ * touch the last active gladiator (the same soft-lock floor used everywhere else) or
+ * a staff roster that's already empty. Once BOTH are true, applySevereConsequence had
+ * nothing left to seize and became a permanent no-op: nothing in the system ever
+ * shrinks the balance again, while interest keeps compounding on it forever.
+ *
+ * That "nothing left to seize" moment, not any particular gold amount, is the actual
+ * point of no return -- diagnosed against the Round 7 playtest, where it hit with the
+ * balance only a few thousand gold negative, and 1500+ days of a single CA45 fighter
+ * (an 86% win rate, ~300-500g a fight every 6 days) against ~325g/week in fixed
+ * upkeep never closed the gap: once income-minus-upkeep is smaller than 6% of the
+ * outstanding balance, the balance can only grow, and it had already compounded past
+ * -2.5 MILLION gold with zero mathematical path back by the time the playtest report
+ * was written. A magnitude threshold would have to be guessed and re-guessed for
+ * every roster size; the seize-check already knows precisely when recovery stops
+ * being possible, so bankruptcy triggers there instead of the old no-op.
+ *
+ * Bankruptcy is a real, felt reset, not an escape hatch: the debt is wiped, but
+ * reputation is cut back to the current tier's own floor (the same "you've dropped to
+ * just barely qualifying" feeling a bad losing streak already produces) and every
+ * building loses a level, mirroring the loan-collateral consequence elsewhere. It can
+ * happen more than once in a game, same as EU4's bankruptcy -- mismanage it again and
+ * it hits again.
+ */
+export const BANKRUPTCY = {
+  buildingLevelLoss: 1,
+};
+
+/**
  * A deliberate lever, not free money: taking a loan is real debt with its own
  * compounding interest, separate from the ordinary negative-gold debt above. Only one
  * loan can be outstanding at a time (it must be fully repaid before another is taken),

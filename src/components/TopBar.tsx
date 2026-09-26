@@ -21,8 +21,15 @@ export function TopBar() {
   return (
     <header className="topbar">
       <div className="topbar-title">
-        <h1>{state.ludusName}</h1>
-        <span className="topbar-founder">Lanista {state.founderName}</span>
+        <img
+          className="topbar-logo"
+          src={`${import.meta.env.BASE_URL}branding/ludus-logo.png`}
+          alt="Ludus: Gladiator Manager"
+        />
+        <div className="topbar-title-text">
+          <h1>{state.ludusName}</h1>
+          <span className="topbar-founder">Lanista {state.founderName}</span>
+        </div>
       </div>
       <div className="topbar-stats">
         <div className="stat">

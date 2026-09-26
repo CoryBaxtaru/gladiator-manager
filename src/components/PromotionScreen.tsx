@@ -216,8 +216,9 @@ export function PromotionScreen() {
               </div>
             </GladiatorHoverCard>
             <p className="hint">
-              A hard fight, but not a death match. Losing costs reputation and time, not his life, and you can
-              regroup and try again after the cooldown.
+              A hard fight, not a death match: losing isn't a guaranteed death sentence the way that is. But it's a
+              real fight all the same, and a bad enough defeat can still turn fatal. Losing costs reputation and
+              time either way, and you can regroup and try again after the cooldown.
             </p>
           </Card>
 
@@ -268,7 +269,7 @@ export function PromotionScreen() {
       {confirmingGladiator && champion && (
         <ConfirmDialog
           title="Challenge for promotion?"
-          message={`Send ${confirmingGladiator.name} to challenge ${champion.gladiator.name}. A loss costs real reputation and starts a ${PROMOTION.cooldownDays}-day cooldown before another attempt, but he survives either way.`}
+          message={`Send ${confirmingGladiator.name} to challenge ${champion.gladiator.name}. A loss costs real reputation and starts a ${PROMOTION.cooldownDays}-day cooldown before another attempt -- and carries the same real risk to his life a losing fight always does. This is not risk-free.`}
           confirmLabel="Challenge"
           onConfirm={() => {
             attemptPromotion(confirmingGladiator.id);

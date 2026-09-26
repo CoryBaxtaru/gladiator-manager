@@ -1,5 +1,5 @@
 import type { LudusState, SummaryEntry } from "../types";
-import { DEBT } from "../config";
+import { DEBT, BANKRUPTCY, REPUTATION_BANDS_BY_TIER } from "../config";
 import { addMoodModifier } from "./mood";
 import { instantSalePrice } from "./sale";
 import { pick, chance } from "./rng";
@@ -8,6 +8,44 @@ import { currentAbilityOf } from "./rating";
 export interface DebtTickResult {
   state: LudusState;
   entries: SummaryEntry[];
+}
+
+/**
+ * Phase 14 Part B: the debt-spiral circuit breaker. Fires in place of the old
+ * "nothing left to seize" no-op -- see BANKRUPTCY's doc comment in config.ts for why
+ * that moment, not a gold threshold, is the real point of no return. Wipes the debt
+ * outright, but at a real cost: reputation drops to the current tier's own floor, and
+ * every building loses a level, so the ludus survives to keep fighting but genuinely
+ * set back, not let off the hook.
+ */
+function applyBankruptcy(state: LudusState): { state: LudusState; entries: SummaryEntry[] } {
+  const entries: SummaryEntry[] = [];
+  const floor = REPUTATION_BANDS_BY_TIER[state.unlockedTier].min;
+  const newReputation = Math.min(state.reputation, floor);
+  const buildings = Object.fromEntries(
+    Object.entries(state.buildings).map(([id, b]) => [id, { ...b, level: Math.max(1, b.level - BANKRUPTCY.buildingLevelLoss) }])
+  ) as LudusState["buildings"];
+
+  entries.push({
+    category: "upkeep",
+    text: "The ludus has gone bankrupt. Creditors have picked over everything there was left to take -- the debt is wiped clean, but the standing and the buildings it took years to raise are gutted along with it.",
+  });
+  if (newReputation < state.reputation) {
+    entries.push({ category: "upkeep", text: `Reputation collapses to ${newReputation} as word of the bankruptcy spreads.` });
+  }
+  entries.push({ category: "upkeep", text: "Every building is stripped down a level to help cover what's owed." });
+
+  return {
+    state: {
+      ...state,
+      gold: 0,
+      debtWeeksActive: 0,
+      reputation: newReputation,
+      buildings,
+      bankruptcyCount: state.bankruptcyCount + 1,
+    },
+    entries,
+  };
 }
 
 function applySevereConsequence(state: LudusState): { state: LudusState; entries: SummaryEntry[] } {
@@ -21,11 +59,7 @@ function applySevereConsequence(state: LudusState): { state: LudusState; entries
   const canSeize = activeGladiators.length > 1;
 
   if (!canQuit && !canSeize) {
-    entries.push({
-      category: "upkeep",
-      text: "Creditors came looking for something to take, but with only one gladiator left and no staff to let go, there's nothing left to seize.",
-    });
-    return { state, entries };
+    return applyBankruptcy(state);
   }
 
   const doQuit = canQuit && (!canSeize || chance(0.5));

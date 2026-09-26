@@ -115,6 +115,27 @@ body {
   z-index: 10;
 }
 
+.topbar-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Phase 14 Part D: the game's own brand mark, distinct from the player's chosen ludus
+   name next to it -- kept small and fixed-height so it reads as a mark, not a banner
+   competing with the sticky topbar's other content. */
+.topbar-logo {
+  height: 44px;
+  width: auto;
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .topbar-logo {
+    height: 32px;
+  }
+}
+
 .topbar-title h1 {
   margin: 0;
   font-size: 1.4rem;
@@ -1228,6 +1249,15 @@ body {
 /* Main menu */
 .main-menu-modal {
   max-width: 480px;
+}
+
+/* Phase 14 Part D: the closest thing this app has to a title screen -- shown only on
+   the menu's root view, full width of the modal, replacing the plain "Menu" heading. */
+.main-menu-logo {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: -4px 0 12px;
 }
 
 .menu-list {

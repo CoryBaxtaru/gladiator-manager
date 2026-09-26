@@ -18,6 +18,12 @@ export function LudusScreen() {
     <div className="screen">
       <h2>The Ludus</h2>
 
+      {state.bankruptcyCount > 0 && (
+        <div className="banner warning">
+          This ludus has gone bankrupt {state.bankruptcyCount} time{state.bankruptcyCount > 1 ? "s" : ""}. The debt was
+          wiped each time, but so was a level off every building shown below.
+        </div>
+      )}
       {overextended && (
         <div className="banner warning">
           Construction chaos! Too many upgrades started at once, mood decay and training effectiveness are reduced

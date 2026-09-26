@@ -21,7 +21,11 @@ export function MainMenu({ onClose }: { onClose: () => void }) {
       <div className="modal main-menu-modal" onClick={(e) => e.stopPropagation()}>
         {view === "root" && (
           <>
-            <h2>Menu</h2>
+            <img
+              className="main-menu-logo"
+              src={`${import.meta.env.BASE_URL}branding/ludus-logo.png`}
+              alt="Ludus: Gladiator Manager"
+            />
             <div className="menu-list">
               <button
                 className="btn primary"

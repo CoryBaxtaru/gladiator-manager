@@ -49,6 +49,7 @@ function normalizeState(state: LudusState): LudusState {
     // Phase 13 Part B: new field -- a save from before this existed just has no
     // locked-in draws yet, which is exactly the state a fresh one starts in anyway.
     selfChallengeDraws: state.selfChallengeDraws ?? {},
+    bankruptcyCount: state.bankruptcyCount ?? 0,
     // Saves from before Phase 8 Part F never had a chosen ludus name -- fall back to
     // the same "{founder}'s Ludus" pattern they always displayed.
     ludusName: state.ludusName ?? `${state.founderName}'s Ludus`,
