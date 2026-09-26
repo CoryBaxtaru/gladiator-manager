@@ -1424,6 +1424,7 @@ body {
 
 .fighter-select-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
   background: #1a140f;
@@ -1472,6 +1473,16 @@ body {
   flex: 0 0 auto;
   min-width: 104px;
   justify-content: center;
+}
+
+/* Phase 16 Part F: right after a promotion, a matchup can still be blended from the
+   tier below (see fightday.ts's pickMatchTier) -- this flags which fighters got one so
+   an easier-than-expected win chance right at a tier transition doesn't read as a bug. */
+.fighter-select-tier-note {
+  flex: 1 0 100%;
+  margin-left: 42px;
+  font-size: var(--text-2xs);
+  white-space: nowrap;
 }
 
 .fighter-select-row .btn {

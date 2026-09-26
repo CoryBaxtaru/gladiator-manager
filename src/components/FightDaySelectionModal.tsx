@@ -28,6 +28,11 @@ export function FightDaySelectionModal() {
   // may differ, same as the estimate itself is only ever an estimate.
   // Deliberately empty deps: this is a mount-once preview, not a live recompute.
   const previewMatchups = useMemo(() => matchmakeFightDay(state, eligible.map((g) => g.id)), []);
+  const matchupsByGladiatorId = useMemo(() => {
+    const byGladiatorId = new Map<string, (typeof previewMatchups)[number]>();
+    for (const matchup of previewMatchups) byGladiatorId.set(matchup.gladiatorId, matchup);
+    return byGladiatorId;
+  }, [previewMatchups]);
   const winEstimates = useMemo(() => {
     const byGladiatorId = new Map<string, ReturnType<typeof estimateWinChance>>();
     for (const matchup of previewMatchups) {
@@ -63,6 +68,12 @@ export function FightDaySelectionModal() {
           seriously hurt is not eligible.
           {eligible.length > 0 && ` At least ${minimumRequired} of your ${eligible.length} fit fighter(s) must go -- the rest can sit this one out.`}
         </p>
+        {previewMatchups.some((m) => m.tier !== tier) && (
+          <p className="hint">
+            Right after a promotion, some matchups still ease in from the tier below rather than jumping straight to
+            {" "}{TIER_LABELS[tier]} -- a fighter tagged below is one of those, not a full {TIER_LABELS[tier]} test yet.
+          </p>
+        )}
         {eligible.length === 0 ? (
           <p className="empty-note">No one is fit to fight today.</p>
         ) : (
@@ -92,6 +103,12 @@ export function FightDaySelectionModal() {
                     <span className="fighter-select-mood">{moodLabel(g.mood)}</span>
                   </span>
                   {winEstimates.has(g.id) && <WinChanceBadge estimate={winEstimates.get(g.id)!} />}
+                  {(() => {
+                    const matchup = matchupsByGladiatorId.get(g.id);
+                    return matchup && matchup.tier !== tier ? (
+                      <span className="hint fighter-select-tier-note">vs {TIER_LABELS[matchup.tier]}</span>
+                    ) : null;
+                  })()}
                 </label>
               </GladiatorHoverCard>
             ))}
