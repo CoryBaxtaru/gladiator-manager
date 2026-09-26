@@ -68,5 +68,7 @@ export function createInitialState(ludusName?: string, founderName?: string): Lu
     selfChallengeDraws: {},
     bankruptcyCount: 0,
     milestones: [],
+    tierNeglectWeeksBelowStandard: 0,
+    tierNeglectCooldownUntilDay: null,
   };
 }

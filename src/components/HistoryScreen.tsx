@@ -25,6 +25,8 @@ const MILESTONE_ICONS: Record<MilestoneCategory, string> = {
   promotion: "\u{1F3C6}",
   bankruptcy: "\u{1F4B8}",
   technique: "\u{2694}",
+  poaching: "\u{1F575}",
+  demotion: "\u{1F4C9}",
 };
 
 const MILESTONE_TONE: Record<MilestoneCategory, "success" | "warning" | "danger" | "gold" | "neutral"> = {
@@ -34,6 +36,8 @@ const MILESTONE_TONE: Record<MilestoneCategory, "success" | "warning" | "danger"
   promotion: "gold",
   bankruptcy: "danger",
   technique: "gold",
+  poaching: "danger",
+  demotion: "danger",
 };
 
 function signed(n: number): string {
@@ -74,7 +78,7 @@ export function HistoryScreen() {
 
       <h3>Milestones</h3>
       <p className="hint">
-        The significant moments -- deaths, escapes, retirements, promotions, bankruptcies, signature techniques --
+        The significant moments -- deaths, escapes, retirements, promotions, demotions, poachings, bankruptcies, signature techniques --
         kept permanently, well past the rolling day-by-day log below.
       </p>
       {milestones.length === 0 && <p className="empty-note">Nothing significant has happened yet.</p>}

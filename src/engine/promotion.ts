@@ -12,6 +12,26 @@ export function nextTierOf(tier: FightTier): FightTier | null {
   return idx >= 0 && idx < TIER_ORDER.length - 1 ? TIER_ORDER[idx + 1] : null;
 }
 
+/** See engine/tierNeglect.ts: the demotion fallback needs the tier one step down. */
+export function previousTierOf(tier: FightTier): FightTier | null {
+  const idx = TIER_ORDER.indexOf(tier);
+  return idx > 0 ? TIER_ORDER[idx - 1] : null;
+}
+
+/** The ludus's actual average building level and average active-roster Current
+ * Ability -- the two numbers PROMOTION_READINESS judges a tier's entry bar by. Shared
+ * by promotionReadiness (checked once, at the entry gate) and engine/tierNeglect.ts's
+ * ongoing sustain check (checked weekly, against the same numbers, softened). */
+export function computeStanding(state: LudusState): { avgBuildingLevel: number; avgRosterCA: number } {
+  const buildingLevels = Object.values(state.buildings).map((b) => b.level);
+  const avgBuildingLevel = buildingLevels.reduce((sum, l) => sum + l, 0) / buildingLevels.length;
+
+  const active = state.gladiators.filter((g) => g.status === "active");
+  const avgRosterCA = active.length === 0 ? 0 : active.reduce((sum, g) => sum + currentAbilityOf(g), 0) / active.length;
+
+  return { avgBuildingLevel, avgRosterCA };
+}
+
 /** The reputation ceiling for the player's current unlocked tier: the next tier's
  * floor, or unbounded once already at the top (Colosseum). */
 export function reputationCapFor(state: LudusState): number {
@@ -37,12 +57,7 @@ export function promotionReadiness(state: LudusState): PromotionReadiness | null
   const next = nextTierOf(state.unlockedTier);
   if (!next) return null;
   const required = PROMOTION_READINESS[next];
-
-  const buildingLevels = Object.values(state.buildings).map((b) => b.level);
-  const avgBuildingLevel = buildingLevels.reduce((sum, l) => sum + l, 0) / buildingLevels.length;
-
-  const active = state.gladiators.filter((g) => g.status === "active");
-  const avgRosterCA = active.length === 0 ? 0 : active.reduce((sum, g) => sum + currentAbilityOf(g), 0) / active.length;
+  const { avgBuildingLevel, avgRosterCA } = computeStanding(state);
 
   return {
     ok: avgBuildingLevel >= required.minAvgBuildingLevel && avgRosterCA >= required.minAvgRosterCA,

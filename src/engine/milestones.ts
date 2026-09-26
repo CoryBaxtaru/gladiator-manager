@@ -1,8 +1,10 @@
-import type { LudusState, MilestoneCategory, MilestoneEntry } from "../types";
+import type { FightTier, LudusState, MilestoneCategory, MilestoneEntry } from "../types";
 import { SIGNATURE_TECHNIQUES, REPUTATION_TIER_LABELS } from "../config";
 import { nextId } from "./rng";
 
 const MAX_MILESTONES = 300;
+
+const TIER_ORDER: FightTier[] = ["local", "provincial", "rival", "colosseum"];
 
 /**
  * Phase 16 Part C: diffs a before/after LudusState pair (a single tick or a single
@@ -29,6 +31,8 @@ function deriveNewMilestones(before: LudusState, after: LudusState): { category:
         out.push({ category: "escape", text: `${g.name} escaped the ludus.` });
       } else if (g.status === "retired") {
         out.push({ category: "retirement", text: `${g.name} retired from the sand to join the staff.` });
+      } else if (g.status === "poached") {
+        out.push({ category: "poaching", text: `${g.name} was poached away by a rival ludus.` });
       }
     }
     if (!prior.signatureTechnique && g.signatureTechnique) {
@@ -38,7 +42,11 @@ function deriveNewMilestones(before: LudusState, after: LudusState): { category:
   }
 
   if (after.unlockedTier !== before.unlockedTier) {
-    out.push({ category: "promotion", text: `The ludus was promoted -- now fighting at ${REPUTATION_TIER_LABELS[after.unlockedTier]}.` });
+    if (TIER_ORDER.indexOf(after.unlockedTier) > TIER_ORDER.indexOf(before.unlockedTier)) {
+      out.push({ category: "promotion", text: `The ludus was promoted -- now fighting at ${REPUTATION_TIER_LABELS[after.unlockedTier]}.` });
+    } else {
+      out.push({ category: "demotion", text: `The ludus was demoted -- dropped back to ${REPUTATION_TIER_LABELS[after.unlockedTier]}.` });
+    }
   }
   if (after.bankruptcyCount > before.bankruptcyCount) {
     out.push({ category: "bankruptcy", text: "The ludus went bankrupt. Creditors picked it clean." });

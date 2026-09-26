@@ -13,6 +13,7 @@ import { tickWeeklyDebt } from "./debt";
 import { tickWeeklyLoan, applyPurseCut } from "./loan";
 import { reputationCapFor } from "./promotion";
 import { recordRivalryResult } from "./rivalLudi";
+import { tickTierNeglect } from "./tierNeglect";
 import { currentAbilityOf } from "./rating";
 
 const MAX_HISTORY_ENTRIES = 60;
@@ -205,6 +206,13 @@ export function advanceDay(
     const loanResult = tickWeeklyLoan(working, nextDay);
     working = loanResult.state;
     entries.push(...loanResult.entries);
+
+    // Phase 16 Part G: the promotion readiness gate only ever gets checked once, at
+    // the moment a Promotion Fight is attempted -- this is the ongoing version, so
+    // coasting at a tier the ludus has stopped actually earning has a real cost.
+    const neglectResult = tickTierNeglect(working);
+    working = neglectResult.state;
+    entries.push(...neglectResult.entries);
   }
 
   // 6. Staff pool refresh and recruiter trip resolution

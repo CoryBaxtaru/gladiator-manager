@@ -1046,6 +1046,30 @@ export const PROMOTION_READINESS: Record<FightTier, { minAvgBuildingLevel: numbe
   colosseum: { minAvgBuildingLevel: 3, minAvgRosterCA: 42 },
 };
 
+/**
+ * Phase 16 Part G: the readiness gate above only ever checks ONE moment -- the instant
+ * a Promotion Fight is attempted. Nothing rechecked it afterward, so a ludus could
+ * clear the bar once, then sell off buildings or coast on an aging roster forever at
+ * the tier it bought with that one good stretch. This is the ongoing version: checked
+ * weekly (see engine/tierNeglect.ts) against the SAME PROMOTION_READINESS numbers that
+ * got the ludus into its current tier, but softened by sustainFraction -- a temporary
+ * dip below the entry bar (a sold building, a rough training week) shouldn't cost a
+ * gladiator; only genuinely coasting for graceWeeks straight does.
+ *
+ * The consequence is a rival poaching whichever active gladiator is worst-off relative
+ * to the tier (mood-neglected first -- see mood.ts's riskTagFor -- else simply the
+ * lowest Current Ability), never the roster's last fighter. A one-gladiator roster
+ * (nothing poachable) falls back to a real demotion instead, so a min-maxed roster
+ * can't sit at a tier it can't sustain with total impunity either way.
+ */
+export const TIER_NEGLECT = {
+  sustainFraction: 0.7,
+  graceWeeks: 4,
+  warnAtWeek: 3,
+  cooldownWeeksAfterConsequence: 8,
+  poachingReputationPenalty: 10,
+};
+
 export const SAVE_SLOT_COUNT = 3;
 
 export const TRAINING_FOCUS_LABELS: Record<TrainingFocus, string> = {

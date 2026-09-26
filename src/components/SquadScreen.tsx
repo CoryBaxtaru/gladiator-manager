@@ -86,7 +86,7 @@ export function SquadScreen() {
   // vanishing from the list the instant it happens (Phase 8 Part C).
   const recentlyGone = state.gladiators.filter(
     (g) =>
-      (g.status === "dead" || g.status === "escaped" || g.status === "retired") &&
+      (g.status === "dead" || g.status === "escaped" || g.status === "retired" || g.status === "poached") &&
       g.statusChangedOnDay !== null &&
       state.currentDay - g.statusChangedOnDay <= ROSTER_DEATH_GRACE_DAYS
   );
@@ -143,7 +143,7 @@ export function SquadScreen() {
                 <div className="squad-list-item-condition">
                   {isGone ? (
                     <span className="squad-list-condition">
-                      {g.status === "dead" ? "Dead" : g.status === "retired" ? "Retired" : "Escaped"}
+                      {g.status === "dead" ? "Dead" : g.status === "retired" ? "Retired" : g.status === "poached" ? "Poached" : "Escaped"}
                     </span>
                   ) : (
                     <span className="squad-list-condition">
@@ -316,6 +316,8 @@ export function SquadScreen() {
                         ? `${selected.name} did not survive. He is no longer part of the roster.`
                         : selected.status === "retired"
                         ? `${selected.name} has hung up his sword and taken up a place on staff instead. He is no longer part of the roster.`
+                        : selected.status === "poached"
+                        ? `${selected.name} was lured away by a rival ludus. He is no longer part of the roster.`
                         : `${selected.name} escaped and is no longer part of the roster.`}
                     </p>
                   </div>

@@ -85,6 +85,10 @@ function normalizeState(state: LudusState): LudusState {
     // Phase 16 Part C: new field -- a save from before this existed just starts its
     // permanent milestone log empty, same as a fresh game.
     milestones: state.milestones ?? [],
+    // Phase 16 Part G: new fields -- a save from before this existed just starts the
+    // sustain check fresh, same as a save that's currently in good standing.
+    tierNeglectWeeksBelowStandard: state.tierNeglectWeeksBelowStandard ?? 0,
+    tierNeglectCooldownUntilDay: state.tierNeglectCooldownUntilDay ?? null,
     // Saves from before Phase 8 Part F never had a chosen ludus name -- fall back to
     // the same "{founder}'s Ludus" pattern they always displayed.
     ludusName: state.ludusName ?? `${state.founderName}'s Ludus`,

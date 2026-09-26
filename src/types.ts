@@ -46,7 +46,7 @@ export type GladiatorCondition =
   | "injured"
   | "gravely_injured";
 
-export type GladiatorStatus = "active" | "dead" | "escaped" | "sold" | "retired";
+export type GladiatorStatus = "active" | "dead" | "escaped" | "sold" | "retired" | "poached";
 
 export type TrainingFocus =
   | "attack"
@@ -535,9 +535,20 @@ export interface LudusState {
    * Week Summary modal being dismissed or the rolling window moving on.
    */
   milestones: MilestoneEntry[];
+  /**
+   * Phase 16 Part G: consecutive weekly checks (see engine/tierNeglect.ts) where the
+   * ludus's average building level or average roster Current Ability has been below
+   * TIER_NEGLECT.sustainFraction of what its OWN current tier required to enter.
+   * Resets to 0 the first week it's back above standard. Meaningless at "local" tier,
+   * which has no entry requirement to sustain.
+   */
+  tierNeglectWeeksBelowStandard: number;
+  /** Set after a poaching or demotion consequence fires; no new one until currentDay
+   * passes this, so a single rough patch can't cascade into repeated losses. */
+  tierNeglectCooldownUntilDay: number | null;
 }
 
-export type MilestoneCategory = "death" | "escape" | "retirement" | "promotion" | "bankruptcy" | "technique";
+export type MilestoneCategory = "death" | "escape" | "retirement" | "promotion" | "bankruptcy" | "technique" | "poaching" | "demotion";
 
 export interface MilestoneEntry {
   id: string;
