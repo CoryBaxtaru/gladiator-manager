@@ -1,23 +1,37 @@
-import type { Gladiator, GladiatorStats, PersonalityTrait, PhysicalTrait } from "../types";
-import { REPUTATION_STAR_SCALE_MAX, POTENTIAL_STAR_TIERS, PHYSICAL_TRAITS, ATTRIBUTE_PERSONALITY_TRAITS } from "../config";
+import type { Gladiator, GladiatorStats, PersonalityTrait, PhysicalTrait, WeaponType } from "../types";
+import { REPUTATION_STAR_SCALE_MAX, POTENTIAL_STAR_TIERS, PHYSICAL_TRAITS, ATTRIBUTE_PERSONALITY_TRAITS, WEAPON_TYPES } from "../config";
 
-/** Raw average of the four attributes, unclamped. The single source of truth for
- * every "how strong is this fighter right now" calculation. */
+/**
+ * Raw average of all six attributes, unclamped. The single source of truth for every
+ * "how strong is this fighter right now" calculation (CA, PA, star ratings, training's
+ * roomToGrow check).
+ *
+ * Phase 15 Part 3: kept as a plain unweighted average across all six, Attack/Defence
+ * included, rather than hand-picking which of the split stats "count." Strength no
+ * longer moves the win/loss needle directly (see STRENGTH_STAKES), but it's still a
+ * real, trained attribute of the fighter -- giving it less weight here than the other
+ * five would need its own justification this project doesn't have, and would make CA
+ * inconsistent with how every other stat is already treated identically.
+ */
 export function averageStats(stats: GladiatorStats): number {
-  return Math.round((stats.strength + stats.weaponSkill + stats.endurance + stats.showmanship) / 4);
+  return Math.round((stats.attack + stats.strength + stats.defence + stats.weaponSkill + stats.endurance + stats.showmanship) / 6);
 }
 
 interface TraitBearer {
   stats: GladiatorStats;
   physicalTrait: PhysicalTrait;
   personalityTraits: PersonalityTrait[];
+  /** Phase 15 Part 2: optional so a rival/generated fighter built before weapon types
+   * existed still resolves (no weapon-type modifier applied, same as a missing trait). */
+  weaponType?: WeaponType;
 }
 
 /**
- * Base stats plus the fixed physical-trait trade-off and any attribute-affecting
- * personality traits (Athletic, Gluttonous, ...) -- what the fighter actually brings
- * into a clash or a Current Ability calculation, as opposed to the raw trainable
- * numbers shown on the Squad screen.
+ * Base stats plus the fixed physical-trait trade-off, the fighter's weapon-type
+ * trade-off (Phase 15 Part 2), and any attribute-affecting personality traits
+ * (Athletic, Gluttonous, ...) -- what the fighter actually brings into a clash or a
+ * Current Ability calculation, as opposed to the raw trainable numbers shown on the
+ * Squad screen.
  */
 export function effectiveStats(gladiator: TraitBearer): GladiatorStats {
   const result = { ...gladiator.stats };
@@ -28,6 +42,7 @@ export function effectiveStats(gladiator: TraitBearer): GladiatorStats {
     }
   };
   applyModifiers(PHYSICAL_TRAITS[gladiator.physicalTrait]?.modifiers);
+  if (gladiator.weaponType) applyModifiers(WEAPON_TYPES[gladiator.weaponType]?.modifiers);
   for (const trait of gladiator.personalityTraits) {
     applyModifiers(ATTRIBUTE_PERSONALITY_TRAITS[trait]?.modifiers);
   }

@@ -1,6 +1,6 @@
 // Gladiator generation: names, origins, backstories, starting stats, CA/PA.
-import type { Gladiator, GladiatorRecord, GladiatorStats, Origin, PersonalityTrait, PhysicalTrait } from "../types";
-import { MOOD, ORIGIN_STAT_LEAN, RECRUITMENT, STAFF, PERSONALITY_TRAIT_UNLOCK, ALL_PERSONALITY_TRAITS, POSITIVE_TRAITS, MAKASIMUS } from "../config";
+import type { Gladiator, GladiatorRecord, GladiatorStats, Origin, PersonalityTrait, PhysicalTrait, WeaponType } from "../types";
+import { MOOD, ORIGIN_STAT_LEAN, RECRUITMENT, STAFF, PERSONALITY_TRAIT_UNLOCK, ALL_PERSONALITY_TRAITS, POSITIVE_TRAITS, MAKASIMUS, WEAPON_TYPES } from "../config";
 import { nextId, pick, pickN, randInt, randFloat, chance } from "./rng";
 import { generateFighterName, originDescriptor, pickOrigin } from "./names";
 import { averageStats } from "./rating";
@@ -88,7 +88,13 @@ const DEFAULT_GEM_CHANCE = 0.12;
 function generateStats(origin: Origin, base: number, spread: number): GladiatorStats {
   const lean = ORIGIN_STAT_LEAN[origin];
   return {
-    strength: Math.max(1, base + randInt(0, spread) + (lean.strength ?? 0)),
+    attack: Math.max(1, base + randInt(0, spread) + (lean.attack ?? 0)),
+    // Phase 15 Part 3: strength and defence deliberately carry no origin lean -- see
+    // ORIGIN_STAT_LEAN's type, which only covers the four stats an origin's fighting
+    // style plausibly favors. Strength (stakes) and Defence (mitigation) are earned
+    // through training/weapon choice, not birthplace.
+    strength: Math.max(1, base + randInt(0, spread)),
+    defence: Math.max(1, base + randInt(0, spread)),
     weaponSkill: Math.max(1, base + randInt(0, spread) + (lean.weaponSkill ?? 0)),
     endurance: Math.max(1, base + randInt(0, spread) + (lean.endurance ?? 0)),
     showmanship: Math.max(1, base + randInt(0, spread) + (lean.showmanship ?? 0)),
@@ -96,6 +102,7 @@ function generateStats(origin: Origin, base: number, spread: number): GladiatorS
 }
 
 const ALL_PHYSICAL_TRAITS: PhysicalTrait[] = ["Tall", "Short", "Stocky", "Wiry"];
+const ALL_WEAPON_TYPES = Object.keys(WEAPON_TYPES) as WeaponType[];
 
 export interface GenerateOptions {
   /** force a "gem" (low CA, high PA) roll */
@@ -201,6 +208,11 @@ export function generateGladiator(currentDay: number, options: GenerateOptions =
     lastSelfChallengeDay: null,
     potentialNoiseSeed: randFloat(-STAFF.ratingNoiseMax, STAFF.ratingNoiseMax),
     sparringPartnerId: null,
+    // Phase 15 Part 2: assigned at generation so every gladiator arrives with a real
+    // build already in effect rather than a null/neutral state -- reassignable by the
+    // player afterward (see TrainingScreen), unlike a physical trait.
+    weaponType: pick(ALL_WEAPON_TYPES),
+    signatureTechnique: null,
   };
 }
 
@@ -218,7 +230,9 @@ export function maybeGenerateMakasimus(currentDay: number): Gladiator | null {
   if (!chance(MAKASIMUS.chance)) return null;
 
   const stats: GladiatorStats = {
+    attack: MAKASIMUS.minStat + randInt(0, MAKASIMUS.statSpread),
     strength: MAKASIMUS.minStat + randInt(0, MAKASIMUS.statSpread),
+    defence: MAKASIMUS.minStat + randInt(0, MAKASIMUS.statSpread),
     weaponSkill: MAKASIMUS.minStat + randInt(0, MAKASIMUS.statSpread),
     endurance: MAKASIMUS.minStat + randInt(0, MAKASIMUS.statSpread),
     showmanship: MAKASIMUS.minStat + randInt(0, MAKASIMUS.statSpread),
@@ -265,6 +279,8 @@ export function maybeGenerateMakasimus(currentDay: number): Gladiator | null {
     lastSelfChallengeDay: null,
     potentialNoiseSeed: 0,
     sparringPartnerId: null,
+    weaponType: pick(ALL_WEAPON_TYPES),
+    signatureTechnique: null,
   };
 }
 

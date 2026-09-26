@@ -1,5 +1,5 @@
-import type { CombatLogRound, CombatResult, FightMatchup, Gladiator, GladiatorStats, LudusState, StatKey } from "../types";
-import { COMBAT, MOOD, STAFF, CLASH_LABELS, FIGHT_ECONOMY, PERSONALITY_TRAIT_UNLOCK, ALL_PERSONALITY_TRAITS, BRONZE_CROWN, DEATH_ON_DEFEAT, SPONSOR_SURVIVAL, INJURY_MISS_CHANCE } from "../config";
+import type { CombatLogRound, CombatResult, FightMatchup, Gladiator, GladiatorStats, LudusState, SignatureTechniqueId } from "../types";
+import { COMBAT, MOOD, STAFF, CLASH_LABELS, FIGHT_ECONOMY, PERSONALITY_TRAIT_UNLOCK, ALL_PERSONALITY_TRAITS, BRONZE_CROWN, DEATH_ON_DEFEAT, SPONSOR_SURVIVAL, INJURY_MISS_CHANCE, STRENGTH_STAKES, SIGNATURE_TECHNIQUES } from "../config";
 import { randFloat, pickN } from "./rng";
 import { addMoodModifier } from "./mood";
 import { bestDoctor } from "./staff";
@@ -27,9 +27,14 @@ export function canFight(gladiator: Gladiator): boolean {
   return gladiator.condition !== "injured" && gladiator.condition !== "gravely_injured";
 }
 
-type ClashKey = StatKey | "composite";
+// Phase 15 Part 3: strength and defence are deliberately NOT clash keys -- strength has
+// no clash of its own (it's a stakes stat, see STRENGTH_STAKES below) and defence is a
+// passive per-clash modifier applied to the OPPONENT's value, not a clash a gladiator
+// "wins." Attack takes over strength's old clash slot 1:1, same 5-clash, odd-count
+// structure as before (odd so a draw is unreachable without the sudden-death path).
+type ClashKey = "attack" | "weaponSkill" | "endurance" | "showmanship" | "composite";
 
-const CLASH_SEQUENCE: ClashKey[] = ["strength", "weaponSkill", "endurance", "showmanship", "composite"];
+const CLASH_SEQUENCE: ClashKey[] = ["attack", "weaponSkill", "endurance", "showmanship", "composite"];
 
 export interface FightOptions {
   /** Death match mode: no injuries, no draws (sudden-death tiebreak instead), the loser dies. */
@@ -39,7 +44,7 @@ export interface FightOptions {
 }
 
 function compositeStat(stats: GladiatorStats): number {
-  return Math.round((stats.weaponSkill * 1.2 + stats.strength + stats.endurance * 0.6) / 2.8);
+  return Math.round((stats.weaponSkill * 1.2 + stats.attack + stats.endurance * 0.6) / 2.8);
 }
 
 function baseStatFor(key: ClashKey, stats: GladiatorStats): number {
@@ -48,7 +53,7 @@ function baseStatFor(key: ClashKey, stats: GladiatorStats): number {
 
 /** Mood, trait, condition, and building bonuses applied to the player's side only -- the
  * rival side is intentionally not simulated to this depth (see rivalLudi.ts). */
-function situationalBonus(g: Gladiator, state: LudusState, currentDay: number, isLosing: boolean): number {
+function situationalBonus(g: Gladiator, state: LudusState, currentDay: number, isLosing: boolean, clashKey?: ClashKey): number {
   let total = 0;
   if (g.hotStreakUntilDay && g.hotStreakUntilDay > currentDay) total += MOOD.hotStreakBonus;
   if (g.mood < MOOD.minorBreakMax) total -= 4;
@@ -63,11 +68,25 @@ function situationalBonus(g: Gladiator, state: LudusState, currentDay: number, i
   if (g.personalityTraits.includes("Coward") && isLosing) total -= 3;
   if (g.personalityTraits.includes("Prideful") && isLosing) total += 2; // refuses to yield, fights harder
 
+  // Phase 15 Part 2: a signature technique's edge only shows up on the clash it's
+  // actually about -- see SIGNATURE_TECHNIQUES's clashBonus.
+  if (g.signatureTechnique && clashKey) {
+    const technique = SIGNATURE_TECHNIQUES[g.signatureTechnique];
+    if (technique.clashBonus.clash === clashKey) total += technique.clashBonus.bonus;
+  }
+
   return total;
 }
 
 function withVariance(value: number): number {
   return Math.max(1, value * (1 + randFloat(-COMBAT.clashVariance, COMBAT.clashVariance)));
+}
+
+/** Phase 15 Part 3: see COMBAT.defenceMitigationPerPoint's doc comment -- reduces what
+ * the opponent effectively rolls against this gladiator, every clash. Player-side only,
+ * same asymmetric convention as situationalBonus. */
+function defenceMitigation(defence: number): number {
+  return Math.min(COMBAT.defenceMitigationMax, defence * COMBAT.defenceMitigationPerPoint);
 }
 
 export function resolveFight(
@@ -94,8 +113,8 @@ export function resolveFight(
     const key = CLASH_SEQUENCE[i];
     const isLosing = opponentWins > playerWins;
     const playerMisses = missChance > 0 && Math.random() < missChance;
-    const playerBase = baseStatFor(key, playerStats) + situationalBonus(gladiator, state, currentDay, isLosing);
-    const opponentBase = baseStatFor(key, matchup.opponentStats);
+    const playerBase = baseStatFor(key, playerStats) + situationalBonus(gladiator, state, currentDay, isLosing, key);
+    const opponentBase = baseStatFor(key, matchup.opponentStats) * (1 - defenceMitigation(playerStats.defence));
 
     const playerValue = playerMisses ? 0 : withVariance(playerBase);
     const opponentValue = withVariance(opponentBase);
@@ -130,7 +149,7 @@ export function resolveFight(
     // A death match cannot end in a draw. Break the tie with one sudden-death clash
     // on overall prowess; this only fires if clashCount is ever changed to an even
     // number, since the default 5 clashes can never tie on its own.
-    const playerValue = withVariance(compositeStat(gladiator.stats) + situationalBonus(gladiator, state, currentDay, false));
+    const playerValue = withVariance(compositeStat(gladiator.stats) + situationalBonus(gladiator, state, currentDay, false, "composite"));
     const opponentValue = withVariance(compositeStat(matchup.opponentStats));
     outcome = playerValue >= opponentValue ? "win" : "loss";
     if (!skipLog) {
@@ -166,6 +185,12 @@ export function resolveFight(
     if (isPridefulForReward) {
       reputationReward = Math.round(reputationReward * COMBAT.pridefulWinReputationMultiplier);
     }
+    // Phase 15 Part 3: strength's win-side job -- a decisive win backed by real power
+    // pays out bigger ("that was a brutal, memorable win"), scaled by margin so a
+    // narrow win barely notices it. See STRENGTH_STAKES's doc comment.
+    const strengthRewardBonus = 1 + playerStats.strength * STRENGTH_STAKES.ownRewardBonusPerPoint * marginFactor;
+    goldReward = Math.round(goldReward * strengthRewardBonus);
+    reputationReward = Math.round(reputationReward * strengthRewardBonus);
   } else if (outcome === "draw") {
     goldReward = Math.round(basePurse * FIGHT_ECONOMY.drawFraction);
     reputationReward = 2;
@@ -196,7 +221,9 @@ export function resolveFight(
     injuryChance = Math.max(0.03, Math.min(0.85, injuryChance));
 
     if (Math.random() < injuryChance) {
-      const severityRoll = Math.random() + marginFactor * 0.25;
+      // Phase 15 Part 3: strength's loss-side job -- a powerful opponent leaves worse
+      // wounds. See STRENGTH_STAKES's doc comment.
+      const severityRoll = Math.random() + marginFactor * 0.25 + matchup.opponentStats.strength * STRENGTH_STAKES.opponentSeverityPerPoint;
       if (severityRoll < 0.5) injury = "bruised";
       else if (severityRoll < 0.85) injury = "injured";
       else injury = "gravely_injured";
@@ -213,6 +240,7 @@ export function resolveFight(
       if (doctor) deathChance -= doctor.trueSkill * DEATH_ON_DEFEAT.doctorSkillReduction;
       if (isPrideful) deathChance += DEATH_ON_DEFEAT.pridefulBonus;
       if (isCoward) deathChance -= DEATH_ON_DEFEAT.cowardReduction;
+      deathChance += matchup.opponentStats.strength * STRENGTH_STAKES.opponentDeathChancePerPoint;
       deathChance = Math.max(DEATH_ON_DEFEAT.minChance, Math.min(DEATH_ON_DEFEAT.maxChance, deathChance));
       if (Math.random() < deathChance) {
         died = true;
@@ -297,6 +325,26 @@ export function applyCombatResultToGladiator(gladiator: Gladiator, result: Comba
     updated.record.wins >= PERSONALITY_TRAIT_UNLOCK.firstSlotWinMilestone
   ) {
     updated = { ...updated, personalityTraits: pickN(ALL_PERSONALITY_TRAITS, 1) };
+  }
+
+  // Phase 15 Part 2: checked the same moment as the personality-trait unlock above --
+  // see SIGNATURE_TECHNIQUES's doc comment for why it needs weapon type AND stat
+  // threshold AND trait all at once, so it reads as earned rather than coincidental.
+  // Permanent once earned; the caller (tick.ts et al.) diffs signatureTechnique
+  // before/after this call to announce it, the same pattern already used for CA jumps.
+  if (!updated.signatureTechnique) {
+    const eff = effectiveStats(updated);
+    const earnedId = (Object.keys(SIGNATURE_TECHNIQUES) as SignatureTechniqueId[]).find((id) => {
+      const technique = SIGNATURE_TECHNIQUES[id];
+      return (
+        updated.weaponType === technique.weaponType &&
+        updated.personalityTraits.includes(technique.trait) &&
+        eff[technique.statKey] >= technique.minStatValue
+      );
+    });
+    if (earnedId) {
+      updated = { ...updated, signatureTechnique: earnedId };
+    }
   }
 
   if (result.died) {

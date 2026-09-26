@@ -1,4 +1,4 @@
-import type { Gladiator, LudusState, StatKey, TrainingFocus } from "../types";
+import type { Gladiator, LudusState, StatKey, TrainingFocus, WeaponType } from "../types";
 import { isOverextended } from "./buildings";
 import { MOOD, OVEREXTENSION, TRAINING, STAT_SPREAD_PENALTY } from "../config";
 import { addMoodModifier } from "./mood";
@@ -8,13 +8,15 @@ import { chance, pick } from "./rng";
 import { currentAbilityOf } from "./rating";
 
 const FOCUS_STAT: Record<Exclude<TrainingFocus, "rest" | "balanced">, StatKey> = {
+  attack: "attack",
   strength: "strength",
+  defence: "defence",
   weaponSkill: "weaponSkill",
   endurance: "endurance",
   showmanship: "showmanship",
 };
 
-const ALL_STATS: StatKey[] = ["strength", "weaponSkill", "endurance", "showmanship"];
+const ALL_STATS: StatKey[] = ["attack", "strength", "defence", "weaponSkill", "endurance", "showmanship"];
 
 export function markStatChange(gladiator: Gladiator, stat: StatKey, delta: number, currentDay: number): Gladiator {
   const marker = { stat, delta, expiresOnDay: currentDay + TRAINING.statChangeIndicatorDays };
@@ -170,6 +172,15 @@ export function payForDoctorVisit(state: LudusState, gladiatorId: string): Ludus
         ? { ...g, injuryDaysRemaining: newDays, condition: newDays === 0 ? "healthy" : g.condition }
         : g
     ),
+  };
+}
+
+/** Phase 15 Part 2: reassignable any time, unlike a physical trait -- a re-arm, not a
+ * retrain, so it takes effect immediately with no cooldown or cost. */
+export function setWeaponType(state: LudusState, gladiatorId: string, weaponType: WeaponType): LudusState {
+  return {
+    ...state,
+    gladiators: state.gladiators.map((g) => (g.id === gladiatorId ? { ...g, weaponType } : g)),
   };
 }
 

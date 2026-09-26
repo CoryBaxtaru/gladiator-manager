@@ -1130,18 +1130,20 @@ body {
   font-weight: bold;
 }
 
+/* Phase 15 Part 3: 8 options now (Attack/Strength/Defence added) instead of 6 -- 4
+   columns of 2 rows reads cleaner than a single cramped row of 8. */
 .training-focus-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(64px, 1fr));
+  grid-template-columns: repeat(4, minmax(64px, 1fr));
   gap: 6px;
 }
 
-/* 6 columns of at least 64px each needs ~384px -- overflows a phone screen. 3 columns
-   (2 rows) fits comfortably and keeps every option a similarly-sized, easy tap target
-   rather than shrinking them to fit one cramped row. */
+/* 4 columns of at least 64px each needs ~256px -- still tight on a phone screen. 2
+   columns (4 rows) fits comfortably and keeps every option a similarly-sized, easy tap
+   target rather than shrinking them to fit a cramped row. */
 @media (max-width: 480px) {
   .training-focus-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1173,7 +1175,8 @@ body {
   align-items: center;
 }
 
-.spar-picker select {
+.spar-picker select,
+.weapon-type-select {
   background: var(--bg-card);
   border: 1px solid var(--border);
   color: var(--text);

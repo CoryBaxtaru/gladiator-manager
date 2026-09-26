@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import type { BuildingId, DaySummary, DeathMatchOutcome, LudusState, PromotionOutcome, RecruitChannel, RecruiterTier, RivalLudus, SaleType, SponsorshipCollateral, TrainingFocus } from "../types";
+import type { BuildingId, DaySummary, DeathMatchOutcome, LudusState, PromotionOutcome, RecruitChannel, RecruiterTier, RivalLudus, SaleType, SponsorshipCollateral, TrainingFocus, WeaponType } from "../types";
 import { createInitialState } from "./initialState";
 import { advanceDay as engineAdvanceDay } from "../engine/tick";
 import { queueUpgrade as engineQueueUpgrade, sellBuildingLevel as engineSellBuildingLevel } from "../engine/buildings";
@@ -13,7 +13,7 @@ import {
 import { matchmakeFightDay, eligibleForFightDay } from "../engine/fightday";
 import { computeNextFightDay } from "../engine/fightday";
 import { sellGladiator as engineSellGladiator } from "../engine/sale";
-import { hireStaff as engineHireStaff, dismissStaff as engineDismissStaff } from "../engine/staff";
+import { hireStaff as engineHireStaff, dismissStaff as engineDismissStaff, retireGladiatorToStaff as engineRetireGladiatorToStaff } from "../engine/staff";
 import {
   triggerMoraleEvent as engineTriggerMoraleEvent,
   performRitual as enginePerformRitual,
@@ -24,7 +24,7 @@ import {
   visitBaths as engineVisitBaths,
   givePublicRecognition as engineGivePublicRecognition,
 } from "../engine/moodActions";
-import { payForDoctorVisit as enginePayForDoctorVisit } from "../engine/training";
+import { payForDoctorVisit as enginePayForDoctorVisit, setWeaponType as engineSetWeaponType } from "../engine/training";
 import { setSparringPair as engineSetSparringPair, clearSparring as engineClearSparring } from "../engine/sparring";
 import {
   eligibleChallengeTargets as engineEligibleChallengeTargets,
@@ -72,6 +72,8 @@ interface GameContextValue {
   sellBuildingLevel: (buildingId: BuildingId) => void;
   takeLoan: (collateral: SponsorshipCollateral) => void;
   setTrainingFocus: (gladiatorId: string, focus: TrainingFocus) => void;
+  setWeaponType: (gladiatorId: string, weaponType: WeaponType) => void;
+  retireGladiator: (gladiatorId: string) => void;
   recruit: (candidateId: string) => void;
   passCandidate: (candidateId: string) => void;
   sellOnCandidate: (candidateId: string) => void;
@@ -200,6 +202,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         g.id === gladiatorId ? { ...g, trainingFocus: focus } : g
       ),
     }));
+  }, []);
+
+  const setWeaponType = useCallback((gladiatorId: string, weaponType: WeaponType) => {
+    setState((prev) => engineSetWeaponType(prev, gladiatorId, weaponType));
+  }, []);
+
+  const retireGladiator = useCallback((gladiatorId: string) => {
+    setState((prev) => engineRetireGladiatorToStaff(prev, gladiatorId));
   }, []);
 
   const recruit = useCallback((candidateId: string) => {
@@ -427,6 +437,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       sellBuildingLevel,
       takeLoan,
       setTrainingFocus,
+      setWeaponType,
+      retireGladiator,
       recruit,
       passCandidate,
       sellOnCandidate,
@@ -482,6 +494,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       sellBuildingLevel,
       takeLoan,
       setTrainingFocus,
+      setWeaponType,
+      retireGladiator,
       recruit,
       passCandidate,
       sellOnCandidate,

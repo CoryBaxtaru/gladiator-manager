@@ -13,48 +13,93 @@ climb a reputation ladder through four tiers (Local → Provincial → Rival →
 and try to win optional, player-timed Promotion Fights to actually unlock each next tier
 rather than just reaching its reputation threshold. Live at
 https://corybaxtaru.github.io/gladiator-manager/, deployed manually to the `gh-pages`
-branch (not automatic — see `README.md`).
+branch (not automatic -- see `README.md`).
 
 ## Where things stand
 
-**Last completed: Phase 14** (commit `4a975d1`). It fixed two things found in the Phase
-13 fixes' own follow-up playtest (Round 7) and added the game's logo:
+**Last completed: Phase 15** (Retirement into staff, signature techniques + weapon
+types, and the Attack/Strength/Defence stat split). Three parts, all landed and
+verified live against a real save carried over from the Phase 14 Round 7 playtest:
 
-- Promotion Fight copy no longer claims a loss is safe — it reuses the same
-  `applyCombatResultToGladiator` path as an ordinary fight, so it's carried the same
-  real death risk since Phase 12 and the copy hadn't caught up.
-- A **bankruptcy circuit breaker** in `engine/debt.ts`: once a ludus has no gladiator
-  left to seize and no staff left to dismiss, the debt-consequence system used to become
-  a permanent no-op while interest kept compounding with no cap — verified in Round 7 to
-  reach -2.59 million gold with zero mathematical way back. Now that exact moment
-  triggers bankruptcy instead: debt wiped to 0, reputation cut to the current tier's
-  floor, every building loses a level. Real setback, not an escape hatch. Can recur
-  (`bankruptcyCount` on `LudusState`).
-- The game's logo is in (Main Menu title-screen placement, compact TopBar mark, browser
-  tab title). No real square favicon yet — see open items.
+- **Retirement into staff** (Part 1): a fourth exit alongside die/escape/sold. A
+  gladiator who's aged out (`RETIREMENT.minAge`, 32) or proven himself
+  (`RETIREMENT.provenWinsThreshold`, 15 career wins) can be repurposed onto staff as a
+  trainer instead of sold -- no gold changes hands either way, framed in the UI as
+  "steps down from the sand," not a transaction. `trueSkill` derives from his single
+  best effective stat scaled down by `RETIREMENT.trueSkillTransferFraction` (0.75): a
+  real bargain, deliberately not a 1:1 steal, since "a great fighter isn't automatically
+  a great teacher." Specialty is whichever stat that was. See `engine/staff.ts`'s
+  `canRetire`/`retireGladiatorToStaff` and the "Retire to Staff" button on the Squad
+  screen. Peer mentorship (a Round 7 report idea aimed at the same problem) was
+  deliberately dropped, per instruction, in favor of this.
+- **Weapon types + signature techniques** (Part 2): gladiators now carry a
+  reassignable `weaponType` (murmillo/retiarius/thraex/dimachaerus/secutor, see
+  `WEAPON_TYPES` in config.ts), each a fixed two-stat trade-off applied through
+  `effectiveStats()` the same way physical traits are -- a real build choice, picked on
+  the Squad screen's new "Combat Style" block. Signature techniques
+  (`SIGNATURE_TECHNIQUES`) are rare, permanent milestones requiring a specific weapon
+  type AND a stat threshold AND an earned personality trait all at once, checked
+  alongside the personality-trait-unlock check in `combat.ts`'s
+  `applyCombatResultToGladiator`; the ordinary fight-day path (`tick.ts`) diffs
+  before/after and announces it by name in that day's summary the moment it fires
+  (verified live -- see below). The Promotion Fight / death match / Colosseum finale
+  paths still unlock a technique correctly but don't carry the same dedicated
+  announcement text; a player would discover it there via the Squad screen instead.
+  Worth wiring the same announcement into those paths if it comes up again.
+- **Attack/Strength/Defence split** (Part 3): the old single `strength` stat is now
+  three. **Attack** took over strength's old clash slot 1:1 (same composite weight,
+  same clash). **Defence** is new: a passive per-clash modifier that reduces what the
+  opponent effectively rolls against this gladiator, every clash (`COMBAT.
+  defenceMitigationPerPoint`/`defenceMitigationMax`), asymmetric and player-side-only,
+  reusing the precedent already established by `situationalBonus`. **Strength** is
+  new and deliberately has no clash of its own -- it's a pure stakes stat
+  (`STRENGTH_STAKES` in config.ts): an opponent's strength worsens injury severity and
+  death chance on a loss, and a gladiator's own strength adds a margin-scaled
+  reward bonus on a decisive win. This shape (3-way, not the leaner Attack+Defence
+  option also on the table) was chosen specifically because Strength was found real,
+  non-redundant work to do (stakes/severity, not win-rate) -- see `types.ts`'s
+  `GladiatorStats` doc comment and `config.ts`'s `STRENGTH_STAKES` comment for the full
+  reasoning. `averageStats()` (rating.ts, the CA/PA basis) is now an unweighted average
+  of all six stats, Strength included at full weight alongside the other five, on the
+  reasoning that giving it a smaller weight would need its own justification this
+  project doesn't have.
+  **Migration**: an old save's gladiators/rival roster/recruit-pool candidates get
+  `attack = defence = (old strength value)` the first time they're loaded
+  (`saveManager.ts`'s `migrateStats`), not a reset to zero; `weaponType` defaults to
+  `"murmillo"` (fixed, not random, so it doesn't reroll every load of a save that's
+  never been resaved -- same reasoning as the existing `physicalTrait` migration
+  fallback).
 
-**Confirmed working via live playtest** (Round 7, the fullest playtest to date — 3
-promotion-cycle attempt, 2 of 3 completed before the debt spiral above ended the run):
-- Sponsor-or-die (Phase 12 Part A, retuned in Phase 13): cost now tracks treasury
-  health correctly — checked a real range from 4% of treasury (arguably too cheap once
-  wealthy) up to 87% (a genuinely hard call) rather than being unaffordable regardless
-  of who it is, which was the Phase 12 launch bug.
-- Self-directed challenge opponent locking (Phase 13 Part B): re-confirmed twice, same
-  opponent survives backing out and reopening the preview, same day.
-- Bruised-gladiator fight eligibility (Phase 13 Part C): correctly wired, but rarely
-  *observed* firing in ordinary fight days — bruised recovery (2 days) is shorter than
-  the 6-day fight-day interval, so a bruised fighter is usually back to fully healthy
-  before the next one anyway. It's real, just structurally hard to catch outside a
-  self-directed challenge or a same-week sparring injury. Not a bug, just a coverage
-  note for whoever plays it next.
-- The bankruptcy fix above: verified live against the actual Round 7 save state, not
-  just in isolation.
+**Confirmed working via a live playtest against a real carried-over save** (the actual
+Round 7 save, `Ludus Numisianus`, day 1884, loaded through the new migration path with
+no manual fixture needed):
+- The migration itself: a real 227-fight, 197-win veteran (`Glaucus`) loaded with
+  `attack = defence = 45` derived correctly from his old `strength: 45`, weaponSkill/
+  endurance/showmanship untouched, weaponType defaulted to Murmillo.
+- Retirement: retired `Glaucus` through the actual UI (not a data hack) -- roster count
+  dropped, he appeared as "Retired" in the grace-period list with the right flavor
+  copy, and a new "Trainer, Showmanship" staff entry appeared immediately with a
+  correctly-derived trueSkill and weekly salary.
+- Signature techniques + weapon types + the stat split all at once, in one real fight:
+  a test gladiator built with Retiarius + Attack 85 + Bloodthirsty won a fight day and
+  the day summary announced `Reaperius has earned a name for it: "The Reaper's Cast."`
+  exactly as designed, the clash log correctly read "Attack clash" (not "Strength"),
+  and the technique badge persisted on the Squad screen afterward. This is the
+  strongest evidence the three systems compose the way Part 3's brief asked for.
+- Trainer specialty coverage cycling (`SPECIALTY_CYCLE` in `staff.ts`) confirmed
+  working with the new 6-stat order: a 5-star Strength-specialty trainer correctly
+  covered Strength, Defence, Weapon Skill (cycling forward through the new order).
 
-**Phase-by-phase history**: `git log --oneline` — every phase has landed as one
+**Not re-verified this phase** (carried over from Phase 14, no reason to expect
+regression, just not re-clicked-through): sponsor-or-die cost tuning, self-challenge
+opponent locking, bruised-gladiator eligibility, the bankruptcy circuit breaker. See
+Phase 14's own history in `git log` if you need the detail.
+
+**Phase-by-phase history**: `git log --oneline` -- every phase has landed as one
 commit with a descriptive message covering what it did and why; that's the canonical
 record, not duplicated here. Deep-dive docs for specific systems live in `docs/`
 (`economy-rebalance.md`, `difficulty-ramp.md`, `mood-action-tuning.md`,
-`gladiator-name-pools.md`, `name-system-handoff.md`) — read the relevant one before
+`gladiator-name-pools.md`, `name-system-handoff.md`) -- read the relevant one before
 touching that system, they contain the diagnostic work, not just the conclusion.
 
 ## Known open items (not yet acted on)
@@ -74,77 +119,14 @@ Raised across various playtests, never built, still on the table:
   a trainer vs. doctor actually does before you pay for one.
 - **Tier-transition difficulty signal**: nothing currently tells a player *why* a fight
   suddenly got harder right after a promotion, beyond the readiness gate's own numbers.
-- **Real square favicon**: blocked in Phase 14 — no image-processing tool was available
+- **Real square favicon**: blocked in Phase 14 -- no image-processing tool was available
   in that session (no ImageMagick, no Python+PIL, no sharp/canvas installed), and the
   source logo (`public/branding/ludus-logo.png`, 1820×864, ~2.4MB) is a wide banner, not
   a croppable square icon. Needs either a separately-prepared square asset, or a session
   with real image-editing capability.
-
-## Phase 15 brief (the next task)
-
-Two parts: wrap up the prior session cleanly (this document is that), then start the
-next real design phase. Verbatim brief for Parts 1–3 below.
-
-### Part 1: Retirement into staff
-
-Gladiators currently have exactly three exits: die, escape, sold. Add a fourth: a
-gladiator who's aged out or hit a real ceiling (age threshold, or player-initiated
-retirement on a proven veteran) can convert into a trainer on the player's own staff
-instead.
-
-- This costs nothing to execute. He's not being hired, he's still the ludus's property,
-  being repurposed rather than freed, so no gold changes hands either way. Frame the
-  copy accordingly, not as a purchase.
-- Specialty and `trueSkill` should derive from his own record (best stat, career CA).
-  Use your judgment on how a converted gladiator compares to a recruited staff member
-  of the same nominal tier — worth a deliberate look at whether he should be a bargain
-  (free, but maybe capped lower than a paid specialist) or a genuine steal, your call
-  once you see the numbers.
-- Since this now exists, drop peer mentorship entirely, don't build it (it was proposed
-  in the Round 7 report as a gameplay idea, never built — it aimed at the same
-  "capped-out veteran has nothing left to do" problem this solves more directly).
-
-### Part 2: Signature techniques + weapon-type stat bonuses
-
-Build the signature-techniques idea from the Round 7 report (rare, discovered "he's
-earned a name for this" quirks at extreme stat/trait combinations, announced as a
-milestone, giving a small permanent combat edge), and extend it with a second, related
-idea:
-
-- Weapon type should give its own stat bonuses, not just flavor. If gladiators can be
-  assigned or trained toward a weapon type (whatever the game currently supports,
-  spear/gladius/net-and-trident/etc.), each type should lean into different stats, so
-  weapon choice is a real build decision, not cosmetic.
-- These two systems should compose sensibly — a signature technique tied to a
-  stat/trait combo that a given weapon type naturally leans into should feel earned,
-  not coincidental.
-
-### Part 3: Open design call — split Strength into Attack/Strength/Defence?
-
-Current stats are `strength`, `weaponSkill`, `endurance`, `showmanship`, resolved in
-combat as `relevantStat + situationalModifiers + roll` against an opponent's
-equivalent. The question on the table: should `strength` split into three (Attack,
-Strength, Defence), or something leaner like just Attack + Defence replacing the single
-Strength? Diagnose before deciding, don't just pick a number of stats up front:
-
-- Look at what `relevantStat` actually resolves to today and where `strength`
-  currently pulls weight in the combat formula.
-- The concern with three stats: Strength as a third, separate axis next to Attack and
-  Defence risks being redundant unless it does something the other two don't (e.g.,
-  affects injury severity dealt, damage variance, or a stagger/knockback mechanic,
-  rather than hit/dodge chance). If you can't find it real work to do that Attack and
-  Defence don't already cover, don't add it just to add it.
-- Weapon-type bonuses (Part 2) and this stat question should land together. If a
-  weapon type is going to lean into stats, decide the final stat shape first so that
-  doesn't need reworking twice.
-- Whatever you land on, this touches squad screens, training allocation, and every
-  combat calculation, so treat it as a real migration (existing gladiators need sane
-  derived values, not resets to zero) and report what you changed and why, not just
-  that you changed it.
-
-### After all three
-
-Re-run a short playtest specifically on what's new here (does staff-conversion actually
-feel like a real veteran send-off, does a signature technique milestone feel earned
-when it fires, does the weapon-type/stat decision hold up in an actual fight) before
-returning to any of the still-open items above.
+- **Signature-technique announcement coverage**: only the ordinary fight-day path
+  announces a newly-earned technique by name in the day summary (see Phase 15 above).
+  Promotion Fights, death matches, and the Colosseum finale still unlock one correctly,
+  just silently -- the player finds out via the Squad screen instead of a named moment.
+  Not urgent, but worth wiring the same announcement text into those three paths if a
+  future session is already touching that code.

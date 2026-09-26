@@ -182,7 +182,9 @@ export function GladiatorHoverCard({ data, reputation, children, triggerClassNam
         </div>
         <div className="hover-card-label">{potentialStarLabel(potentialStars)}</div>
         <div className="hover-card-attrs">
+          <span>Atk {data.stats.attack}{data.statIndicators.attack && <span className={`stat-indicator stat-indicator-${data.statIndicators.attack}`}>{data.statIndicators.attack === "boost" ? "▲" : "▼"}</span>}</span>
           <span>Str {data.stats.strength}{data.statIndicators.strength && <span className={`stat-indicator stat-indicator-${data.statIndicators.strength}`}>{data.statIndicators.strength === "boost" ? "▲" : "▼"}</span>}</span>
+          <span>Def {data.stats.defence}{data.statIndicators.defence && <span className={`stat-indicator stat-indicator-${data.statIndicators.defence}`}>{data.statIndicators.defence === "boost" ? "▲" : "▼"}</span>}</span>
           <span>Wpn {data.stats.weaponSkill}{data.statIndicators.weaponSkill && <span className={`stat-indicator stat-indicator-${data.statIndicators.weaponSkill}`}>{data.statIndicators.weaponSkill === "boost" ? "▲" : "▼"}</span>}</span>
           <span>End {data.stats.endurance}{data.statIndicators.endurance && <span className={`stat-indicator stat-indicator-${data.statIndicators.endurance}`}>{data.statIndicators.endurance === "boost" ? "▲" : "▼"}</span>}</span>
           <span>Show {data.stats.showmanship}{data.statIndicators.showmanship && <span className={`stat-indicator stat-indicator-${data.statIndicators.showmanship}`}>{data.statIndicators.showmanship === "boost" ? "▲" : "▼"}</span>}</span>

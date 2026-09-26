@@ -1,5 +1,5 @@
 // Central tunable config. Balance the game by editing values here, not game logic.
-import type { BuildingId, BuildingMaterial, FightTier, GladiatorStats, Origin, PersonalityTrait, PhysicalTrait, RecruitChannel, RecruiterTier, TrainingFocus } from "./types";
+import type { BuildingId, BuildingMaterial, FightTier, GladiatorStats, Origin, PersonalityTrait, PhysicalTrait, RecruitChannel, RecruiterTier, SignatureTechniqueId, StatKey, TrainingFocus, WeaponType } from "./types";
 
 export const MOOD = {
   min: 0,
@@ -210,10 +210,14 @@ export const ALL_PERSONALITY_TRAITS: PersonalityTrait[] = Object.keys(TRAITS) as
  * below). Each archetype is a fixed, visible trade-off between two attributes.
  */
 export const PHYSICAL_TRAITS: Record<PhysicalTrait, { description: string; modifiers: Partial<GladiatorStats> }> = {
-  Tall: { description: "Reach and power at the cost of stamina.", modifiers: { strength: 3, endurance: -3 } },
-  Short: { description: "Stamina and a low center of gravity at the cost of reach.", modifiers: { strength: -3, endurance: 3 } },
-  Stocky: { description: "Raw power at the cost of crowd-pleasing flair.", modifiers: { strength: 3, showmanship: -2 } },
-  Wiry: { description: "Speed and technique at the cost of raw power.", modifiers: { weaponSkill: 3, strength: -2 } },
+  // Phase 15 Part 3: strength references remapped to attack/defence now that strength
+  // itself carries no clash-winning weight -- each trait keeps its original flavor
+  // text and trade-off shape, just pointed at whichever new stat the description
+  // actually describes (reach/power -> attack, a stable low stance -> defence).
+  Tall: { description: "Reach and power at the cost of stamina.", modifiers: { attack: 3, endurance: -3 } },
+  Short: { description: "Stamina and a low center of gravity at the cost of reach.", modifiers: { defence: 3, endurance: 3 } },
+  Stocky: { description: "Raw power at the cost of crowd-pleasing flair.", modifiers: { attack: 3, showmanship: -2 } },
+  Wiry: { description: "Speed and technique at the cost of raw power.", modifiers: { weaponSkill: 3, attack: -2 } },
 };
 
 /**
@@ -239,19 +243,125 @@ export const PERSONALITY_TRAIT_UNLOCK = {
   firstSlotWinMilestone: 2,
 };
 
-export const ORIGIN_STAT_LEAN: Record<Origin, Partial<Record<"strength" | "weaponSkill" | "endurance" | "showmanship", number>>> = {
+// Phase 15 Part 3: strength leans remapped to attack (the clash-winning half of the
+// old stat) -- these were always about "hits harder/charges in," which is attack's job
+// now, not the stakes-only strength that remains.
+export const ORIGIN_STAT_LEAN: Record<Origin, Partial<Record<"attack" | "weaponSkill" | "endurance" | "showmanship", number>>> = {
   Thracian: { weaponSkill: 4, showmanship: 2 },
-  Gaul: { strength: 5 },
+  Gaul: { attack: 5 },
   Nubian: { endurance: 4, showmanship: 1 },
   Roman: { weaponSkill: 3, endurance: 2 },
   Numidian: { endurance: 5 },
-  Germanic: { strength: 4, endurance: 1 },
+  Germanic: { attack: 4, endurance: 1 },
   Syrian: { weaponSkill: 3, showmanship: 3 },
   Greek: { showmanship: 4, weaponSkill: 2 },
   // Not used by ordinary generation (Makasimus's stats are hand-set, see
   // generator.ts's maybeGenerateMakasimus) -- present only so this remains a total
   // record over Origin.
-  Iberian: { strength: 2, weaponSkill: 2 },
+  Iberian: { attack: 2, weaponSkill: 2 },
+};
+
+/**
+ * Phase 15 Part 2: a player-assignable, reassignable equipment/style choice (unlike
+ * PHYSICAL_TRAITS, which are a fixed fact about the body) -- a real build decision,
+ * a fixed trade-off between two stats, same convention as physical traits so the two
+ * read consistently on a gladiator's sheet. Historically grounded arena archetypes,
+ * picked to spread across the stat pool rather than all leaning the same axis.
+ */
+export const WEAPON_TYPES: Record<WeaponType, { label: string; description: string; modifiers: Partial<GladiatorStats> }> = {
+  murmillo: {
+    label: "Murmillo",
+    description: "Gladius and a heavy rectangular shield -- a wall built for holding the line, at the cost of a quick strike.",
+    modifiers: { defence: 4, attack: -2 },
+  },
+  retiarius: {
+    label: "Retiarius",
+    description: "Net and trident, no shield, no helmet -- speed and reach with nothing between him and a blade.",
+    modifiers: { attack: 4, defence: -3 },
+  },
+  thraex: {
+    label: "Thraex",
+    description: "A curved Thracian sica and a small shield -- technique over brute force.",
+    modifiers: { weaponSkill: 3, endurance: -2 },
+  },
+  dimachaerus: {
+    label: "Dimachaerus",
+    description: "Two blades, no shield at all -- everything staked on ending it before he's touched.",
+    modifiers: { attack: 5, defence: -4 },
+  },
+  secutor: {
+    label: "Secutor",
+    description: "Built to run down a fleeing net-fighter and finish it -- brute force over flair.",
+    modifiers: { strength: 3, showmanship: -2 },
+  },
+};
+
+/**
+ * Phase 15 Part 2: a rare, discovered "he's earned a name for this" milestone -- a
+ * real stat threshold AND an earned personality trait AND the matching weapon type,
+ * so it composes with Part 2's own weapon-type bonuses instead of firing coincidentally
+ * on a build that doesn't fit the flavor. Checked once a fight resolves (same moment as
+ * the personality-trait-unlock check); once earned it's permanent, never lost. The
+ * combat edge is deliberately small -- a milestone, not a new tier of power.
+ */
+export const SIGNATURE_TECHNIQUES: Record<
+  SignatureTechniqueId,
+  {
+    label: string;
+    description: string;
+    weaponType: WeaponType;
+    statKey: StatKey;
+    minStatValue: number;
+    trait: PersonalityTrait;
+    /** Flat bonus applied in situationalBonus to the clash this technique favors. */
+    clashBonus: { clash: "attack" | "weaponSkill" | "endurance" | "showmanship" | "composite"; bonus: number };
+  }
+> = {
+  reapers_cast: {
+    label: "The Reaper's Cast",
+    description: "A net-throw perfected past reflex, into reputation. Every Attack clash carries a little more menace.",
+    weaponType: "retiarius",
+    statKey: "attack",
+    minStatValue: 80,
+    trait: "Bloodthirsty",
+    clashBonus: { clash: "attack", bonus: 4 },
+  },
+  iron_wall: {
+    label: "Iron Wall",
+    description: "A shield discipline the crowd has started calling by name. Nothing gets through it easily.",
+    weaponType: "murmillo",
+    statKey: "defence",
+    minStatValue: 80,
+    trait: "Stoic",
+    clashBonus: { clash: "endurance", bonus: 4 },
+  },
+  twin_fury: {
+    label: "Twin Fury",
+    description: "A dual-blade flurry too fast to fully follow. The crowd has never seen its like.",
+    weaponType: "dimachaerus",
+    statKey: "attack",
+    minStatValue: 85,
+    trait: "Prideful",
+    clashBonus: { clash: "composite", bonus: 5 },
+  },
+  butchers_mark: {
+    label: "Butcher's Mark",
+    description: "A finishing style earned a reputation of its own -- and a name to go with it.",
+    weaponType: "secutor",
+    statKey: "strength",
+    minStatValue: 80,
+    trait: "Bloodthirsty",
+    clashBonus: { clash: "composite", bonus: 4 },
+  },
+  featherfoot: {
+    label: "Featherfoot",
+    description: "Footwork sharp enough that the crowd started chanting for it by name.",
+    weaponType: "thraex",
+    statKey: "weaponSkill",
+    minStatValue: 85,
+    trait: "Athletic",
+    clashBonus: { clash: "weaponSkill", bonus: 4 },
+  },
 };
 
 // Clash-based combat: a fight is a fixed set of stat-vs-stat comparisons (a "card
@@ -263,6 +373,14 @@ export const COMBAT = {
   clashVariance: 0.13, // +/- 13% bounded random swing per clash
   homeArenaBonusPerLevel: 0.5,
   armoryBonusPerLevel: 0.4,
+  // Phase 15 Part 3: defence is a passive per-clash modifier, not a clash of its own --
+  // it reduces what the OPPONENT effectively rolls against THIS gladiator, every
+  // clash, same asymmetric "only the player's side is modeled this deeply" convention
+  // already used for mood/trait/building bonuses in situationalBonus. Capped well
+  // short of 100% so a heavily-armored fighter is much harder to beat clean, never
+  // literally unbeatable.
+  defenceMitigationPerPoint: 0.006,
+  defenceMitigationMax: 0.4,
   baseInjuryChanceOnLoss: 0.35,
   // Death used to be gated behind this (chance of dying ONLY once already
   // gravely-injured) -- superseded by the direct DEATH_ON_DEFEAT roll, see its doc
@@ -325,6 +443,21 @@ export const DEATH_ON_DEFEAT = {
 };
 
 /**
+ * Phase 15 Part 3: strength's actual job -- stakes, not win-rate. A powerful OPPONENT
+ * makes losing to him more dangerous (worse injuries, a real bump to death chance);
+ * this gladiator's OWN strength makes his decisive wins pay out better (a "that was a
+ * brutal, memorable win" bonus, scaled by margin so a narrow win doesn't trigger it).
+ * Deliberately not double-applied to both directions on the same fighter -- only the
+ * opponent's strength matters on a loss, only this gladiator's own strength matters on
+ * a win, so the two effects can't stack on one person in one fight.
+ */
+export const STRENGTH_STAKES = {
+  opponentSeverityPerPoint: 0.003, // added to the severity roll on a loss
+  opponentDeathChancePerPoint: 0.0015, // added straight to DEATH_ON_DEFEAT's chance
+  ownRewardBonusPerPoint: 0.003, // reputation/gold multiplier on a win, scaled by margin
+};
+
+/**
  * Phase 13 Part A diagnostic: the Phase 12 formula (CA * 8 * tierMultiplier) double-
  * counted tier the same way the Phase 11 reputation-loss bug did -- a gladiator's CA
  * already climbs as the tier does (roster development IS what lets a player reach a
@@ -380,8 +513,8 @@ export const STAT_SPREAD_PENALTY = {
   minMultiplier: 0.15,
 };
 
-export const CLASH_LABELS: Record<"strength" | "weaponSkill" | "endurance" | "showmanship" | "composite", string> = {
-  strength: "Strength clash",
+export const CLASH_LABELS: Record<"attack" | "weaponSkill" | "endurance" | "showmanship" | "composite", string> = {
+  attack: "Attack clash",
   weaponSkill: "Weapon skill clash",
   endurance: "Endurance clash",
   showmanship: "Showmanship clash",
@@ -703,8 +836,9 @@ export const RECRUITER_TIERS: Record<RecruiterTier, { label: string; stars: numb
 
 export const SPARRING = {
   // Only physical/combat stats are drilled in live sparring -- showmanship is
-  // performance for a crowd, not something you train by hitting a partner.
-  statPool: ["strength", "weaponSkill", "endurance"] as const,
+  // performance for a crowd, not something you train by hitting a partner. Phase 15
+  // Part 3: attack/strength/defence all qualify the same way strength used to.
+  statPool: ["attack", "strength", "defence", "weaponSkill", "endurance"] as const,
   traitTransferChancePerDay: 0.0044, // compounds to roughly 3% over a 7-day week
   injuryChancePerDay: 0.05,
   injuryMoodPenalty: -4,
@@ -772,6 +906,26 @@ export const STAFF = {
   refreshIntervalDays: 10,
   doctorRecoveryDaysPerSkillPoint: 0.02,
   doctorInjuryChanceReductionPerSkillPoint: 0.0015,
+};
+
+/**
+ * Phase 15 Part 1: a fourth exit alongside die/escape/sold -- no gold changes hands
+ * either way, he's not being hired, he's the ludus's own property repurposed. Eligible
+ * once age-declined (same declineStartAge as the existing stat-decline system, a
+ * fighter this old is already fading in the arena) OR, if the player wants to retire a
+ * younger fighter early, once he's proven himself with enough career wins.
+ *
+ * trueSkill derives from his single best CURRENT stat (that's his specialty), scaled
+ * DOWN rather than 1:1 -- deliberately a bargain, not a pure steal: being a great
+ * fighter doesn't automatically make someone a great teacher, and a straight transfer
+ * would make "retire your best fighter into staff" a dominant, no-cost strategy. Still
+ * clearly worth doing (free plus meaningfully skilled), just not as strong as paying
+ * full price for an equivalently-rated recruit would otherwise buy.
+ */
+export const RETIREMENT = {
+  minAge: 32,
+  provenWinsThreshold: 15,
+  trueSkillTransferFraction: 0.75,
 };
 
 /**
@@ -868,7 +1022,9 @@ export const PROMOTION_READINESS: Record<FightTier, { minAvgBuildingLevel: numbe
 export const SAVE_SLOT_COUNT = 3;
 
 export const TRAINING_FOCUS_LABELS: Record<TrainingFocus, string> = {
+  attack: "Attack",
   strength: "Strength",
+  defence: "Defence",
   weaponSkill: "Weapon Skill",
   endurance: "Endurance",
   showmanship: "Showmanship",

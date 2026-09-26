@@ -1,6 +1,7 @@
-import type { LudusState, Staff, StaffCandidate, StaffRole, TrainingFocus } from "../types";
-import { STAFF, REPUTATION_STAR_SCALE_MAX, TRAINER_STAT_COVERAGE_TIERS } from "../config";
+import type { Gladiator, LudusState, Staff, StaffCandidate, StaffRole, StatKey, TrainingFocus } from "../types";
+import { STAFF, REPUTATION_STAR_SCALE_MAX, TRAINER_STAT_COVERAGE_TIERS, RETIREMENT } from "../config";
 import { nextId, pick, randInt, randFloat } from "./rng";
+import { effectiveStats } from "./rating";
 
 const TRAINER_NAMES = [
   "Gnaeus Rutilus", "Publius Ahenus", "Marcus Cordus", "Titus Vinicius", "Quintus Barbatus",
@@ -13,7 +14,7 @@ const DOCTOR_NAMES = [
 ];
 
 const SPECIALTIES: Exclude<TrainingFocus, "balanced" | "rest">[] = [
-  "strength", "weaponSkill", "endurance", "showmanship",
+  "attack", "strength", "defence", "weaponSkill", "endurance", "showmanship",
 ];
 
 function generateTrueSkill(): number {
@@ -93,7 +94,7 @@ export function dismissStaff(state: LudusState, staffId: string): LudusState {
 }
 
 /** Fixed cycle order a trainer's coverage extends through, starting at his specialty. */
-const SPECIALTY_CYCLE: Exclude<TrainingFocus, "balanced" | "rest">[] = ["strength", "weaponSkill", "endurance", "showmanship"];
+const SPECIALTY_CYCLE: Exclude<TrainingFocus, "balanced" | "rest">[] = ["attack", "strength", "defence", "weaponSkill", "endurance", "showmanship"];
 
 /**
  * How many stats a trainer's hidden skill lets him cover, per TRAINER_STAT_COVERAGE_TIERS
@@ -138,4 +139,48 @@ export function bestDoctor(state: LudusState): Staff | null {
 
 export function weeklyStaffSalaries(state: LudusState): number {
   return state.staff.reduce((sum, s) => sum + s.weeklySalary, 0);
+}
+
+const RETIREMENT_SPECIALTY_STATS: Exclude<TrainingFocus, "balanced" | "rest">[] = [
+  "attack", "strength", "defence", "weaponSkill", "endurance", "showmanship",
+];
+
+/** Phase 15 Part 1: age-out OR a proven-enough record, either is enough on its own. */
+export function canRetire(gladiator: Gladiator): boolean {
+  return gladiator.status === "active" && (gladiator.age >= RETIREMENT.minAge || gladiator.record.wins >= RETIREMENT.provenWinsThreshold);
+}
+
+/**
+ * Converts a gladiator into a trainer on staff -- repurposed, not hired, so no gold
+ * changes hands (see RETIREMENT's doc comment in config.ts for the bargain-vs-steal
+ * reasoning behind the 0.75 transfer fraction). Specialty is whichever of his six
+ * stats is currently strongest; that's the thing he actually has to teach.
+ */
+export function retireGladiatorToStaff(state: LudusState, gladiatorId: string): LudusState {
+  const gladiator = state.gladiators.find((g) => g.id === gladiatorId);
+  if (!gladiator || !canRetire(gladiator)) return state;
+
+  const eff = effectiveStats(gladiator);
+  const specialty = RETIREMENT_SPECIALTY_STATS.reduce((best, key) => (eff[key as StatKey] > eff[best as StatKey] ? key : best));
+  const trueSkill = Math.max(STAFF.trueSkillMin, Math.min(STAFF.trueSkillMax, Math.round(eff[specialty as StatKey] * RETIREMENT.trueSkillTransferFraction)));
+
+  const newStaff: Staff = {
+    id: nextId("st"),
+    role: "trainer",
+    name: gladiator.name,
+    specialty,
+    trueSkill,
+    ratingNoiseSeed: generateNoiseSeed(),
+    weeklySalary: Math.round(trueSkill * STAFF.salaryPerSkillPoint),
+    hireDay: state.currentDay,
+    retiredGladiatorName: gladiator.name,
+  };
+
+  return {
+    ...state,
+    staff: [...state.staff, newStaff],
+    gladiators: state.gladiators.map((g) =>
+      g.id === gladiatorId ? { ...g, status: "retired" as const, statusChangedOnDay: state.currentDay } : g
+    ),
+  };
 }

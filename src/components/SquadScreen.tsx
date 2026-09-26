@@ -2,7 +2,9 @@ import { useState } from "react";
 import type { Gladiator } from "../types";
 import { useGame } from "../state/GameContext";
 import { potentialStarDisplay, currentAbilityStars, currentAbilityOf, statIndicators } from "../engine/rating";
-import { TRAITS, PHYSICAL_TRAITS, PERSONALITY_TRAIT_UNLOCK, ROSTER_DEATH_GRACE_DAYS } from "../config";
+import { TRAITS, PHYSICAL_TRAITS, PERSONALITY_TRAIT_UNLOCK, ROSTER_DEATH_GRACE_DAYS, WEAPON_TYPES, SIGNATURE_TECHNIQUES, RETIREMENT } from "../config";
+import { canRetire } from "../engine/staff";
+import type { WeaponType } from "../types";
 import { StarRating } from "./StarRating";
 import { Tooltip } from "./Tooltip";
 import { GladiatorPortrait } from "./GladiatorPortrait";
@@ -28,6 +30,7 @@ import { Card } from "./Card";
 import { Badge } from "./Badge";
 import { SaleChoiceModal } from "./SaleChoiceModal";
 import { AuctionResultModal } from "./AuctionResultModal";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 const CONDITION_BADGE_TONE: Record<Gladiator["condition"], "success" | "warning" | "danger"> = {
   healthy: "success",
@@ -69,18 +72,21 @@ export function SquadScreen() {
     visitBaths,
     givePublicRecognition,
     payForDoctorVisit,
+    setWeaponType,
+    retireGladiator,
   } = useGame();
   const [selectedId, setSelectedId] = useState<string | null>(
     state.gladiators.find((g) => g.status === "active")?.id ?? null
   );
   const [confirmingSell, setConfirmingSell] = useState<string | null>(null);
+  const [confirmingRetire, setConfirmingRetire] = useState<string | null>(null);
 
   const activeGladiators = state.gladiators.filter((g) => g.status === "active");
   // A death or escape stays visible, greyed out, for a grace period rather than
   // vanishing from the list the instant it happens (Phase 8 Part C).
   const recentlyGone = state.gladiators.filter(
     (g) =>
-      (g.status === "dead" || g.status === "escaped") &&
+      (g.status === "dead" || g.status === "escaped" || g.status === "retired") &&
       g.statusChangedOnDay !== null &&
       state.currentDay - g.statusChangedOnDay <= ROSTER_DEATH_GRACE_DAYS
   );
@@ -135,7 +141,9 @@ export function SquadScreen() {
                 </div>
                 <div className="squad-list-item-condition">
                   {isGone ? (
-                    <span className="squad-list-condition">{g.status === "dead" ? "Dead" : "Escaped"}</span>
+                    <span className="squad-list-condition">
+                      {g.status === "dead" ? "Dead" : g.status === "retired" ? "Retired" : "Escaped"}
+                    </span>
                   ) : (
                     <span className="squad-list-condition">
                       {CONDITION_LABELS[g.condition]}
@@ -207,7 +215,9 @@ export function SquadScreen() {
                   {(() => {
                     const indicators = statIndicators(selected);
                     const rows: [string, keyof typeof indicators, number][] = [
+                      ["Attack", "attack", selected.stats.attack],
                       ["Strength", "strength", selected.stats.strength],
+                      ["Defence", "defence", selected.stats.defence],
                       ["Weapon Skill", "weaponSkill", selected.stats.weaponSkill],
                       ["Endurance", "endurance", selected.stats.endurance],
                       ["Showmanship", "showmanship", selected.stats.showmanship],
@@ -247,6 +257,34 @@ export function SquadScreen() {
                   </div>
                   {potential && <div className="potential-label">{potential.label}</div>}
                 </div>
+
+                <div className="detail-block">
+                  <h4>Combat Style</h4>
+                  <div className="card-row">
+                    <span>Weapon Type</span>
+                    <Tooltip text={WEAPON_TYPES[selected.weaponType ?? "murmillo"].description}>
+                      <select
+                        className="weapon-type-select"
+                        value={selected.weaponType ?? "murmillo"}
+                        disabled={selected.status !== "active"}
+                        onChange={(e) => setWeaponType(selected.id, e.target.value as WeaponType)}
+                      >
+                        {(Object.keys(WEAPON_TYPES) as WeaponType[]).map((wt) => (
+                          <option key={wt} value={wt}>
+                            {WEAPON_TYPES[wt].label}
+                          </option>
+                        ))}
+                      </select>
+                    </Tooltip>
+                  </div>
+                  {selected.signatureTechnique ? (
+                    <Tooltip text={SIGNATURE_TECHNIQUES[selected.signatureTechnique].description}>
+                      <Badge tone="gold">{SIGNATURE_TECHNIQUES[selected.signatureTechnique].label}</Badge>
+                    </Tooltip>
+                  ) : (
+                    <p className="hint">No signature technique yet -- rare, and only discovered through a real stat threshold, an earned trait, and the matching weapon, all at once.</p>
+                  )}
+                </div>
               </div>
 
               <div className="detail-column">
@@ -266,6 +304,8 @@ export function SquadScreen() {
                     <p className="empty-note">
                       {selected.status === "dead"
                         ? `${selected.name} did not survive. He is no longer part of the roster.`
+                        : selected.status === "retired"
+                        ? `${selected.name} has hung up his sword and taken up a place on staff instead. He is no longer part of the roster.`
                         : `${selected.name} escaped and is no longer part of the roster.`}
                     </p>
                   </div>
@@ -384,6 +424,15 @@ export function SquadScreen() {
 
             {selected.status === "active" && (
               <div className="detail-actions">
+                {canRetire(selected) && (
+                  <button
+                    className="btn"
+                    onClick={() => setConfirmingRetire(selected.id)}
+                    title={`Repurposed onto staff as a trainer, not sold -- no gold changes hands either way. Eligible at age ${RETIREMENT.minAge}+ or ${RETIREMENT.provenWinsThreshold}+ career wins.`}
+                  >
+                    Retire to Staff
+                  </button>
+                )}
                 <button className="btn danger-outline" onClick={() => setConfirmingSell(selected.id)}>
                   Release / Sell (from {instantSalePrice(currentAbilityOf(selected))}g)
                 </button>
@@ -398,6 +447,24 @@ export function SquadScreen() {
           const sellTarget = activeGladiators.find((g) => g.id === confirmingSell);
           if (!sellTarget) return null;
           return <SaleChoiceModal gladiator={sellTarget} onClose={() => setConfirmingSell(null)} />;
+        })()}
+      {confirmingRetire &&
+        (() => {
+          const retireTarget = activeGladiators.find((g) => g.id === confirmingRetire);
+          if (!retireTarget) return null;
+          return (
+            <ConfirmDialog
+              title="Retire to Staff"
+              message={`${retireTarget.name} steps down from the sand and takes up a place training the next generation instead. He remains part of the ludus -- no gold changes hands, and he can't fight again once this is done.`}
+              confirmLabel="Retire"
+              danger={false}
+              onConfirm={() => {
+                retireGladiator(retireTarget.id);
+                setConfirmingRetire(null);
+              }}
+              onCancel={() => setConfirmingRetire(null)}
+            />
+          );
         })()}
       <AuctionResultModal />
     </div>

@@ -7,10 +7,12 @@ import { StarRating } from "./StarRating";
 import { Tooltip } from "./Tooltip";
 import { Card } from "./Card";
 
-const FOCUS_OPTIONS: TrainingFocus[] = ["strength", "weaponSkill", "endurance", "showmanship", "balanced", "rest"];
+const FOCUS_OPTIONS: TrainingFocus[] = ["attack", "strength", "defence", "weaponSkill", "endurance", "showmanship", "balanced", "rest"];
 
 const FOCUS_STAT_KEY: Partial<Record<TrainingFocus, StatKey>> = {
+  attack: "attack",
   strength: "strength",
+  defence: "defence",
   weaponSkill: "weaponSkill",
   endurance: "endurance",
   showmanship: "showmanship",
@@ -83,14 +85,18 @@ function SparringPairCard({ a, b }: { a: Gladiator; b: Gladiator }) {
       <div className="sparring-pair-stats">
         <div>
           <div className="sparring-pair-gladiator-name">{a.name}</div>
+          <span>Atk {a.stats.attack}</span>
           <span>Str {a.stats.strength}</span>
+          <span>Def {a.stats.defence}</span>
           <span>Wpn {a.stats.weaponSkill}</span>
           <span>End {a.stats.endurance}</span>
           <span>Show {a.stats.showmanship}</span>
         </div>
         <div>
           <div className="sparring-pair-gladiator-name">{b.name}</div>
+          <span>Atk {b.stats.attack}</span>
           <span>Str {b.stats.strength}</span>
+          <span>Def {b.stats.defence}</span>
           <span>Wpn {b.stats.weaponSkill}</span>
           <span>End {b.stats.endurance}</span>
           <span>Show {b.stats.showmanship}</span>

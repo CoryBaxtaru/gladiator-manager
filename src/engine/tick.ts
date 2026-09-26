@@ -4,7 +4,7 @@ import { recomputeMood, resolveBreak, addMoodModifier } from "./mood";
 import { applyDailyTraining, maybeRevealPotential, tickInjuryRecovery, tickAgeAndDecline } from "./training";
 import { applySparringTraining } from "./sparring";
 import { resolveFight, applyCombatResultToGladiator, estimateWinChance, checkBronzeCrown } from "./combat";
-import { BRONZE_CROWN } from "../config";
+import { BRONZE_CROWN, SIGNATURE_TECHNIQUES } from "../config";
 import { weeklyGladiatorUpkeep, weeklyBuildingUpkeep, weeklyLudusOverhead } from "./economy";
 import { tickRecruiterTrip } from "./scouting";
 import { maybeRefreshStaffPool, weeklyStaffSalaries, bestDoctor } from "./staff";
@@ -49,6 +49,17 @@ export function advanceDay(
       updatedGladiator = addMoodModifier(updatedGladiator, "Awarded a bronze crown", BRONZE_CROWN.moodBoost, nextDay, BRONZE_CROWN.moodDurationDays);
       result = { ...result, reputationReward: result.reputationReward + BRONZE_CROWN.reputationBonus };
       entries.push({ category: "fight", text: `${gladiator.name} was awarded a bronze crown for a performance the crowd won't forget.` });
+    }
+    // Phase 15 Part 2: a signature technique is rare and permanent -- announce the
+    // exact fight it's earned in, the same "real, visible milestone" treatment the
+    // first personality trait slot doesn't get (that one's discovered on the Squad
+    // screen), because this one is explicitly meant to land as a named moment.
+    if (!gladiator.signatureTechnique && updatedGladiator.signatureTechnique) {
+      const technique = SIGNATURE_TECHNIQUES[updatedGladiator.signatureTechnique];
+      entries.push({
+        category: "fight",
+        text: `${gladiator.name} has earned a name for it: "${technique.label}." ${technique.description}`,
+      });
     }
     combatResults.push(result);
     goldFromFights += result.goldReward;

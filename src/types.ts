@@ -49,7 +49,9 @@ export type GladiatorCondition =
 export type GladiatorStatus = "active" | "dead" | "escaped" | "sold" | "retired";
 
 export type TrainingFocus =
+  | "attack"
   | "strength"
+  | "defence"
   | "weaponSkill"
   | "endurance"
   | "showmanship"
@@ -64,14 +66,54 @@ export interface MoodModifier {
   expiresOnDay: number;
 }
 
+/**
+ * Phase 15 Part 3: `strength` split into three, replacing the single stat that used to
+ * do double duty as "the 4th equally-weighted clash stat." Diagnosed first (see
+ * engine/combat.ts's doc comments): the old strength was just another symmetric clash
+ * axis, no different in kind from weaponSkill/endurance. The split gives each piece a
+ * genuinely distinct job instead of three names for the same thing:
+ * - `attack` takes over strength's old clash slot 1:1 (same symmetric roll-off, same
+ *   composite weight) -- decides whether a clash is WON.
+ * - `defence` is new: a passive per-clash modifier that reduces what the OPPONENT
+ *   effectively rolls against this gladiator (see situationalBonus/opponent
+ *   mitigation in combat.ts) -- decides how hard this gladiator is to beat.
+ * - `strength` keeps its name but gets no clash at all -- it scales the STAKES once a
+ *   result is already decided (the opponent's strength worsens injury/death odds on a
+ *   loss, this gladiator's own strength adds a reward bonus on a decisive win). A
+ *   third symmetric clash stat would have been redundant with attack; this isn't.
+ */
 export interface GladiatorStats {
+  attack: number;
   strength: number;
+  defence: number;
   weaponSkill: number;
   endurance: number;
   showmanship: number;
 }
 
 export type StatKey = keyof GladiatorStats;
+
+/**
+ * Phase 15 Part 2: a player-assignable equipment/style choice, reassignable like
+ * training focus rather than fixed at generation like PhysicalTrait -- a ludus can
+ * re-arm a fighter as its needs change, it's not a fact about his body. Each type
+ * leans a fixed pair of stats (see WEAPON_TYPES in config.ts), a real build decision,
+ * not flavor. Historically grounded arena archetypes.
+ */
+export type WeaponType = "murmillo" | "retiarius" | "thraex" | "dimachaerus" | "secutor";
+
+/**
+ * Phase 15 Part 2: a rare, discovered "he's earned a name for this" milestone -- once
+ * earned it's permanent, same spirit as an earned personality trait. Requires a stat
+ * threshold, a personality trait, AND (to make weapon choice and technique compose
+ * instead of coincide) the matching weapon type. See SIGNATURE_TECHNIQUES in config.ts.
+ */
+export type SignatureTechniqueId =
+  | "reapers_cast"
+  | "iron_wall"
+  | "twin_fury"
+  | "butchers_mark"
+  | "featherfoot";
 
 export interface StatChangeMarker {
   stat: StatKey;
@@ -150,6 +192,13 @@ export interface Gladiator {
    * pending".
    */
   awaitingFateDecision?: boolean;
+  /** Phase 15 Part 2: player-assignable, reassignable any time from Training. Optional
+   * so pre-existing saves default sensibly (see saveManager's normalizeState) rather
+   * than crash. */
+  weaponType?: WeaponType;
+  /** Phase 15 Part 2: null until earned, permanent once set. Optional for the same
+   * pre-existing-save reason as weaponType. */
+  signatureTechnique?: SignatureTechniqueId | null;
   /**
    * Fixed random offset assigned at generation, used to fuzz the displayed Potential
    * Ability star rating the same way a trainer's displayed rating is fuzzed. Optional
@@ -296,6 +345,14 @@ export interface Staff {
   ratingNoiseSeed: number;
   weeklySalary: number;
   hireDay: number;
+  /**
+   * Phase 15 Part 1: set when this trainer is a retired gladiator repurposed onto
+   * staff rather than recruited from the hiring pool -- purely a record for flavor/UI
+   * ("this trainer used to fight"), doesn't change how he functions. Optional so
+   * ordinary recruited staff (the overwhelming majority) don't carry a meaningless
+   * null around; absent reads as "recruited normally."
+   */
+  retiredGladiatorName?: string;
 }
 
 export interface StaffCandidate {

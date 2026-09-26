@@ -1,9 +1,31 @@
-import type { LudusState } from "../types";
+import type { GladiatorStats, LudusState } from "../types";
 import { SAVE_SLOT_COUNT } from "../config";
 import { tierForReputation } from "../engine/rivalLudi";
 import { generateRomanCitizenName } from "../engine/names";
 
 export const AUTOSAVE_KEY = "gladiator-manager-autosave-v2";
+
+/**
+ * Phase 15 Part 3 migration: a save from before the Attack/Strength/Defence split has
+ * stats missing `attack`/`defence` entirely (or, for a rival fighter with no stats at
+ * all, nothing to derive from beyond currentAbility). Neither gets reset to zero:
+ * `attack` and `defence` both derive from the old `strength` value, which is exactly
+ * the stat Attack took over 1:1 -- Defence didn't exist as a concept before, and a
+ * fighter's old raw power is a reasonable stand-in for it until training reshapes him.
+ * A save already in the new shape passes through untouched.
+ */
+function migrateStats(stats: Partial<GladiatorStats> | undefined, fallbackAbility: number): GladiatorStats {
+  const base = stats ?? {};
+  const strength = base.strength ?? fallbackAbility;
+  return {
+    attack: base.attack ?? strength,
+    strength,
+    defence: base.defence ?? strength,
+    weaponSkill: base.weaponSkill ?? fallbackAbility,
+    endurance: base.endurance ?? fallbackAbility,
+    showmanship: base.showmanship ?? fallbackAbility,
+  };
+}
 
 /**
  * Fills in fields that didn't exist when a save was written, so older saves keep
@@ -18,7 +40,17 @@ function normalizeState(state: LudusState): LudusState {
     // Phase 10 Part B: refundValue is new -- a candidate pool resolved before this
     // change has no per-candidate cost share to compute it from, so it defaults to 0
     // ("sell him on" just isn't worth anything for that already-in-flight batch).
-    recruitPool: (state.recruitPool ?? []).map((c) => ({ ...c, channel: c.channel ?? "slave_market", refundValue: c.refundValue ?? 0 })),
+    recruitPool: (state.recruitPool ?? []).map((c) => ({
+      ...c,
+      channel: c.channel ?? "slave_market",
+      refundValue: c.refundValue ?? 0,
+      gladiator: {
+        ...c.gladiator,
+        stats: migrateStats(c.gladiator.stats, c.gladiator.stats?.weaponSkill ?? 20),
+        weaponType: c.gladiator.weaponType ?? "murmillo",
+        signatureTechnique: c.gladiator.signatureTechnique ?? null,
+      },
+    })),
     // Phase 8 Part A: recruiters are no longer hired staff sent on a trip, they're a
     // one-off expedition paid for upfront. A trip in flight from before this change has
     // no tier to migrate to, so it's cleared rather than guessed at -- the player can
@@ -71,19 +103,17 @@ function normalizeState(state: LudusState): LudusState {
       // doesn't reshuffle a fighter's build/CA each time the save is reopened.
       physicalTrait: g.physicalTrait ?? "Tall",
       statusChangedOnDay: g.statusChangedOnDay ?? null,
+      stats: migrateStats(g.stats, g.stats?.weaponSkill ?? 20),
+      // Same "fixed, deterministic" reasoning as physicalTrait above -- a random pick
+      // here would reroll on every load of a save that's never been written back out.
+      weaponType: g.weaponType ?? "murmillo",
+      signatureTechnique: g.signatureTechnique ?? null,
     })),
     rivalLudi: (state.rivalLudi ?? []).map((ludus) => ({
       ...ludus,
       roster: ludus.roster.map((fighter) => ({
         ...fighter,
-        stats:
-          fighter.stats ??
-          {
-            strength: fighter.currentAbility,
-            weaponSkill: fighter.currentAbility,
-            endurance: fighter.currentAbility,
-            showmanship: fighter.currentAbility,
-          },
+        stats: migrateStats(fighter.stats, fighter.currentAbility),
         potentialAbility: fighter.potentialAbility ?? Math.min(99, fighter.currentAbility + 15),
         potentialNoiseSeed: fighter.potentialNoiseSeed ?? 0,
         physicalTrait: fighter.physicalTrait ?? "Tall",
