@@ -83,6 +83,16 @@ export const BRONZE_CROWN = {
   reputationBonus: 8,
 };
 
+/**
+ * Phase 16 Part D: persistent rivalries. A win/loss count against a specific rival
+ * ludus only becomes a felt notice ("the crowd remembers") once it crosses one of
+ * these -- fired the exact fight that hits each value, not every fight after, so it
+ * reads as a milestone rather than a running commentary.
+ */
+export const RIVALRY = {
+  noticeThresholds: [3, 5, 8, 12, 20, 30, 50],
+};
+
 export const BUILDING_MATERIAL_TIME: Record<
   BuildingMaterial,
   { baseTime: number; timeGrowth: number }

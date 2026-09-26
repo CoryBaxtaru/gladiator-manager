@@ -114,6 +114,9 @@ function normalizeState(state: LudusState): LudusState {
     })),
     rivalLudi: (state.rivalLudi ?? []).map((ludus) => ({
       ...ludus,
+      // Phase 16 Part D: new field -- a save from before this existed has no rivalry
+      // history yet, same as a fresh game's rival ludi.
+      record: ludus.record ?? { wins: 0, losses: 0 },
       roster: ludus.roster.map((fighter) => ({
         ...fighter,
         stats: migrateStats(fighter.stats, fighter.currentAbility),

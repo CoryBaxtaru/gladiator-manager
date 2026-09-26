@@ -1,6 +1,6 @@
 import type { CombatResult, FightMatchup, FightTier, LudusState, PromotionOutcome, RivalGladiator, RivalLudus } from "../types";
 import { PROMOTION, PROMOTION_READINESS, REPUTATION_BANDS_BY_TIER } from "../config";
-import { rivalLudiForTier } from "./rivalLudi";
+import { rivalLudiForTier, recordRivalryResult } from "./rivalLudi";
 import { resolveFight, applyCombatResultToGladiator, canFight, techniqueAnnouncementFor } from "./combat";
 import { currentAbilityOf } from "./rating";
 import { nextId } from "./rng";
@@ -110,6 +110,7 @@ export function buildPromotionMatchup(state: LudusState, gladiatorId: string): F
     opponentPowerLevel: champion.gladiator.currentAbility,
     opponentStats: champion.gladiator.stats,
     rivalLudusName: champion.rivalLudus.name,
+    rivalLudusId: champion.rivalLudus.id,
   };
 }
 
@@ -142,6 +143,9 @@ export function resolvePromotionFight(
     ...state,
     gladiators: state.gladiators.map((g) => (g.id === gladiator.id ? updatedGladiator : g)),
   };
+  const rivalry = recordRivalryResult(working, matchup.rivalLudusId, combat.outcome);
+  working = rivalry.state;
+  const rivalryNotice = rivalry.notice;
 
   if (combat.outcome === "win") {
     const newTier = nextTierOf(state.unlockedTier)!;
@@ -163,7 +167,7 @@ export function resolvePromotionFight(
       gold: working.gold + totalGold,
       promotionCooldownUntilDay: null,
     };
-    return { state: working, outcome: { won: true, combat: displayCombat, newTier, cooldownUntilDay: null, techniqueAnnouncement } };
+    return { state: working, outcome: { won: true, combat: displayCombat, newTier, cooldownUntilDay: null, techniqueAnnouncement, rivalryNotice } };
   }
 
   const cooldownUntilDay = currentDay + PROMOTION.cooldownDays;
@@ -173,5 +177,5 @@ export function resolvePromotionFight(
     reputation: Math.max(0, working.reputation + combat.reputationReward),
     promotionCooldownUntilDay: cooldownUntilDay,
   };
-  return { state: working, outcome: { won: false, combat, newTier: null, cooldownUntilDay, techniqueAnnouncement } };
+  return { state: working, outcome: { won: false, combat, newTier: null, cooldownUntilDay, techniqueAnnouncement, rivalryNotice } };
 }

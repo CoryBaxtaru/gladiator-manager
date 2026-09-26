@@ -12,6 +12,7 @@ import { maybeRivalInitiatesChallenge } from "./deathMatch";
 import { tickWeeklyDebt } from "./debt";
 import { tickWeeklyLoan, applyPurseCut } from "./loan";
 import { reputationCapFor } from "./promotion";
+import { recordRivalryResult } from "./rivalLudi";
 import { currentAbilityOf } from "./rating";
 
 const MAX_HISTORY_ENTRIES = 60;
@@ -56,6 +57,13 @@ export function advanceDay(
     // screen), because this one is explicitly meant to land as a named moment.
     const techniqueAnnouncement = techniqueAnnouncementFor(gladiator, updatedGladiator);
     if (techniqueAnnouncement) entries.push({ category: "fight", text: techniqueAnnouncement });
+    // Phase 16 Part D: an ordinary fight day is matched against a real persistent
+    // rival ludus (see fightday.ts), so it's the primary place this rivalry record
+    // accumulates -- update it before working.rivalLudi is otherwise untouched again
+    // until the next matchup in this same loop.
+    const rivalry = recordRivalryResult(working, matchup.rivalLudusId, result.outcome);
+    working = rivalry.state;
+    if (rivalry.notice) entries.push({ category: "event", text: rivalry.notice });
     combatResults.push(result);
     goldFromFights += result.goldReward;
     reputationFromFights += result.reputationReward;

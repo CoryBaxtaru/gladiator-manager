@@ -44,6 +44,7 @@ export function DeathMatchResultModal() {
                 </p>
               )}
               {deathMatchOutcome.techniqueAnnouncement && <p className="hint">{deathMatchOutcome.techniqueAnnouncement}</p>}
+              {deathMatchOutcome.rivalryNotice && <p className="hint">{deathMatchOutcome.rivalryNotice}</p>}
             </>
           )
         )}

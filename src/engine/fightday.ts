@@ -87,6 +87,7 @@ export function matchmakeFightDay(state: LudusState, selectedGladiatorIds: strin
       opponentPowerLevel: closest.currentAbility,
       opponentStats: closest.stats,
       rivalLudusName: rivalLudus.name,
+      rivalLudusId: rivalLudus.id,
     });
   }
 

@@ -20,6 +20,7 @@ export function PromotionResultModal() {
           <FightResultCard result={promotionOutcome.combat} />
         </div>
         {promotionOutcome.techniqueAnnouncement && <p className="hint">{promotionOutcome.techniqueAnnouncement}</p>}
+        {promotionOutcome.rivalryNotice && <p className="hint">{promotionOutcome.rivalryNotice}</p>}
         <p className="hint">
           {promotionOutcome.won
             ? "The cap is gone, reputation is free to climb again, and this win paid out well above a normal fight day."

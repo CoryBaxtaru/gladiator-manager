@@ -1767,6 +1767,15 @@ body {
   font-weight: bold;
 }
 
+/* Phase 16 Part D: win-loss record against a specific rival ludus, plus a callout
+   badge once a losing rivalry becomes a real, felt pattern. */
+.rivalry-record {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
 .gladiator-detail-header h3 + span,
 .gladiator-detail-header span {
   display: block;

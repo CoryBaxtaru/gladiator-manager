@@ -264,6 +264,7 @@ export function resolveFight(
     gladiatorName: gladiator.name,
     opponentName: matchup.opponentName,
     rivalLudusName: matchup.rivalLudusName,
+    rivalLudusId: matchup.rivalLudusId ?? null,
     tier: matchup.tier,
     outcome,
     margin,

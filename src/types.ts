@@ -264,6 +264,11 @@ export interface CombatResult {
   gladiatorName: string;
   opponentName: string;
   rivalLudusName: string;
+  /** Phase 16 Part D: the stable id of the RivalLudus this fight was against, when it
+   * was against one of the persistent rival ludi at all (fight day, Promotion Fight, a
+   * ludus death match) rather than a one-off generated opponent (self-challenge, the
+   * Colosseum finale's Praetorian Guard) -- see engine/rivalLudi.ts's recordRivalryResult. */
+  rivalLudusId?: string | null;
   tier: FightTier;
   outcome: FightOutcome;
   /** clashes won minus clashes lost, magnitude drives reward/injury/mood scaling */
@@ -288,6 +293,8 @@ export interface FightMatchup {
   opponentPowerLevel: number;
   opponentStats: GladiatorStats;
   rivalLudusName: string;
+  /** See CombatResult.rivalLudusId. */
+  rivalLudusId?: string | null;
 }
 
 export type RecruitChannel = "slave_market" | "auction_house" | "volunteer_hall";
@@ -381,6 +388,15 @@ export interface RivalLudus {
   reputation: number;
   facilityLevel: number;
   roster: RivalGladiator[];
+  /**
+   * Phase 16 Part D: win/loss record from the PLAYER's perspective, across every
+   * fight-day, Promotion Fight, and ludus death match matchup ever resolved against
+   * this exact rival ludus (self-challenges and the Colosseum finale don't involve a
+   * real rival identity, so they never touch this). Rival ludi are generated once at
+   * game start and never regenerated (see engine/rivalLudi.ts), so this is a real,
+   * persistent rivalry with a stable identity, not a coincidence of reused naming.
+   */
+  record: { wins: number; losses: number };
 }
 
 export type SaleType = "instant" | "auction";
@@ -421,6 +437,10 @@ export interface DeathMatchOutcome {
   /** Phase 16 Part A: set when this bout is also the exact fight a signature technique
    * was earned in, same named-moment treatment the ordinary fight-day path already gets. */
   techniqueAnnouncement?: string | null;
+  /** Phase 16 Part D: set when this fight's win/loss count against the specific rival
+   * ludus fought (not set for "self" mode, which has no real rival identity) just
+   * crossed one of RIVALRY.noticeThresholds. See engine/rivalLudi.ts's recordRivalryResult. */
+  rivalryNotice?: string | null;
 }
 
 /** Result of a Promotion Fight attempt (see engine/promotion.ts). */
@@ -431,6 +451,8 @@ export interface PromotionOutcome {
   cooldownUntilDay: number | null;
   /** Phase 16 Part A: see DeathMatchOutcome.techniqueAnnouncement. */
   techniqueAnnouncement?: string | null;
+  /** Phase 16 Part D: see DeathMatchOutcome.rivalryNotice. */
+  rivalryNotice?: string | null;
 }
 
 export interface LudusState {

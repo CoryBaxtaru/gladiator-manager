@@ -1,6 +1,8 @@
 import { useGame } from "../state/GameContext";
 import { reputationToStars, currentAbilityOf } from "../engine/rating";
+import { RIVALRY } from "../config";
 import { StarRating } from "./StarRating";
+import { Badge } from "./Badge";
 
 interface RankRow {
   id: string;
@@ -9,6 +11,7 @@ interface RankRow {
   facilityLevel: number;
   rosterStrength: number;
   isPlayer: boolean;
+  record: { wins: number; losses: number } | null;
 }
 
 export function LudiRankingsScreen() {
@@ -30,6 +33,7 @@ export function LudiRankingsScreen() {
       facilityLevel: Math.max(1, playerFacility),
       rosterStrength: avgCA,
       isPlayer: true,
+      record: null,
     },
     ...state.rivalLudi.map((l) => ({
       id: l.id,
@@ -38,6 +42,7 @@ export function LudiRankingsScreen() {
       facilityLevel: l.facilityLevel,
       rosterStrength: Math.round(l.roster.reduce((sum, g) => sum + g.currentAbility, 0) / Math.max(1, l.roster.length)),
       isPlayer: false,
+      record: l.record,
     })),
   ].sort((a, b) => b.reputation - a.reputation);
 
@@ -54,6 +59,7 @@ export function LudiRankingsScreen() {
             <th>Reputation</th>
             <th>Roster</th>
             <th>Facilities</th>
+            <th>Record</th>
           </tr>
         </thead>
         <tbody>
@@ -64,6 +70,20 @@ export function LudiRankingsScreen() {
               <td><StarRating value={reputationToStars(row.reputation)} size="sm" /></td>
               <td>{rosterBand(row.rosterStrength)}</td>
               <td><StarRating value={row.facilityLevel} size="sm" /></td>
+              <td>
+                {row.record && (row.record.wins > 0 || row.record.losses > 0) ? (
+                  <span className="rivalry-record">
+                    {row.record.wins}-{row.record.losses}
+                    {row.record.losses >= RIVALRY.noticeThresholds[0] && row.record.losses > row.record.wins && (
+                      <Badge tone="danger" title={`${row.name} has beaten you ${row.record.losses} times.`}>
+                        Bitter Rival
+                      </Badge>
+                    )}
+                  </span>
+                ) : (
+                  <span className="hint">--</span>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>

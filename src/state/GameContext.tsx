@@ -163,7 +163,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     const { state: next, summary } = engineAdvanceDay(state);
     setState(next);
     setLatestSummaries([summary]);
-  }, [state]);
+  }, [state, setState]);
 
   const advanceToNextFight = useCallback(() => {
     let working = state;
@@ -176,7 +176,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setState(working);
     setPendingIntermediateSummaries(collected);
     setPendingFightDay(true);
-  }, [state]);
+  }, [state, setState]);
 
   const resolveFightDay = useCallback(
     (selectedGladiatorIds: string[]) => {
@@ -188,7 +188,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setPendingIntermediateSummaries([]);
       setPendingFightDay(false);
     },
-    [state, pendingIntermediateSummaries]
+    [state, pendingIntermediateSummaries, setState]
   );
 
   const eligibleFighters = useCallback(() => eligibleForFightDay(state.gladiators), [state.gladiators]);
@@ -197,15 +197,15 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const queueBuildingUpgrade = useCallback((buildingId: BuildingId) => {
     setState((prev) => engineQueueUpgrade(prev, buildingId));
-  }, []);
+  }, [setState]);
 
   const sellBuildingLevel = useCallback((buildingId: BuildingId) => {
     setState((prev) => engineSellBuildingLevel(prev, buildingId));
-  }, []);
+  }, [setState]);
 
   const takeLoan = useCallback((collateral: SponsorshipCollateral) => {
     setState((prev) => engineTakeLoan(prev, collateral));
-  }, []);
+  }, [setState]);
 
   const setTrainingFocus = useCallback((gladiatorId: string, focus: TrainingFocus) => {
     setState((prev) => ({
@@ -214,39 +214,39 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         g.id === gladiatorId ? { ...g, trainingFocus: focus } : g
       ),
     }));
-  }, []);
+  }, [setState]);
 
   const setWeaponType = useCallback((gladiatorId: string, weaponType: WeaponType) => {
     setState((prev) => engineSetWeaponType(prev, gladiatorId, weaponType));
-  }, []);
+  }, [setState]);
 
   const retireGladiator = useCallback((gladiatorId: string) => {
     setState((prev) => engineRetireGladiatorToStaff(prev, gladiatorId));
-  }, []);
+  }, [setState]);
 
   const recruit = useCallback((candidateId: string) => {
     setState((prev) => engineRecruitGladiator(prev, candidateId));
-  }, []);
+  }, [setState]);
 
   const passCandidate = useCallback((candidateId: string) => {
     setState((prev) => enginePassRecruitCandidate(prev, candidateId));
-  }, []);
+  }, [setState]);
 
   const sellOnCandidate = useCallback((candidateId: string) => {
     setState((prev) => engineSellOnCandidate(prev, candidateId));
-  }, []);
+  }, [setState]);
 
   const sendRecruiter = useCallback((channel: RecruitChannel, tier: RecruiterTier) => {
     setState((prev) => engineSendRecruiter(prev, channel, tier));
-  }, []);
+  }, [setState]);
 
   const setSparringPair = useCallback((gladiatorAId: string, gladiatorBId: string) => {
     setState((prev) => engineSetSparringPair(prev, gladiatorAId, gladiatorBId));
-  }, []);
+  }, [setState]);
 
   const clearSparring = useCallback((gladiatorId: string) => {
     setState((prev) => engineClearSparring(prev, gladiatorId));
-  }, []);
+  }, [setState]);
 
   const [auctionResult, setAuctionResult] = useState<{ gladiatorName: string; price: number } | null>(null);
   const clearAuctionResult = useCallback(() => setAuctionResult(null), []);
@@ -262,52 +262,52 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         setAuctionResult({ gladiatorName: gladiator.name, price: result.auctionPrice });
       }
     },
-    [state]
+    [state, setState]
   );
 
   const hireStaff = useCallback((candidateId: string) => {
     setState((prev) => engineHireStaff(prev, candidateId));
-  }, []);
+  }, [setState]);
 
   const dismissStaff = useCallback((staffId: string) => {
     setState((prev) => engineDismissStaff(prev, staffId));
-  }, []);
+  }, [setState]);
 
   const triggerMoraleEvent = useCallback((gladiatorId: string) => {
     setState((prev) => engineTriggerMoraleEvent(prev, gladiatorId));
-  }, []);
+  }, [setState]);
 
   const performRitual = useCallback((gladiatorId: string) => {
     setState((prev) => enginePerformRitual(prev, gladiatorId));
-  }, []);
+  }, [setState]);
 
   const giveBonusCut = useCallback((gladiatorId: string) => {
     setState((prev) => engineGiveBonusCut(prev, gladiatorId));
-  }, []);
+  }, [setState]);
 
   const boastPride = useCallback((gladiatorId: string) => {
     setState((prev) => engineBoastPride(prev, gladiatorId));
-  }, []);
+  }, [setState]);
 
   const giveEncouragement = useCallback((gladiatorId: string) => {
     setState((prev) => engineGiveEncouragement(prev, gladiatorId));
-  }, []);
+  }, [setState]);
 
   const giveLeave = useCallback((gladiatorId: string) => {
     setState((prev) => engineGiveLeave(prev, gladiatorId));
-  }, []);
+  }, [setState]);
 
   const visitBaths = useCallback((gladiatorId: string) => {
     setState((prev) => engineVisitBaths(prev, gladiatorId));
-  }, []);
+  }, [setState]);
 
   const givePublicRecognition = useCallback((gladiatorId: string) => {
     setState((prev) => engineGivePublicRecognition(prev, gladiatorId));
-  }, []);
+  }, [setState]);
 
   const payForDoctorVisit = useCallback((gladiatorId: string) => {
     setState((prev) => enginePayForDoctorVisit(prev, gladiatorId));
-  }, []);
+  }, [setState]);
 
   const [deathMatchOutcome, setDeathMatchOutcome] = useState<DeathMatchOutcome | null>(null);
   const clearDeathMatchOutcome = useCallback(() => setDeathMatchOutcome(null), []);
@@ -321,7 +321,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setState(result.state);
       setDeathMatchOutcome(result.outcome);
     },
-    [state]
+    [state, setState]
   );
 
   const respondToChallenge = useCallback(
@@ -330,7 +330,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setState(result.state);
       if (result.outcome) setDeathMatchOutcome(result.outcome);
     },
-    [state]
+    [state, setState]
   );
 
   const issueSelfChallenge = useCallback(
@@ -340,7 +340,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setState(result.state);
       setDeathMatchOutcome(result.outcome);
     },
-    [state]
+    [state, setState]
   );
 
   // Phase 13 Part B: generates (and locks in) today's self-challenge opponent the
@@ -353,14 +353,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       const result = engineDrawSelfChallengeOpponent(state, gladiatorId);
       if (result.state !== state) setState(result.state);
     },
-    [state]
+    [state, setState]
   );
 
   const resolveFateDecision = useCallback(
     (gladiatorId: string, sponsor: boolean) => {
       setState((prev) => engineResolveFateDecision(prev, gladiatorId, sponsor));
     },
-    []
+    [setState]
   );
 
   const [praetorianFinaleOutcome, setPraetorianFinaleOutcome] = useState<PraetorianFinaleOutcome | null>(null);
@@ -373,7 +373,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setState(result.state);
       setPraetorianFinaleOutcome(result.outcome);
     },
-    [state]
+    [state, setState]
   );
 
   const [promotionOutcome, setPromotionOutcome] = useState<PromotionOutcome | null>(null);
@@ -388,7 +388,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setState(result.state);
       setPromotionOutcome(result.outcome);
     },
-    [state]
+    [state, setState]
   );
 
   const newGame = useCallback((ludusName: string, founderName?: string) => {
@@ -398,7 +398,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setLatestSummaries([]);
     setPendingFightDay(false);
     setPendingIntermediateSummaries([]);
-  }, []);
+  }, [setState]);
 
   // Phase 12 Part N: applies the player's chosen names to the auto-generated first-
   // launch state in place, rather than regenerating a whole new game (which would
@@ -410,7 +410,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       ludusName: ludusName.trim() || prev.ludusName,
     }));
     setIsFirstLaunch(false);
-  }, []);
+  }, [setState]);
 
   const saveGame = useCallback(
     (slot: number) => {
@@ -427,7 +427,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setLatestSummaries([]);
     setPendingFightDay(false);
     setPendingIntermediateSummaries([]);
-  }, []);
+  }, [setState]);
 
   const deleteSave = useCallback((slot: number) => {
     deleteSlot(slot);
