@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { Gladiator } from "../types";
 import { useGame } from "../state/GameContext";
 import { potentialStarDisplay, currentAbilityStars, currentAbilityOf, statIndicators } from "../engine/rating";
-import { TRAITS, PHYSICAL_TRAITS, PERSONALITY_TRAIT_UNLOCK, ROSTER_DEATH_GRACE_DAYS, WEAPON_TYPES, SIGNATURE_TECHNIQUES, RETIREMENT } from "../config";
+import { TRAITS, PHYSICAL_TRAITS, PERSONALITY_TRAIT_UNLOCK, ROSTER_DEATH_GRACE_DAYS, WEAPON_TYPES, SIGNATURE_TECHNIQUES, RETIREMENT, STAT_DESCRIPTIONS } from "../config";
 import { canRetire } from "../engine/staff";
 import type { WeaponType } from "../types";
 import { StarRating } from "./StarRating";
@@ -234,14 +234,16 @@ export function SquadScreen() {
                       const indicator = indicators[key];
                       return (
                         <div className="card-row" key={key}>
-                          <span>
-                            {label}
-                            {indicator && (
-                              <span className={`stat-indicator stat-indicator-${indicator}`}>
-                                {indicator === "boost" ? "▲" : "▼"}
-                              </span>
-                            )}
-                          </span>
+                          <Tooltip text={STAT_DESCRIPTIONS[key]}>
+                            <span>
+                              {label}
+                              {indicator && (
+                                <span className={`stat-indicator stat-indicator-${indicator}`}>
+                                  {indicator === "boost" ? "▲" : "▼"}
+                                </span>
+                              )}
+                            </span>
+                          </Tooltip>
                           <span>{value}</span>
                         </div>
                       );

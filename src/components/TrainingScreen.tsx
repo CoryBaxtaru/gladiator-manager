@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useGame } from "../state/GameContext";
-import { TRAINING_FOCUS_LABELS } from "../config";
+import { TRAINING_FOCUS_LABELS, STAT_DESCRIPTIONS } from "../config";
 import type { Gladiator, StatKey, TrainingFocus } from "../types";
 import { displayedStaffStars, trainerCoveredStats } from "../engine/staff";
 import { StarRating } from "./StarRating";
@@ -34,6 +34,19 @@ const STAFF_ROLE_DESCRIPTION: Record<string, (specialty: string) => string> = {
 
 function staffRoleDescription(role: string, specialtyLabel: string): string {
   return (STAFF_ROLE_DESCRIPTION[role] ?? (() => ""))(specialtyLabel);
+}
+
+/**
+ * Phase 16 Part E: what makes a "Trainer, Strength" a blind purchase isn't the trainer
+ * mechanic itself (already explained above) -- it's that Strength stopped being a
+ * clash stat in Phase 15's Attack/Strength/Defence split, so a player has no way to
+ * know what training it up is actually FOR without this. Only worth the extra line
+ * for the two stats (Strength, Defence) that don't win a clash directly; Attack/Weapon
+ * Skill/Endurance/Showmanship are already self-evident from watching a fight.
+ */
+function trainerSpecialtyNote(specialty: StatKey | null): string | null {
+  if (specialty !== "strength" && specialty !== "defence") return null;
+  return STAT_DESCRIPTIONS[specialty];
 }
 
 function StatArrow({ delta }: { delta: number }) {
@@ -202,6 +215,9 @@ export function TrainingScreen() {
               {s.role === "trainer" && (
                 <p className="hint">Covers: {trainerCoveredStats(s).map((stat) => TRAINING_FOCUS_LABELS[stat]).join(", ")}</p>
               )}
+              {s.role === "trainer" && trainerSpecialtyNote(s.specialty) && (
+                <p className="hint staff-role-desc">{trainerSpecialtyNote(s.specialty)}</p>
+              )}
               <StarRating value={displayedStaffStars(s, state.reputation)} />
               <div className="staff-salary">{s.weeklySalary}g per week</div>
               <button className="btn small danger-outline" onClick={() => dismissStaff(s.id)}>Dismiss</button>
@@ -225,6 +241,9 @@ export function TrainingScreen() {
               <p className="hint staff-role-desc">{staffRoleDescription(c.staff.role, TRAINING_FOCUS_LABELS[c.staff.specialty ?? "balanced"])}</p>
               {c.staff.role === "trainer" && (
                 <p className="hint">Covers: {trainerCoveredStats(c.staff).map((stat) => TRAINING_FOCUS_LABELS[stat]).join(", ")}</p>
+              )}
+              {c.staff.role === "trainer" && trainerSpecialtyNote(c.staff.specialty) && (
+                <p className="hint staff-role-desc">{trainerSpecialtyNote(c.staff.specialty)}</p>
               )}
               <Tooltip text="This rating is fuzzy at low reputation and sharpens as your ludus grows more respected.">
                 <StarRating value={displayedStaffStars(c.staff, state.reputation)} />

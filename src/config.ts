@@ -532,6 +532,23 @@ export const CLASH_LABELS: Record<"attack" | "weaponSkill" | "endurance" | "show
 };
 
 /**
+ * Phase 16 Part E: what each stat actually does mechanically, honestly, for the Squad
+ * screen's stat tooltips and the Training screen's trainer descriptions -- Strength
+ * especially, since Phase 15's Attack/Strength/Defence split left it with no clash of
+ * its own, which reads as "why does this stat exist" without an explanation. Defence
+ * is similarly easy to misread as a clash stat when it's a passive mitigation instead.
+ */
+export const STAT_DESCRIPTIONS: Record<StatKey, string> = {
+  attack: "Wins or loses the Attack clash directly, and feeds into the blended Overall Prowess clash at the end of a fight.",
+  strength:
+    "Not rolled in any clash. A gladiator's own Strength earns a bigger gold/reputation payout on a decisive win. A tougher OPPONENT's Strength is what makes losing to him worse -- more severe injuries, higher death risk.",
+  defence: "Never rolled for its own clash. Instead, passively reduces what an opponent effectively rolls against him in every single clash of the fight.",
+  weaponSkill: "Wins or loses the Weapon Skill clash directly, and weighs heaviest in the blended Overall Prowess clash at the end of a fight.",
+  endurance: "Wins or loses the Endurance clash directly, and also feeds into the blended Overall Prowess clash.",
+  showmanship: "Wins or loses the Showmanship clash directly. Also grows on its own from winning fights and crowd-pleasing personality traits.",
+};
+
+/**
  * The single source of truth for how gold scales with reputation tier, used both for
  * fight purses (income) and one-time action costs (spending), so the two stay tied to
  * the same scale instead of drifting apart. Reuses the FightTier already used to gate
