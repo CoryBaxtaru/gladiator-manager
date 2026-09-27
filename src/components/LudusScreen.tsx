@@ -55,50 +55,56 @@ export function LudusScreen() {
                 <Badge tone="gold">Lv {building.level}</Badge>
               </div>
               <p className="building-desc">{def.description}</p>
-              {queued ? (
-                <div className="building-queue-status">
-                  Building to level {queued.targetLevel}, completes day {queued.completesOnDay}
-                  <div className="progress-bar">
-                    <div
-                      className="progress-bar-fill"
-                      style={{
-                        width: `${Math.min(
-                          100,
-                          Math.round(
-                            ((state.currentDay - queued.startedOnDay) /
-                              (queued.completesOnDay - queued.startedOnDay)) *
-                              100
-                          )
-                        )}%`,
-                      }}
-                    />
+              {/* Phase 17: anchored to the card's bottom (margin-top: auto on the flex
+                  column) so every card's action area lines up on the same baseline
+                  across a row, regardless of how many buttons a given card has or how
+                  long its description runs. */}
+              <div className="building-card-actions">
+                {queued ? (
+                  <div className="building-queue-status">
+                    Building to level {queued.targetLevel}, completes day {queued.completesOnDay}
+                    <div className="progress-bar">
+                      <div
+                        className="progress-bar-fill"
+                        style={{
+                          width: `${Math.min(
+                            100,
+                            Math.round(
+                              ((state.currentDay - queued.startedOnDay) /
+                                (queued.completesOnDay - queued.startedOnDay)) *
+                                100
+                            )
+                          )}%`,
+                        }}
+                      />
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <>
-                  <div className="building-upgrade-info">
-                    <span>Upgrade cost: {cost}g</span>
-                    <span>Time: {time}d</span>
-                  </div>
-                  <button
-                    className="btn"
-                    disabled={!check.ok}
-                    onClick={() => queueBuildingUpgrade(id)}
-                    title={check.reason}
-                  >
-                    {check.ok ? `Upgrade to Lv ${building.level + 1}` : check.reason}
-                  </button>
-                  {canSellLevel(state, id) && (
+                ) : (
+                  <>
+                    <div className="building-upgrade-info">
+                      <span>Upgrade cost: {cost}g</span>
+                      <span>Time: {time}d</span>
+                    </div>
                     <button
-                      className="btn small danger-outline"
-                      onClick={() => sellBuildingLevel(id)}
-                      title="Refunds part of what this level cost. A deliberate downgrade to survive a cash crunch."
+                      className="btn"
+                      disabled={!check.ok}
+                      onClick={() => queueBuildingUpgrade(id)}
+                      title={check.reason}
                     >
-                      Sell back to Lv {building.level - 1} (+{sellRefund(building)}g)
+                      {check.ok ? `Upgrade to Lv ${building.level + 1}` : check.reason}
                     </button>
-                  )}
-                </>
-              )}
+                    {canSellLevel(state, id) && (
+                      <button
+                        className="btn small danger-outline"
+                        onClick={() => sellBuildingLevel(id)}
+                        title="Refunds part of what this level cost. A deliberate downgrade to survive a cash crunch."
+                      >
+                        Sell back to Lv {building.level - 1} (+{sellRefund(building)}g)
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
             </Card>
           );
         })}

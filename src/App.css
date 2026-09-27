@@ -472,12 +472,23 @@ body {
   min-height: 32px;
 }
 
+/* Phase 17: pushes the action area (upgrade info + buttons, or the queue-progress bar)
+   to the bottom of the card. Grid already stretches every card in a row to match the
+   tallest one -- without this, a card with a shorter description or no Sell button
+   just leaves its buttons floating higher up than its row-mates instead of lined up
+   on a shared baseline. */
+.building-card-actions {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .building-upgrade-info {
   display: flex;
   justify-content: space-between;
   font-size: 0.8rem;
   color: var(--text-dim);
-  margin-bottom: 8px;
 }
 
 .building-queue-status {
