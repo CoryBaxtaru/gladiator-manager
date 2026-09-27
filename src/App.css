@@ -1223,12 +1223,25 @@ body {
   padding: 10px;
 }
 
+/* Tooltip's own wrapper is an inline-flex row by default (sized to its content),
+   which left every stat button shrink-wrapped and left-anchored in its grid cell
+   instead of filling and centering in it. Block + full width here makes the button
+   inside it the one thing actually sizing the cell. */
+.stat-train-tooltip {
+  display: block;
+  width: 100%;
+}
+
 .stat-train-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 2px;
   line-height: 1.2;
+  width: 100%;
+  min-height: 48px;
+  box-sizing: border-box;
 }
 
 .stat-train-btn-name {

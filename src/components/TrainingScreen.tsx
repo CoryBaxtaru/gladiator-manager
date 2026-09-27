@@ -68,7 +68,7 @@ function StatTrainButton({ gladiator, statKey }: { gladiator: Gladiator; statKey
   const active = gladiator.trainingFocus === statKey;
 
   return (
-    <Tooltip text={STAT_DESCRIPTIONS[statKey]}>
+    <Tooltip text={STAT_DESCRIPTIONS[statKey]} className="stat-train-tooltip">
       <button
         className={`btn small stat-train-btn ${active ? "active" : ""}`}
         onClick={() => setTrainingFocus(gladiator.id, statKey)}
