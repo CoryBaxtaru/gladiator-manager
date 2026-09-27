@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/branding/ludus-logo-readme.png" alt="Ludus: Gladiator Manager" width="480">
+  <img src="docs/branding/ludus-logo-readme.png" alt="Ludus: Gladiator Manager" width="480">
 </p>
 
 <p align="center">
