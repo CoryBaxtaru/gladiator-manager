@@ -45,7 +45,8 @@ function poachingRival(state: LudusState) {
 /**
  * Phase 16 Part G: called once per week, right alongside the other weekly ticks. If
  * the ludus's average building level or average roster Current Ability has sat below
- * TIER_NEGLECT.sustainFraction of its own current tier's entry bar for
+ * its own current tier's entry bar (scaled down by TIER_NEGLECT.buildingSustainFraction
+ * or .sustainFraction respectively -- see TIER_NEGLECT's doc comment in config.ts) for
  * TIER_NEGLECT.graceWeeks straight, a consequence fires: a rival poaches whichever
  * active gladiator is worst-off, or -- if the roster is down to one fighter and
  * nothing can be poached -- the ludus is demoted a tier outright. Local tier has no
@@ -71,7 +72,7 @@ export function tickTierNeglect(state: LudusState): TierNeglectTickResult {
   const required = PROMOTION_READINESS[state.unlockedTier];
   const { avgBuildingLevel, avgRosterCA } = computeStanding(state);
   const belowStandard =
-    avgBuildingLevel < required.minAvgBuildingLevel * TIER_NEGLECT.sustainFraction ||
+    avgBuildingLevel < required.minAvgBuildingLevel * TIER_NEGLECT.buildingSustainFraction ||
     avgRosterCA < required.minAvgRosterCA * TIER_NEGLECT.sustainFraction;
 
   if (!belowStandard) {

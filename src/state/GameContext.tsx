@@ -134,6 +134,16 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       return next === prev ? next : withMilestones(prev, next);
     });
   }, []);
+  // Phase 17 Part B: newGame/loadGame swap in an entirely unrelated save -- diffing
+  // that against whatever was playing a moment ago isn't a real in-place transition,
+  // it's two different sessions' states side by side, and produced exactly this kind
+  // of false read (a fresh Local-tier game diffed against a previous Provincial+ save
+  // logged a phantom "demoted" milestone on day one). This bypasses withMilestones
+  // entirely for those two call sites; every other action still goes through setState
+  // above so real diffs keep getting logged.
+  const replaceState = useCallback((next: LudusState) => {
+    setStateRaw(next);
+  }, []);
   // Phase 12 Part N: on a genuine first launch (no autosave found at all), the shell
   // shows a blocking FoundingModal so the player can pick their own founder/ludus name
   // instead of one being silently generated. Cleared for good once they submit it or
@@ -393,12 +403,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const newGame = useCallback((ludusName: string, founderName?: string) => {
     clearAutosave();
-    setState(createInitialState(ludusName, founderName));
+    replaceState(createInitialState(ludusName, founderName));
     setIsFirstLaunch(false);
     setLatestSummaries([]);
     setPendingFightDay(false);
     setPendingIntermediateSummaries([]);
-  }, [setState]);
+  }, [replaceState]);
 
   // Phase 12 Part N: applies the player's chosen names to the auto-generated first-
   // launch state in place, rather than regenerating a whole new game (which would
@@ -422,12 +432,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const loadGame = useCallback((slot: number) => {
     const loaded = loadFromSlot(slot);
     if (!loaded) return;
-    setState(loaded);
+    replaceState(loaded);
     setIsFirstLaunch(false);
     setLatestSummaries([]);
     setPendingFightDay(false);
     setPendingIntermediateSummaries([]);
-  }, [setState]);
+  }, [replaceState]);
 
   const deleteSave = useCallback((slot: number) => {
     deleteSlot(slot);

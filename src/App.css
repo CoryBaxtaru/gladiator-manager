@@ -1140,63 +1140,136 @@ body {
   font-size: 1rem;
 }
 
-.training-table {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.training-row {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 10px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.training-row-name {
-  font-weight: bold;
-}
-
-/* Phase 15 Part 3: 8 options now (Attack/Strength/Defence added) instead of 6 -- 4
-   columns of 2 rows reads cleaner than a single cramped row of 8. */
-.training-focus-grid {
+/* Phase 17 Part C: per-gladiator training cards, spread like a hand of cards rather
+   than one full-width row each -- collapses to a single column on its own once the
+   viewport can't fit a second 240px card, no separate mobile breakpoint needed. */
+.training-cards-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(64px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+.training-card {
+  padding: 0;
+  overflow: hidden;
+  gap: 0;
+}
+
+/* The card's own top section, styled like a trading card: a thin CA/name/PA strip
+   above the art, rather than the art dropped in at whatever size it already is. */
+.training-pokemon-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.training-pokemon-strip {
+  display: flex;
+  align-items: center;
   gap: 6px;
+  padding: 7px 8px;
+  background: linear-gradient(180deg, var(--bg-card-hover), var(--bg-card));
+  border-bottom: 2px solid var(--gold);
 }
 
-/* 4 columns of at least 64px each needs ~256px -- still tight on a phone screen. 2
-   columns (4 rows) fits comfortably and keeps every option a similarly-sized, easy tap
-   target rather than shrinking them to fit a cramped row. */
-@media (max-width: 480px) {
-  .training-focus-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.training-pokemon-name {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  color: var(--gold);
+  font-weight: bold;
+  font-size: var(--text-md);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.training-focus-cell {
+.training-pokemon-ca,
+.training-pokemon-pa {
+  flex-shrink: 0;
+}
+
+/* Source sprites are a full 1000x1000 square with no letterboxing, so cropping a
+   taller frame down with `cover` loses only background (arena wall/sand), never the
+   figure -- a real recrop for the card's proportions, not a stretched drop-in. */
+.training-pokemon-portrait {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid var(--border);
+}
+
+.training-pokemon-portrait .gladiator-portrait-img {
+  object-fit: cover;
+  object-position: top center;
+}
+
+.training-debuff-notes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px 10px 0;
+}
+
+/* Rows of 3: a flat 6-item list in attack/weaponSkill/strength/endurance/defence/
+   showmanship order, dropped into 2 columns, row-major-fills into exactly
+   left column Attack/Strength/Defence, right column Weapon Skill/Endurance/
+   Showmanship -- the pairing the layout asks for, with no manual row grouping. */
+.stat-train-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 10px;
+}
+
+.stat-train-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
+  line-height: 1.2;
 }
 
-.training-focus-number {
-  font-size: 0.78rem;
+.stat-train-btn-name {
+  font-size: 0.7rem;
   color: var(--text-dim);
+}
+
+.btn.active .stat-train-btn-name {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.stat-train-btn-value {
   font-weight: bold;
-  height: 1.1em;
 }
 
-.training-focus-number-blank {
-  display: inline-block;
+.stat-train-balanced {
+  display: block;
+  width: calc(100% - 20px);
+  margin: 0 10px 10px;
 }
 
-.training-focus-cell .btn {
-  width: 100%;
+/* Visually distinct from the solo stat grind above -- gladiator-vs-gladiator, not a
+   stat button, so it gets its own tinted panel rather than reusing the button style. */
+.training-sparring-section {
+  background: rgba(0, 0, 0, 0.18);
+  border-top: 1px solid var(--border);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.training-sparring-label {
+  font-size: var(--text-xs);
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.training-sparring-empty {
+  margin: 0;
 }
 
 .spar-picker {

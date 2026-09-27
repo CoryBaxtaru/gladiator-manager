@@ -17,7 +17,64 @@ branch (not automatic -- see `README.md`).
 
 ## Where things stand
 
-**Last completed: Phase 16** (working backlog: eight parts, A through H). All landed,
+**Last completed: Phase 17** (three parts, following a Round 8 playtest report). All
+verified live against a real browser session (see each part below for how).
+
+- **Part A -- tier-neglect axis asymmetry**: Round 8 found building-level neglect
+  mathematically unreachable at Provincial tier specifically (1.3 entry bar * the
+  shared 0.7 sustainFraction = 0.91, but 7 buildings floored at level 1 each means the
+  average can never go below 1.0). Buildings never decay on their own and can't drop
+  below 1 per building, so falling below standard on that axis always requires
+  actively selling a level back -- it isn't reachable through mere neglect the way
+  roster CA drifting down is, at ANY tier, but it was mathematically *impossible* only
+  at Provincial. Fixed with a separate, more generous `TIER_NEGLECT.
+  buildingSustainFraction` (0.9) for the building axis only, leaving roster CA's
+  `sustainFraction` (0.7) untouched. Corrected per-tier building thresholds: Provincial
+  1.3*0.9=1.17 (was 0.91, unreachable), Rival 2.0*0.9=1.8 (was 1.4, already reachable,
+  now a bit stricter), Colosseum 3.0*0.9=2.7 (was 2.1, already reachable, now a bit
+  stricter). CA thresholds unchanged at every tier (Provincial 12.6, Rival 21,
+  Colosseum 29.4). See `config.ts`'s `TIER_NEGLECT` doc comment for the full math.
+- **Part B -- phantom day-1 demotion milestone**: root cause wasn't an uninitialized
+  diffing baseline as first suspected -- it was `newGame`/`loadGame` calling the same
+  milestone-diffing `setState` wrapper used for real in-place transitions, so starting
+  a new game while a more-advanced save was still the live React state diffed the
+  fresh Local-tier state against that old save and logged a false "demoted" entry.
+  Fixed with a separate `replaceState` (GameContext.tsx) that bypasses
+  `withMilestones` entirely, used only by `newGame` and `loadGame` -- every other
+  action still goes through the diffing `setState` and keeps logging real events.
+  Verified live: started a new game from an existing Provincial-tier save, `milestones`
+  came back `[]`.
+- **Part C -- Training screen overhaul**: full visual rework per the brief. Each
+  gladiator gets a trading-card-style header (CA stars / name / PA stars strip above a
+  cropped, non-letterboxed portrait -- `GladiatorPortrait` now takes an optional
+  `className` to size/crop a "full" portrait into a non-square frame instead of only
+  ever being square), six compact stat buttons in a 2-column grid (Attack/Strength/
+  Defence left, Weapon Skill/Endurance/Showmanship right -- a flat ordered array
+  dropped into a 2-col grid produces the pairing with no manual row grouping), one wide
+  Balanced button, and a visually distinct tinted Sparring sub-section. The "Rest"
+  button is gone from the Training screen (the underlying `trainingFocus: "rest"`
+  value stays -- `moodActions.ts`'s "Grant a Day of Leave" still depends on it for a
+  real forced rest, that's a different, working feature this phase didn't touch). In
+  its place, a real mechanical debuff: an injured gladiator now still trains (previously
+  ANY `injuryDaysRemaining > 0` blocked training entirely) but at reduced effectiveness
+  (`TRAINING.bruisedMultiplier` 0.7, `.injuredMultiplier` 0.35, stacking with the
+  existing-but-previously-invisible low-mood multiplier), surfaced to the player as a
+  visible badge (`trainingDebuffReasons()` in training.ts) rather than a silent number.
+  Gravely injured is still a hard block -- too hurt to meaningfully train, same line
+  `combat.ts`'s `canFight` already draws for fighting. Verified live in a real browser
+  at both desktop and mobile (375px) width: the card renders correctly for both a
+  "range" and an "exact" potential-reveal gladiator, all six stat buttons plus Balanced
+  train correctly, the injured/low-mood debuff badge actually shows real numbers
+  ("Injured: training cut to 35% effectiveness."), and Sparring still functions in its
+  new section.
+
+**Two Round 8 findings were reviewed and deliberately left alone, not bugs**: Flight
+Risk's narrow warning window (real, but the "Unsettled" phase before it already gives
+the actual runway) and Bitter Rival rarely triggering for a consistently-winning player
+(the mechanism works correctly, it just structurally requires losing more than winning
+against a specific rival). Don't re-flag either without new information.
+
+**Previously completed: Phase 16** (working backlog: eight parts, A through H). All landed,
 each as its own commit, each verified live -- either through the real UI/save the way
 Phase 15 was, or (for the two engine-heavy parts, D and G) through direct engine-level
 simulation scripts plus a live browser check of the resulting UI, since a full natural
@@ -211,22 +268,23 @@ had to.
 Nothing carried over unbuilt. New items noticed while working through Phase 16,
 not yet acted on:
 
-- **Tier-neglect tuning is unverified against a real long playthrough**: Part G's
-  numbers (`TIER_NEGLECT` in config.ts -- 0.7 sustain fraction, 4-week grace period,
-  8-week cooldown, 10 reputation penalty per poaching) were chosen by reasoning from
-  the existing `PROMOTION_READINESS` numbers, not tuned against actual play. Verified
-  correct and firing as designed (direct engine simulation plus a live browser run),
-  but never felt by a player across a real multi-week save where building/roster
-  investment naturally fluctuates. Watch for it firing too readily (a player who just
-  had a rough recruiting week getting punished) or not readily enough (still too easy
-  to coast) in the next real playtest round, and retune `TIER_NEGLECT` accordingly --
-  the mechanism itself shouldn't need to change, just the numbers.
+- **Tier-neglect timing was played for real in Round 8 and held up, but only under a
+  deliberately accelerated setup**: warning fired week 3, poaching fired week 4, target
+  selection correctly picked the actually-worse-off of two fighters, all exactly as
+  designed -- but reaching "below standard" at Provincial tier required directly
+  lowering roster CA (organic play never got there in ~260 days), since building-level
+  neglect turned out to be mathematically unreachable there at all until Phase 17 Part
+  A's fix. Worth a further look in a genuinely organic long playthrough now that both
+  axes are reachable at every tier, but this is no longer an open question about
+  whether the mechanism works -- it demonstrably does.
 - **Poaching's target selection doesn't consider the poached gladiator's actual combat
   value to the roster**: it picks strictly the worst-off (mood-neglected first, else
   lowest Current Ability), which is the right read of "who did you neglect" but can
   occasionally take a low-CA gladiator the player was deliberately still developing
   (e.g. a high-Potential prospect who just hasn't trained up yet) rather than one who's
-  actually expendable. Not wrong, but worth a look if playtesting turns up poaching
+  actually expendable. Round 8's one real test picked correctly (genuinely the
+  worse-off of two active fighters), so this remains a theoretical edge case, not an
+  observed problem -- still worth a look if a future playtest turns up poaching
   feeling like it's targeting the wrong fighter.
 - **`GladiatorHoverCard.tsx` and `state/GameContext.tsx` export non-component values
   from component files**: pre-existing oxlint warnings (`react/only-export-components`),

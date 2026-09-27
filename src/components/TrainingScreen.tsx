@@ -1,22 +1,29 @@
 import { useState } from "react";
 import { useGame } from "../state/GameContext";
 import { TRAINING_FOCUS_LABELS, STAT_DESCRIPTIONS } from "../config";
-import type { Gladiator, StatKey, TrainingFocus } from "../types";
+import type { Gladiator, StatKey } from "../types";
 import { displayedStaffStars, trainerCoveredStats } from "../engine/staff";
+import { trainingDebuffReasons } from "../engine/training";
+import { currentAbilityStars, currentAbilityOf, potentialStarDisplay } from "../engine/rating";
 import { StarRating } from "./StarRating";
 import { Tooltip } from "./Tooltip";
 import { Card } from "./Card";
+import { Badge } from "./Badge";
+import { GladiatorPortrait } from "./GladiatorPortrait";
 
-const FOCUS_OPTIONS: TrainingFocus[] = ["attack", "strength", "defence", "weaponSkill", "endurance", "showmanship", "balanced", "rest"];
-
-const FOCUS_STAT_KEY: Partial<Record<TrainingFocus, StatKey>> = {
-  attack: "attack",
-  strength: "strength",
-  defence: "defence",
-  weaponSkill: "weaponSkill",
-  endurance: "endurance",
-  showmanship: "showmanship",
+const STAT_LABELS: Record<StatKey, string> = {
+  attack: "Attack",
+  strength: "Strength",
+  defence: "Defence",
+  weaponSkill: "Weapon Skill",
+  endurance: "Endurance",
+  showmanship: "Showmanship",
 };
+
+// Phase 17 Part C: left column reads Attack/Strength/Defence top to bottom, right
+// column Weapon Skill/Endurance/Showmanship -- a flat list in this order, dropped into
+// a 2-column CSS grid, produces exactly that pairing (row-major fill).
+const STAT_BUTTON_ORDER: StatKey[] = ["attack", "weaponSkill", "strength", "endurance", "defence", "showmanship"];
 
 const STAFF_ROLE_LABEL: Record<string, (specialty: string) => string> = {
   trainer: (specialty) => `Trainer, ${specialty}`,
@@ -55,36 +62,125 @@ function StatArrow({ delta }: { delta: number }) {
   return null;
 }
 
-function SoloFocusRow({ gladiator }: { gladiator: Gladiator }) {
+function StatTrainButton({ gladiator, statKey }: { gladiator: Gladiator; statKey: StatKey }) {
   const { setTrainingFocus } = useGame();
-  const changeFor = (stat: StatKey) => gladiator.recentStatChanges.find((m) => m.stat === stat)?.delta ?? 0;
+  const delta = gladiator.recentStatChanges.find((m) => m.stat === statKey)?.delta ?? 0;
+  const active = gladiator.trainingFocus === statKey;
 
   return (
-    <div className="training-focus-grid">
-      {FOCUS_OPTIONS.map((opt) => {
-        const statKey = FOCUS_STAT_KEY[opt];
-        return (
-          <div className="training-focus-cell" key={opt}>
-            <div className="training-focus-number">
-              {statKey ? (
-                <>
-                  {gladiator.stats[statKey]}
-                  <StatArrow delta={changeFor(statKey)} />
-                </>
-              ) : (
-                <span className="training-focus-number-blank">&nbsp;</span>
-              )}
-            </div>
-            <button
-              className={`btn small ${gladiator.trainingFocus === opt ? "active" : ""}`}
-              onClick={() => setTrainingFocus(gladiator.id, opt)}
-            >
-              {TRAINING_FOCUS_LABELS[opt]}
-            </button>
-          </div>
-        );
-      })}
+    <Tooltip text={STAT_DESCRIPTIONS[statKey]}>
+      <button
+        className={`btn small stat-train-btn ${active ? "active" : ""}`}
+        onClick={() => setTrainingFocus(gladiator.id, statKey)}
+      >
+        <span className="stat-train-btn-name">{STAT_LABELS[statKey]}</span>
+        <span className="stat-train-btn-value">
+          {gladiator.stats[statKey]}
+          <StatArrow delta={delta} />
+        </span>
+      </button>
+    </Tooltip>
+  );
+}
+
+function GladiatorPokemonHeader({ gladiator, reputation }: { gladiator: Gladiator; reputation: number }) {
+  const potential = potentialStarDisplay(gladiator, reputation);
+
+  return (
+    <div className="training-pokemon-card">
+      <div className="training-pokemon-strip">
+        <Tooltip text="Current Ability">
+          <span className="training-pokemon-ca">
+            <StarRating value={currentAbilityStars(currentAbilityOf(gladiator))} size="sm" />
+          </span>
+        </Tooltip>
+        <span className="training-pokemon-name">{gladiator.name}</span>
+        <Tooltip text={potential.revealed ? "Potential fully scouted." : "Not fully scouted yet. This guess sharpens as your ludus earns more reputation."}>
+          <span className="training-pokemon-pa">
+            <StarRating value={potential.stars} size="sm" />
+          </span>
+        </Tooltip>
+      </div>
+      <GladiatorPortrait
+        name={gladiator.name}
+        origin={gladiator.origin}
+        condition={gladiator.condition}
+        variant="full"
+        className="training-pokemon-portrait"
+      />
     </div>
+  );
+}
+
+function SparPicker({ gladiator, candidates }: { gladiator: Gladiator; candidates: Gladiator[] }) {
+  const { setSparringPair } = useGame();
+  const [partnerId, setPartnerId] = useState("");
+
+  if (candidates.length === 0) {
+    return <p className="empty-note training-sparring-empty">No one else is free to spar with right now.</p>;
+  }
+
+  return (
+    <div className="spar-picker">
+      <select value={partnerId} onChange={(e) => setPartnerId(e.target.value)}>
+        <option value="">Spar with...</option>
+        {candidates.map((c) => (
+          <option value={c.id} key={c.id}>
+            {c.name}
+          </option>
+        ))}
+      </select>
+      <button
+        className="btn small"
+        disabled={!partnerId}
+        onClick={() => {
+          if (partnerId) setSparringPair(gladiator.id, partnerId);
+          setPartnerId("");
+        }}
+      >
+        Start Sparring
+      </button>
+    </div>
+  );
+}
+
+function GladiatorTrainingCard({ gladiator, candidates, reputation }: { gladiator: Gladiator; candidates: Gladiator[]; reputation: number }) {
+  const { setTrainingFocus } = useGame();
+  const debuffs = trainingDebuffReasons(gladiator);
+  const isBalanced = gladiator.trainingFocus === "balanced";
+
+  return (
+    <Card className="training-card">
+      <GladiatorPokemonHeader gladiator={gladiator} reputation={reputation} />
+
+      {debuffs.length > 0 && (
+        <div className="training-debuff-notes">
+          {debuffs.map((text) => (
+            <Badge tone="warning" key={text}>
+              {text}
+            </Badge>
+          ))}
+        </div>
+      )}
+
+      <div className="stat-train-grid">
+        {STAT_BUTTON_ORDER.map((statKey) => (
+          <StatTrainButton gladiator={gladiator} statKey={statKey} key={statKey} />
+        ))}
+      </div>
+
+      <button
+        className={`btn small stat-train-balanced ${isBalanced ? "active" : ""}`}
+        onClick={() => setTrainingFocus(gladiator.id, "balanced")}
+      >
+        {TRAINING_FOCUS_LABELS.balanced}
+      </button>
+
+      <div className="training-sparring-section">
+        <div className="training-sparring-label">Sparring</div>
+        <SparPicker gladiator={gladiator} candidates={candidates} />
+      </div>
+    </Card>
   );
 }
 
@@ -119,36 +215,6 @@ function SparringPairCard({ a, b }: { a: Gladiator; b: Gladiator }) {
         Stop Sparring
       </button>
     </Card>
-  );
-}
-
-function SparPicker({ gladiator, candidates }: { gladiator: Gladiator; candidates: Gladiator[] }) {
-  const { setSparringPair } = useGame();
-  const [partnerId, setPartnerId] = useState("");
-
-  if (candidates.length === 0) return null;
-
-  return (
-    <div className="spar-picker">
-      <select value={partnerId} onChange={(e) => setPartnerId(e.target.value)}>
-        <option value="">Spar with...</option>
-        {candidates.map((c) => (
-          <option value={c.id} key={c.id}>
-            {c.name}
-          </option>
-        ))}
-      </select>
-      <button
-        className="btn small"
-        disabled={!partnerId}
-        onClick={() => {
-          if (partnerId) setSparringPair(gladiator.id, partnerId);
-          setPartnerId("");
-        }}
-      >
-        Start Sparring
-      </button>
-    </div>
   );
 }
 
@@ -189,13 +255,14 @@ export function TrainingScreen() {
 
       <div className="training-block">
         <h3>Focus Assignments</h3>
-        <div className="training-table">
+        <div className="training-cards-grid">
           {soloGladiators.map((g) => (
-            <Card key={g.id} className="training-row">
-              <div className="training-row-name">{g.name}</div>
-              <SoloFocusRow gladiator={g} />
-              <SparPicker gladiator={g} candidates={soloGladiators.filter((c) => c.id !== g.id)} />
-            </Card>
+            <GladiatorTrainingCard
+              key={g.id}
+              gladiator={g}
+              candidates={soloGladiators.filter((c) => c.id !== g.id)}
+              reputation={state.reputation}
+            />
           ))}
           {soloGladiators.length === 0 && <p className="empty-note">Everyone is either paired up or unavailable.</p>}
         </div>

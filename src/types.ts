@@ -538,7 +538,9 @@ export interface LudusState {
   /**
    * Phase 16 Part G: consecutive weekly checks (see engine/tierNeglect.ts) where the
    * ludus's average building level or average roster Current Ability has been below
-   * TIER_NEGLECT.sustainFraction of what its OWN current tier required to enter.
+   * its OWN current tier's entry bar, scaled down by TIER_NEGLECT.buildingSustainFraction
+   * or .sustainFraction respectively (Phase 17 Part A: buildings and roster CA use
+   * different fractions -- see TIER_NEGLECT's own doc comment for why).
    * Resets to 0 the first week it's back above standard. Meaningless at "local" tier,
    * which has no entry requirement to sustain.
    */

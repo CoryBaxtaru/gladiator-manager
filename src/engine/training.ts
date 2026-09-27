@@ -47,7 +47,22 @@ function baseEffectiveness(gladiator: Gladiator, state: LudusState): number {
   if (isOverextended(state)) effectiveness *= OVEREXTENSION.trainingEffectMultiplier;
   if (gladiator.mood < TRAINING.lowMoodThreshold) effectiveness *= TRAINING.lowMoodMultiplier;
   if (gladiator.mood >= TRAINING.highMoodThreshold) effectiveness *= TRAINING.highMoodMultiplier;
+  if (gladiator.condition === "bruised") effectiveness *= TRAINING.bruisedMultiplier;
+  if (gladiator.condition === "injured") effectiveness *= TRAINING.injuredMultiplier;
   return effectiveness;
+}
+
+/**
+ * Phase 17 Part C: surfaces the same multipliers baseEffectiveness applies silently,
+ * as plain-language reasons a player can actually see on the Training screen, instead
+ * of a debuff that only ever showed up as "fewer stat gains than expected" over time.
+ */
+export function trainingDebuffReasons(gladiator: Gladiator): string[] {
+  const reasons: string[] = [];
+  if (gladiator.condition === "bruised") reasons.push(`Bruised: training cut to ${Math.round(TRAINING.bruisedMultiplier * 100)}% effectiveness.`);
+  if (gladiator.condition === "injured") reasons.push(`Injured: training cut to ${Math.round(TRAINING.injuredMultiplier * 100)}% effectiveness.`);
+  if (gladiator.mood < TRAINING.lowMoodThreshold) reasons.push(`Low mood: training cut to ${Math.round(TRAINING.lowMoodMultiplier * 100)}% effectiveness.`);
+  return reasons;
 }
 
 /**
@@ -82,9 +97,15 @@ export function trainStat(
   return updated;
 }
 
-/** Solo focus training. Gladiators currently paired for sparring are handled separately (see sparring.ts). */
+/**
+ * Solo focus training. Gladiators currently paired for sparring are handled separately
+ * (see sparring.ts). Phase 17 Part C: only gravely_injured is a hard block now -- too
+ * hurt to meaningfully train, same line combat.ts's canFight draws for fighting.
+ * Bruised/injured still train, just at baseEffectiveness's reduced rate (see
+ * trainingDebuffReasons for the player-facing version of the same numbers).
+ */
 export function applyDailyTraining(gladiator: Gladiator, state: LudusState): Gladiator {
-  if (gladiator.status !== "active" || gladiator.injuryDaysRemaining > 0) return gladiator;
+  if (gladiator.status !== "active" || gladiator.condition === "gravely_injured") return gladiator;
   if (gladiator.sparringPartnerId) return gladiator;
 
   if (gladiator.trainingFocus === "rest") {

@@ -906,6 +906,17 @@ export const POTENTIAL_STAR_TIERS: { minStars: number; minPotential: number; lab
  */
 export const ROSTER_DEATH_GRACE_DAYS = 1;
 
+/**
+ * Phase 17 Part C: the Training screen's old "Rest" button was a manual, do-nothing
+ * parking spot (see moodActions.ts's giveLeave, which still uses trainingFocus "rest"
+ * under the hood for a real forced rest -- that mechanic stays, only the player-facing
+ * button on the Training screen goes away). It's replaced by a real, always-on
+ * consequence of training while compromised: an injured gladiator still trains (unlike
+ * before, where injuryDaysRemaining > 0 blocked training entirely), just at reduced
+ * effectiveness, stacking with the existing lowMoodMultiplier below. Gravely injured is
+ * the one exception -- still a hard block, too hurt to meaningfully train at all, same
+ * as the fight-eligibility line drawn elsewhere (see combat.ts's canFight).
+ */
 export const TRAINING = {
   yardBaseRate: 0.15,
   yardLevelBonus: 0.05,
@@ -913,6 +924,8 @@ export const TRAINING = {
   lowMoodMultiplier: 0.6,
   highMoodThreshold: 85,
   highMoodMultiplier: 1.25,
+  bruisedMultiplier: 0.7,
+  injuredMultiplier: 0.35,
   trainerBonusPerSkillPoint: 0.006,
   balancedFocusMultiplier: 0.6,
   overtrainingChance: 0.08,
@@ -1062,8 +1075,31 @@ export const PROMOTION_READINESS: Record<FightTier, { minAvgBuildingLevel: numbe
  * (nothing poachable) falls back to a real demotion instead, so a min-maxed roster
  * can't sit at a tier it can't sustain with total impunity either way.
  */
+/**
+ * Phase 17 Part A diagnostic: buildings and roster CA used to share one sustainFraction
+ * (0.7), but they don't behave the same way. CA can drift down gradually and
+ * continuously (an aging veteran declining, a poached/dead fighter replaced by a
+ * cheaper recruit) -- a flat 0.7 of any tier's minAvgRosterCA is always reachable that
+ * way. Building levels can't: they never decay on their own and can't go below 1 per
+ * building (7 buildings, so the average floor is exactly 1.0, always), so falling
+ * "below standard" always requires actively selling a level back, never mere neglect --
+ * and at Provincial specifically, 1.3 * 0.7 = 0.91 sits BELOW that 1.0 floor, meaning
+ * building-driven neglect was mathematically impossible to ever trigger there, no
+ * matter how many buildings got sold off.
+ *
+ * Fix: a separate, more generous fraction for the building axis, tuned so every tier's
+ * building threshold clears the 1.0 floor with real room to spare, without touching
+ * PROMOTION_READINESS itself (that number also gates the promotion attempt; this is
+ * only about the ongoing sustain check). Corrected per-tier building thresholds:
+ *   Provincial: 1.3 * 0.9 = 1.17 (was 0.91, unreachable)
+ *   Rival:      2.0 * 0.9 = 1.8  (was 1.4, already reachable, now a bit stricter)
+ *   Colosseum:  3.0 * 0.9 = 2.7  (was 2.1, already reachable, now a bit stricter)
+ * Roster CA keeps the original sustainFraction (0.7) unchanged at every tier --
+ * Provincial 12.6, Rival 21, Colosseum 29.4, all already reachable.
+ */
 export const TIER_NEGLECT = {
   sustainFraction: 0.7,
+  buildingSustainFraction: 0.9,
   graceWeeks: 4,
   warnAtWeek: 3,
   cooldownWeeksAfterConsequence: 8,
