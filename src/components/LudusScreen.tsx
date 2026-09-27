@@ -2,6 +2,7 @@ import type { BuildingId } from "../types";
 import { useGame } from "../state/GameContext";
 import { BUILDING_DEFAULTS } from "../config";
 import { canQueueUpgrade, upgradeCost, upgradeTime, isOverextended, computeImbalance, canSellLevel, sellRefund } from "../engine/buildings";
+import { getBuildingSrc } from "../assets/buildings";
 import { Card } from "./Card";
 import { Badge } from "./Badge";
 
@@ -49,11 +50,15 @@ export function LudusScreen() {
           const queued = state.buildQueue.find((q) => q.buildingId === id);
 
           return (
-            <Card key={id}>
+            <Card key={id} className="building-card">
               <div className="building-card-header">
                 <h3>{def.label}</h3>
                 <Badge tone="gold">Lv {building.level}</Badge>
               </div>
+              <div className="building-card-art">
+                <img src={getBuildingSrc(id)} alt={def.label} className="building-card-art-img" />
+              </div>
+              <div className="building-card-body">
               <p className="building-desc">{def.description}</p>
               {/* Phase 17: anchored to the card's bottom (margin-top: auto on the flex
                   column) so every card's action area lines up on the same baseline
@@ -104,6 +109,7 @@ export function LudusScreen() {
                     )}
                   </>
                 )}
+              </div>
               </div>
             </Card>
           );
