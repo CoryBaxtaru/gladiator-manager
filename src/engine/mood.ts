@@ -51,7 +51,10 @@ export function recomputeMood(gladiator: Gladiator, currentDay: number): { gladi
   const entries: SummaryEntry[] = [];
   const activeModifiers = gladiator.moodModifiers.filter((m) => m.expiresOnDay > currentDay);
 
-  let baseline = 0;
+  // Phase 18 Part F: every gladiator now carries a small always-on baseline decay, not
+  // just Brooding -- see MOOD.baselineDailyDecay's doc comment for why a winning
+  // roster previously had no organic pressure at all once modifiers expired.
+  let baseline = MOOD.baselineDailyDecay;
   if (gladiator.personalityTraits.includes("Brooding")) {
     baseline += MOOD.brooding_dailyDecay;
   }

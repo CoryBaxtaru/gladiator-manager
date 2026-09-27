@@ -177,13 +177,17 @@ export function PromotionScreen() {
               <div className="card-row">
                 <span>Average building level</span>
                 <span className={readiness.avgBuildingLevel >= readiness.requiredBuildingLevel ? "" : "mood-negative"}>
-                  {readiness.avgBuildingLevel.toFixed(1)} / {readiness.requiredBuildingLevel.toFixed(1)} needed
+                  {/* Phase 18 Part A: floor, never round, the CURRENT value -- rounding
+                      to 1 decimal could show e.g. "1.3 / 1.3" while the true value was
+                      still 1.2857, a bar that reads as cleared when it isn't. Flooring
+                      can only ever under-report progress, never falsely show it met. */}
+                  {(Math.floor(readiness.avgBuildingLevel * 10) / 10).toFixed(1)} / {readiness.requiredBuildingLevel.toFixed(1)} needed
                 </span>
               </div>
               <div className="card-row">
                 <span>Average roster ability</span>
                 <span className={readiness.avgRosterCA >= readiness.requiredRosterCA ? "" : "mood-negative"}>
-                  {Math.round(readiness.avgRosterCA)} / {readiness.requiredRosterCA} needed
+                  {Math.floor(readiness.avgRosterCA)} / {readiness.requiredRosterCA} needed
                 </span>
               </div>
               <p className="hint">Upgrade buildings on the Ludus screen or keep training/recruiting to close the gap.</p>

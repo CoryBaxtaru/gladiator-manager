@@ -455,18 +455,31 @@ export function estimateWinChance(
  * PA, same as everywhere else) -- no separate tier multiplier, since CA already climbs
  * with tier as a roster develops; multiplying by tier again double-counted the same
  * signal and made the cost unaffordable in practice (see SPONSOR_SURVIVAL's doc
- * comment in config.ts for the diagnostic). `state` is no longer needed here but kept
- * in the signature so callers don't need to change.
+ * comment in config.ts for the diagnostic).
+ *
+ * Phase 18 Part B: that left the opposite problem -- always affordable once the
+ * economy matured, no matter how many times it was used. Cost is now the larger of the
+ * CA-based amount or a fraction of the ludus's current treasury (so a well-off ludus
+ * genuinely feels it, not just a CA-poor one), then surcharged for every PRIOR time
+ * this specific gladiator has been sponsored (so repeatedly bailing out the same
+ * fighter gets progressively more expensive instead of staying flat). See
+ * SPONSOR_SURVIVAL's doc comment for why these two levers and not a tier multiplier.
  */
-export function sponsorSurvivalCost(gladiator: Gladiator, _state: LudusState): number {
-  return Math.round(currentAbilityOf(gladiator) * SPONSOR_SURVIVAL.costPerCA);
+export function sponsorSurvivalCost(gladiator: Gladiator, state: LudusState): number {
+  const caBased = currentAbilityOf(gladiator) * SPONSOR_SURVIVAL.costPerCA;
+  const treasuryBased = state.gold * SPONSOR_SURVIVAL.treasuryFraction;
+  const base = Math.max(caBased, treasuryBased);
+  const priorSponsorships = gladiator.timesSponsored ?? 0;
+  return Math.round(base * (1 + priorSponsorships * SPONSOR_SURVIVAL.repeatMultiplierPerPriorSponsor));
 }
 
 /**
  * Resolves the player's sponsor-or-let-die choice for a gladiator held in limbo by
- * awaitingFateDecision. Sponsoring deducts the cost and clears the flag (he stays
- * gravely_injured, already set when the fight result was applied); declining (or not
- * being able to afford it) finalizes him as dead.
+ * awaitingFateDecision. Phase 18 Part B: sponsoring now means he's actually saved, not
+ * saved-but-still-crippled -- deducts the cost, clears the flag, restores him to full
+ * healthy condition (no lingering injury days), and records the sponsorship so a
+ * repeat rescue of the same fighter costs more next time. Declining (or not being able
+ * to afford it) finalizes him as dead.
  */
 export function resolveFateDecision(state: LudusState, gladiatorId: string, sponsor: boolean): LudusState {
   const gladiator = state.gladiators.find((g) => g.id === gladiatorId);
@@ -478,7 +491,17 @@ export function resolveFateDecision(state: LudusState, gladiatorId: string, spon
     return {
       ...state,
       gold: state.gold - cost,
-      gladiators: state.gladiators.map((g) => (g.id === gladiatorId ? { ...g, awaitingFateDecision: false } : g)),
+      gladiators: state.gladiators.map((g) =>
+        g.id === gladiatorId
+          ? {
+              ...g,
+              awaitingFateDecision: false,
+              condition: "healthy",
+              injuryDaysRemaining: 0,
+              timesSponsored: (g.timesSponsored ?? 0) + 1,
+            }
+          : g
+      ),
     };
   }
 

@@ -25,9 +25,17 @@ export function FateDecisionModal() {
           <GladiatorPortrait name={gladiator.name} origin={gladiator.origin} condition="gravely_injured" size={96} variant="full" />
         </div>
         <p>
-          His wounds are mortal. Sponsoring a physician's full attention will save him, at a real cost scaled to
-          what he's worth -- or you can let him die, and the wager stays real either way.
+          His wounds are mortal. Sponsoring a physician's full attention will bring him back fully healed, not just
+          alive, at a real cost scaled to what he's worth -- or you can let him die, and the wager stays real either
+          way.
         </p>
+        {(gladiator.timesSponsored ?? 0) > 0 && (
+          <p className="hint">
+            He's already been sponsored back from the brink {gladiator.timesSponsored} time
+            {gladiator.timesSponsored === 1 ? "" : "s"} before -- leaning on the same fighter as a safety net costs
+            more each time.
+          </p>
+        )}
         <div className="confirm-actions">
           <button className="btn danger-outline" onClick={() => resolveFateDecision(gladiator.id, false)}>
             Let Him Die

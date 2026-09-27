@@ -1,6 +1,24 @@
 // Central tunable config. Balance the game by editing values here, not game logic.
 import type { BuildingId, BuildingMaterial, FightTier, GladiatorStats, Origin, PersonalityTrait, PhysicalTrait, RecruitChannel, RecruiterTier, SignatureTechniqueId, StatKey, TrainingFocus, WeaponType } from "./types";
 
+/**
+ * Phase 18 Part F diagnostic: recomputeMood's baseline was 0 for every gladiator
+ * except Brooding, so with no active modifier a mood value simply holds forever --
+ * nothing decays on its own. Combined with a win's mood boost (COMBAT.winMoodBase/
+ * winMoodPerMargin, a 5-day modifier) comfortably outlasting the 6-day fight-day
+ * cycle, a roster that's mostly winning self-sustains at 90-100 indefinitely, and the
+ * mood toolkit (Feast, Ritual, Baths, Recognition, ...) only ever gets touched to
+ * recover from an actual bad event -- a side effect of combat outcomes, not a distinct
+ * recurring decision. `baselineDailyDecay` gives EVERY gladiator the same small,
+ * always-on pressure Brooding already had a stronger private version of: small enough
+ * that any real winning streak still nets positive mood (a single win's ~5-day boost
+ * is 3-6x this per day it's active), but enough that a genuinely idle, benched, or
+ * losing stretch erodes mood into the management range within a few weeks instead of
+ * just holding wherever it last was. Deliberately a flat, universal number rather than
+ * new workload/tenure/overcrowding-specific tracking (roster-over-capacity and
+ * building-imbalance mood costs already exist and would only duplicate the same
+ * pressure with more bookkeeping) -- see docs/phase18-rebalance.md.
+ */
 export const MOOD = {
   min: 0,
   max: 100,
@@ -13,6 +31,7 @@ export const MOOD = {
   hotStreakThreshold: 85,
   hotStreakBonus: 6,
   brooding_dailyDecay: -1,
+  baselineDailyDecay: -0.3,
   restFocusBonus: 5,
 };
 
@@ -491,9 +510,33 @@ export const STRENGTH_STAKES = {
  * of it: CA 25 -> 250g, CA 38 -> 380g, CA 50 -> 500g, CA 70 -> 700g. Real money (roughly
  * 1-2 weeks of Local-tier burn even at the high end), but no longer unaffordable by
  * default regardless of who it is.
+ *
+ * Phase 18 Part B diagnostic: that fix worked (sponsoring is affordable everywhere
+ * now), but Round 9 found the opposite failure mode -- fired roughly a dozen times in
+ * one run, always affordable, treasury still climbed to 33k. A flat CA-only cost has
+ * no way to notice that the ludus's economy has grown far beyond what it was
+ * calibrated for, or that a specific gladiator keeps needing to be bailed out.
+ * Re-adding a tier multiplier was rejected on purpose -- that's exactly the double-
+ * counting bug this same block already fixed once (tier is already reflected in CA,
+ * see above), and it's what made the OLD formula unaffordable specifically at high
+ * tiers. Two different levers instead, chosen because each answers a distinct real
+ * finding rather than re-scaling the same signal twice:
+ *  - `treasuryFraction`: cost is now the CA-based amount OR a fraction of current
+ *    gold, whichever is bigger. This is what actually fixes "gold climbed to 33k and
+ *    it was still trivial" -- it reacts to the ludus's ACTUAL coffers, not its fight
+ *    tier, so a cash-poor Colosseum-tier ludus isn't punished for its tier alone, but
+ *    a Colosseum-tier ludus sitting on a huge pile genuinely feels it.
+ *  - `repeatMultiplierPerPriorSponsor`: a 60% surcharge for every PRIOR time this
+ *    specific gladiator has been sponsored (permanent per-gladiator counter, see
+ *    Gladiator.timesSponsored). Directly targets "fired a dozen times, always
+ *    affordable" -- a first rescue stays cheap, but leaning on the same fighter as a
+ *    repeat safety net gets progressively more expensive, so it stops being a free
+ *    pattern without making a single, rare rescue punishing.
  */
 export const SPONSOR_SURVIVAL = {
   costPerCA: 10,
+  treasuryFraction: 0.05,
+  repeatMultiplierPerPriorSponsor: 0.6,
 };
 
 /**
@@ -854,11 +897,27 @@ export const RECRUIT_CHANNELS: Record<
  * stage instead of being a fixed number that's diluted by everything else that scales.
  * (Recruits themselves still don't scale with promotion tier at all -- a separate,
  * bigger balance question flagged in Part J's note, not decided here.)
+ *
+ * Phase 18 Part C diagnostic: baseStatBonusFraction was never the problem -- a 20,000-
+ * trial simulation of the real generation formula confirms Master genuinely raises the
+ * FLOOR, not just the ceiling (e.g. Auction House journeyman p10=38.2 CA vs Master
+ * p10=53.2 CA, the whole distribution shifts up, not just its gem tail). The actual
+ * blocker was priceMultiplier: because recruiterSendCost scales linearly with the same
+ * tierCostMultiplier that fight income scales with, but weekly UPKEEP does not, net
+ * income grows much faster than tier alone across a run (simulated reference roster:
+ * ~19g/week net at Local, ~291 at Provincial, ~906 at Rival, ~2402 at Colosseum). At the
+ * OLD 3.4x, Master (Auction House) cost 17.6 weeks of net income at Provincial and still
+ * 11.3 weeks at Rival -- longer than a tier's own typical stay, so by the time it was
+ * affordable the player had usually already moved past the tier it was meant to matter
+ * in. Retuned priceMultiplier down (seasoned 1.9->1.3, master 3.4->1.4) so that same
+ * trip lands at roughly 6.7/4.3/3.3 weeks (Provincial/Rival/Colosseum) for seasoned and
+ * 7.3/4.7/3.5 weeks for master -- a real, timely mid-tier investment instead of one
+ * that only ever clears once the tier it was for is nearly over.
  */
 export const RECRUITER_TIERS: Record<RecruiterTier, { label: string; stars: number; priceMultiplier: number; baseStatBonusFraction: number; gemChanceBonus: number }> = {
   journeyman: { label: "Journeyman Procurator", stars: 2, priceMultiplier: 1, baseStatBonusFraction: 0, gemChanceBonus: 0 },
-  seasoned: { label: "Seasoned Procurator", stars: 3.5, priceMultiplier: 1.9, baseStatBonusFraction: 0.22, gemChanceBonus: 0.04 },
-  master: { label: "Master Procurator", stars: 5, priceMultiplier: 3.4, baseStatBonusFraction: 0.45, gemChanceBonus: 0.08 },
+  seasoned: { label: "Seasoned Procurator", stars: 3.5, priceMultiplier: 1.3, baseStatBonusFraction: 0.22, gemChanceBonus: 0.04 },
+  master: { label: "Master Procurator", stars: 5, priceMultiplier: 1.4, baseStatBonusFraction: 0.45, gemChanceBonus: 0.08 },
 };
 
 export const SPARRING = {
@@ -1051,12 +1110,31 @@ export const PROMOTION = {
  * reputation cap -- reputation says "you've been winning", this says "you're actually
  * built for what's next." The "local" entry is unused (nextTierOf never returns it as
  * a target) but present so the lookup stays a total function.
+ *
+ * Phase 18 Part D diagnostic: the old minAvgRosterCA values were reachable through
+ * near-total neglect. A 20,000-day-equivalent simulation of the real training formula
+ * with NO Training Yard investment, NO trainer, and default mood (the "a new player did
+ * nothing extra" baseline difficulty-ramp.md already used) still drifts a roster from
+ * ~24 to 33 CA over 600 days on organic showmanship gains and balanced-focus ticks
+ * alone -- meaning the old Colosseum bar of 42 was, in practice, within reach of a
+ * roster that was never meaningfully trained OR recruited into, exactly what Round 9
+ * found (roster CA 41.37 against a 42 requirement, on a roster that had received only
+ * partial investment). Retuned against what genuine investment actually buys in the
+ * same simulation: a roster with a mid-level Training Yard and balanced focus alone
+ * (no trainer) reaches ~42 CA by day 400 and ~51 by day 600; add a matching trainer and
+ * it reaches ~70-75 by day 400. New thresholds sit ABOVE the no-investment drift line at
+ * every tier, so clearing one requires either sustained training investment (yard
+ * level, trainer, focus discipline) or actively upgrading the roster via recruitment
+ * (see RECRUITER_TIERS), never just waiting: Rival's floor in particular needs a
+ * Training Yard past its starting level to hit on schedule, and Colosseum's requires
+ * real, multi-system investment or recruiting in a stronger fighter to replace a
+ * plateaued one -- the "sell old, buy new" loop this phase is meant to force open.
  */
 export const PROMOTION_READINESS: Record<FightTier, { minAvgBuildingLevel: number; minAvgRosterCA: number }> = {
   local: { minAvgBuildingLevel: 0, minAvgRosterCA: 0 },
-  provincial: { minAvgBuildingLevel: 1.3, minAvgRosterCA: 18 },
-  rival: { minAvgBuildingLevel: 2, minAvgRosterCA: 30 },
-  colosseum: { minAvgBuildingLevel: 3, minAvgRosterCA: 42 },
+  provincial: { minAvgBuildingLevel: 1.3, minAvgRosterCA: 20 },
+  rival: { minAvgBuildingLevel: 2, minAvgRosterCA: 40 },
+  colosseum: { minAvgBuildingLevel: 3, minAvgRosterCA: 55 },
 };
 
 /**
@@ -1126,9 +1204,20 @@ export const TRAINING_FOCUS_LABELS: Record<TrainingFocus, string> = {
  * the ordinary (non-lethal) resolveFight path per gladiator, same reasoning as
  * Promotion Fight: the stakes come from the opponents' own strength and the occasion
  * framing, not from a separate permadeath rule bolted on top.
+ *
+ * Phase 18 Part E: the Guard is meant to feel like a 70-90 CA final wall, but Round 9
+ * (under the OLD, too-low PROMOTION_READINESS.colosseum bar) sent fighters in the 30-48
+ * CA range and saw a 50-70 CA Guard -- the multiplier was never really the problem, the
+ * player's own roster never got put in a position to need a higher one. With Part D's
+ * retuned Colosseum floor (55 avg roster CA to even enter) and the further training a
+ * player naturally does before maxing out Colosseum reputation to unlock this finale, a
+ * realistic top-fighter CA sent here is closer to 55-70. Nudged the multiplier down
+ * slightly anyway (1.45 -> 1.3) so that range lands at 71.5-91 -- squarely in the
+ * intended band -- rather than 1.45x overshooting it at the top end once Part D takes
+ * effect. A small correction on top of the real fix, not the fix itself.
  */
 export const COLOSSEUM_FINALE = {
-  opponentCAMultiplier: 1.45,
+  opponentCAMultiplier: 1.3,
   opponentStatSpread: 12,
   cooldownDays: 15,
   winGoldBonus: 4000,

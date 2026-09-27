@@ -192,6 +192,14 @@ export interface Gladiator {
    * pending".
    */
   awaitingFateDecision?: boolean;
+  /**
+   * Phase 18 Part B: how many times this specific gladiator has been sponsored back
+   * from the brink (see SPONSOR_SURVIVAL.repeatMultiplierPerPriorSponsor in config.ts --
+   * each prior sponsorship makes the next one more expensive, so leaning on the same
+   * fighter as a repeat safety net isn't free). Optional so pre-existing saves default
+   * to 0 rather than crash.
+   */
+  timesSponsored?: number;
   /** Phase 15 Part 2: player-assignable, reassignable any time from Training. Optional
    * so pre-existing saves default sensibly (see saveManager's normalizeState) rather
    * than crash. */
