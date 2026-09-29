@@ -28,6 +28,9 @@ export function createInitialState(ludusName?: string, founderName?: string): Lu
     usedArenaNames.add(gladiator.name);
     return gladiator;
   });
+  // Resolved before generateAllRivalLudi so a rival ludus can never be generated with
+  // this exact name -- see generateAllRivalLudi's doc comment.
+  const resolvedLudusName = ludusName?.trim() || generateLudusName();
 
   return {
     gold: ECONOMY.startingGold,
@@ -41,7 +44,7 @@ export function createInitialState(ludusName?: string, founderName?: string): Lu
     staff: [],
     staffPool: generateStaffPool(currentDay),
     staffPoolRefreshedOnDay: currentDay,
-    rivalLudi: generateAllRivalLudi(),
+    rivalLudi: generateAllRivalLudi(resolvedLudusName),
     nextFightDay: currentDay + FIGHT_DAY.intervalDays,
     deathMatchCooldowns: [],
     pendingDeathMatchChallenge: null,
@@ -62,7 +65,7 @@ export function createInitialState(ludusName?: string, founderName?: string): Lu
     // their own -- now an optional override, pre-filled with a generated suggestion by
     // the caller (see MainMenu/FoundingModal) but editable.
     founderName: founderName?.trim() || generateRomanCitizenName({ freedman: true }),
-    ludusName: ludusName?.trim() || generateLudusName(),
+    ludusName: resolvedLudusName,
     praetorianCooldownUntilDay: null,
     praetorianVictories: 0,
     selfChallengeDraws: {},

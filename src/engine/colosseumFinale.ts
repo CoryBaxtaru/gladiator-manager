@@ -30,7 +30,13 @@ function generatePraetorian(playerCA: number): RivalGladiator {
   const full = generateGladiator(1, { baseStatOverride: base, statSpreadOverride: COLOSSEUM_FINALE.opponentStatSpread });
   return {
     id: full.id,
-    name: `${generateArenaName()} of the Praetorian Guard`,
+    // Phase 18 Round 10 bugfix: was `${arenaName} of the Praetorian Guard` here, on
+    // top of the matchup's own `rivalLudusName: "the Praetorian Guard"` below --
+    // FightResultCard always appends "of the {rivalLudusName}" itself, so the two
+    // combined read as "Pheropes of the Praetorian Guard of the the Praetorian
+    // Guard". Just the arena name here; the "of the Praetorian Guard" suffix is the
+    // shared component's job.
+    name: generateArenaName(),
     origin: full.origin,
     currentAbility: currentAbilityOf(full),
     stats: effectiveStats(full),
@@ -89,7 +95,9 @@ export function resolvePraetorianFinale(
       opponentName: opponent.name,
       opponentPowerLevel: opponent.currentAbility,
       opponentStats: opponent.stats,
-      rivalLudusName: "the Praetorian Guard",
+      // FightResultCard renders this as "... versus {opponentName} of the
+      // {rivalLudusName}" -- no leading "the" here, or it doubles up.
+      rivalLudusName: "Praetorian Guard",
     };
     const activeCount = gladiators.filter((g) => g.status === "active").length;
     const combat = resolveFight(matchup, fighter, state, state.currentDay);

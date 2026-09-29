@@ -30,33 +30,35 @@ function GameShell() {
 
   return (
     <div className="app-shell">
-      <TopBar />
-      <nav className="tab-bar">
-        <button className={`tab-btn ${tab === "squad" ? "active" : ""}`} onClick={() => setTab("squad")}>
-          Roster
-        </button>
-        <button className={`tab-btn ${tab === "training" ? "active" : ""}`} onClick={() => setTab("training")}>
-          Training
-        </button>
-        <button className={`tab-btn ${tab === "ludus" ? "active" : ""}`} onClick={() => setTab("ludus")}>
-          Ludus
-        </button>
-        <button className={`tab-btn ${tab === "recruitment" ? "active" : ""}`} onClick={() => setTab("recruitment")}>
-          Recruitment
-        </button>
-        <button className={`tab-btn ${tab === "rankings" ? "active" : ""}`} onClick={() => setTab("rankings")}>
-          Rankings
-        </button>
-        <button className={`tab-btn ${tab === "challenges" ? "active" : ""}`} onClick={() => setTab("challenges")}>
-          Challenges
-        </button>
-        <button className={`tab-btn ${tab === "history" ? "active" : ""}`} onClick={() => setTab("history")}>
-          History
-        </button>
-        <button className={`tab-btn ${tab === "promotion" ? "active" : ""} ${promotionAvailable(state) ? "tab-btn-alert" : ""}`} onClick={() => setTab("promotion")}>
-          Promotion
-        </button>
-      </nav>
+      <div className="app-header">
+        <TopBar />
+        <nav className="tab-bar">
+          <button className={`tab-btn ${tab === "squad" ? "active" : ""}`} onClick={() => setTab("squad")}>
+            Roster
+          </button>
+          <button className={`tab-btn ${tab === "training" ? "active" : ""}`} onClick={() => setTab("training")}>
+            Training
+          </button>
+          <button className={`tab-btn ${tab === "ludus" ? "active" : ""}`} onClick={() => setTab("ludus")}>
+            Ludus
+          </button>
+          <button className={`tab-btn ${tab === "recruitment" ? "active" : ""}`} onClick={() => setTab("recruitment")}>
+            Recruitment
+          </button>
+          <button className={`tab-btn ${tab === "rankings" ? "active" : ""}`} onClick={() => setTab("rankings")}>
+            Rankings
+          </button>
+          <button className={`tab-btn ${tab === "challenges" ? "active" : ""}`} onClick={() => setTab("challenges")}>
+            Challenges
+          </button>
+          <button className={`tab-btn ${tab === "history" ? "active" : ""}`} onClick={() => setTab("history")}>
+            History
+          </button>
+          <button className={`tab-btn ${tab === "promotion" ? "active" : ""} ${promotionAvailable(state) ? "tab-btn-alert" : ""}`} onClick={() => setTab("promotion")}>
+            Promotion
+          </button>
+        </nav>
+      </div>
       <main className="app-main">
         {tab === "squad" && <SquadScreen />}
         {tab === "training" && <TrainingScreen />}

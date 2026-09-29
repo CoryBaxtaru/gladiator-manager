@@ -78,8 +78,17 @@ function generateRivalLudus(tier: FightTier, usedNames: Set<string>): RivalLudus
   };
 }
 
-export function generateAllRivalLudi(): RivalLudus[] {
+/**
+ * `excludeName` keeps a rival ludus from ever being generated with the SAME name as
+ * the player's own -- confirmed in Round 10 playtesting: a rival drawn from the same
+ * pool with no exclusion could land on the player's exact ludus name, producing
+ * nonsense like "Ludus Aurelianus has challenged your ludus... of the Ludus
+ * Aurelianus." Seeded into the same `usedNames` set generateLudusName already uses to
+ * keep the three ludi within a tier from colliding with each other.
+ */
+export function generateAllRivalLudi(excludeName?: string): RivalLudus[] {
   const usedNames = new Set<string>();
+  if (excludeName) usedNames.add(excludeName);
   const ludi: RivalLudus[] = [];
   for (const tier of TIERS) {
     for (let i = 0; i < FIGHT_DAY.ludiPerTier; i++) {

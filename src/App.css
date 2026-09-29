@@ -96,6 +96,21 @@ body {
   flex-direction: column;
 }
 
+/* Phase 11 Part A: a tall detail panel (many mood modifiers, a full trait list) can
+   push the page well past one screen, and Advance Day/Advance to Next Fight are the
+   controls a player reaches for constantly -- sticking this whole header (topbar AND
+   the Roster/Training/... tab bar together, Phase 18 Round 10 bugfix -- the tab bar
+   used to scroll away on its own since only .topbar itself was sticky) to the
+   viewport keeps them reachable without scrolling back up. Stuck as one wrapper
+   rather than each sticking to top:0 independently, since the topbar's own height
+   varies (it wraps onto multiple lines below ~480px), which would make a fixed `top`
+   offset for the tab bar wrong at that width. */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
 .topbar {
   display: flex;
   align-items: center;
@@ -105,14 +120,6 @@ body {
   background: linear-gradient(180deg, #2c2119, #1f1710);
   border-bottom: 2px solid var(--border);
   flex-wrap: wrap;
-  /* Phase 11 Part A: a tall detail panel (many mood modifiers, a full trait list) can
-     push the page well past one screen, and Advance Day/Advance to Next Fight are the
-     controls a player reaches for constantly -- sticking this to the viewport keeps
-     them reachable without scrolling back up. Opaque background (already set above)
-     means the tab bar simply disappears behind it as it scrolls under, no overlap. */
-  position: sticky;
-  top: 0;
-  z-index: 10;
 }
 
 .topbar-title {
