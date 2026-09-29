@@ -4,77 +4,93 @@
 
 <p align="center">
   <a href="https://corybaxtaru.github.io/gladiator-manager/"><strong>▶ Play Now</strong></a>
-  &nbsp;·&nbsp; No install, no sign-up, no backend — it runs entirely in your browser and saves your progress locally.
+  — runs in your browser, saves to localStorage, no account needed.
 </p>
 
-Buy slaves and volunteers off the market, put them through a training yard, and send
-them out to die for your reputation. **Ludus: Gladiator Manager** is a single-player,
-browser-based management sim about running a Roman gladiatorial school — recruit and
-train fighters, keep them fed, healthy, and (mostly) willing, and climb from backwater
-Local Arena Bouts all the way to the Colosseum. Think *Football Manager* for the sand,
-with a splash of *Grepolis*-style empire upkeep and *Europa Universalis*-flavored
-consequences: bad decisions don't just cost you a fight, they can bankrupt your ludus,
-get a veteran poached by a rival school, or get a gladiator killed.
+You run a gladiator school. Buy or recruit fighters, train them, keep an eye on
+their mood and health, and send them out to fight for money and reputation. Do
+well enough and you get invited to tougher tiers, all the way up to the
+Colosseum. Do badly and people die, escape, or get poached by a rival
+school — permanently, there's no undo.
 
-There is no meta-progression outside a single save. Every gladiator who dies, escapes,
-or gets poached is gone for good, and every ludus you build is its own self-contained
-story from founding to (eventually) ruin or legend.
+It's a single-player management sim, closer to Football Manager than anything
+else, just with swords instead of transfer windows. One save, one story: every
+gladiator who dies or walks out is gone for good, and every school you build
+either climbs to legend or falls apart on its own.
 
-## Features
+## What's actually in it
 
-- **Four-tier career ladder** — Local Arena Bouts → Provincial Games → Rival Ludus
-  Challengers → the Colosseum. Reputation alone doesn't move you up: you have to win an
-  optional, player-timed **Promotion Fight** against a real champion, and pass a
-  readiness check on your buildings and roster before you're even offered one.
-- **Clash-based combat** — every fight is a sequence of stat-vs-stat clashes (Attack,
-  Weapon Skill, Endurance, Showmanship, and a blended Overall Prowess), each with a
-  bounded random swing so the better fighter usually wins but upsets stay real.
-  Strength and Defence sit outside the clash sequence entirely: Defence passively
-  blunts what an opponent rolls against you, and Strength raises the stakes instead of
-  the odds — a powerful opponent makes losing to him worse, and your own Strength pays
-  out bigger on a decisive win.
-- **Weapon types & signature techniques** — reassign a gladiator's weapon
-  (Murmillo, Retiarius, Thraex, Dimachaerus, Secutor) for a real stat trade-off, not
-  just flavor. Push the right weapon, stat, and personality trait combination far
-  enough and a fighter can earn a rare, permanent signature technique — announced by
-  name the moment it fires, in an ordinary fight day or a Promotion Fight, a death
-  match, an arranged match, or the Colosseum finale.
-- **Mood, personality, and physical traits** — every gladiator has a body he was born
-  with, a personality he earns through his career, and a mood that can be nursed with
-  feasts, baths, and public recognition or left to rot into an escape attempt. A
-  visible risk tag on the roster tells you when someone is drifting toward trouble
-  before it happens.
-- **Retirement into staff** — a veteran who's aged out or proven himself doesn't have
-  to be sold. Repurpose him onto your own staff as a trainer instead, no gold changes
-  hands, and his specialty and skill come from his own fighting record.
-- **Persistent rival ludi** — the schools you fight against are stable identities with
-  their own reputation and a running record against you, not randomly regenerated
-  opponents. Beat one badly enough and it's a real, remembered rivalry; let one beat
-  you enough and the Rankings screen will call it out as a Bitter Rival.
-- **Ongoing tier pressure** — clearing a Promotion Fight once isn't a permanent pass.
-  Coast too long on a building and roster standard well below what your current tier
-  expects and a rival will poach your worst-neglected fighter, or demote your ludus
-  outright if there's no one left to poach.
-- **A real economic floor** — loans, sponsorships, and compounding debt can genuinely
-  sink a ludus, but bankruptcy is a hard reset, not a soft-lock: it's painful (gutted
-  buildings, collapsed reputation) but always survivable.
-- **Recruitment, training, and staff** — three recruiting channels at three quality
-  tiers, six trainable stats, sparring pairs, and a staff of trainers and doctors whose
-  skill and coverage genuinely change your odds.
+**Four tiers, and promotion isn't automatic.** Local Arena Bouts → Provincial
+Games → Rival Ludus Challengers → the Colosseum. Reputation gets you to the
+door, but you also need a roster and buildings that are actually ready for the
+next tier, and then you have to win a real fight against a champion from that
+tier before it unlocks. You pick when to attempt it, not the game.
+
+**Fights are stat-vs-stat, not dice rolls.** Each match is five clashes —
+Attack, Weapon Skill, Endurance, Showmanship, and an overall composite — with
+some random swing so the better fighter usually wins but not always. Defence
+isn't a clash of its own, it just makes your opponent's numbers worse across
+the board every round. Strength doesn't affect who wins; it affects how bad a
+loss turns out and how good a win pays.
+
+**Weapon types are a real choice, not flavor.** Murmillo, Retiarius, Thraex,
+Dimachaerus, Secutor — each is a stat trade-off, and you can reassign one any
+time. Land the right stat, weapon, and personality combination and a fighter
+earns a permanent signature technique.
+
+**Mood, personality, and physique aren't cosmetic.** Every fighter has a body
+he was born with, a personality he earns over his career, and a mood you have
+to actually manage — feasts, baths, public recognition, or let it slide and
+watch him refuse to fight, pick a fight with a teammate, or bolt for the gate.
+A risk tag on the roster warns you before it gets that far.
+
+**Recruiting has real tiers that matter.** Three channels (cheap and
+unpredictable, expensive and reliable, or a volunteer pool of free citizens)
+crossed with three procurator qualities. A better procurator raises the floor
+of what shows up, not just your odds of a lucky pull — worth the price once
+your school can afford it.
+
+**Sponsoring a dying gladiator costs something real.** The price scales with
+how much gold you actually have and how many times you've already bailed that
+specific fighter out — leaning on the same guy as a permanent safety net gets
+expensive fast, on purpose.
+
+**The buildings are illustrated, not just numbers on a card.** Training yard,
+barracks, infirmary, armory, arena, quarters, and gate & walls each have their
+own art and their own upgrade curve.
+
+**Sitting still doesn't work.** Stay under-built or under-trained for your
+current tier long enough and a rival will poach your worst-off fighter, or
+demote your whole school outright if there's nobody left to take.
+
+**A veteran doesn't have to be sold.** Retire him into your own staff as a
+trainer instead — no gold changes hands, and his skill comes straight from his
+own fighting record.
+
+**Rival schools remember you.** They're persistent identities with their own
+reputation and a running record against you, not regenerated each time. Beat
+one badly enough and it's a real rivalry; lose to one enough and the rankings
+screen will call it out.
+
+**Debt is real but not a dead end.** Loans and unpaid upkeep compound into
+genuine trouble, but bankruptcy resets you — buildings gutted, reputation
+cut — instead of soft-locking the save forever.
 
 ## Screenshots
 
 <p align="center">
-  <img src="docs/screenshots/roster-fresh.png" alt="Squad screen showing a gladiator's stats, combat style, and record" width="700">
+  <img src="docs/screenshots/roster.png" alt="Roster screen showing a gladiator's stats, mood, and fight record" width="800">
 </p>
 <p align="center">
-  <img src="docs/screenshots/training-screen.png" alt="Training screen showing focus assignments and hireable staff" width="700">
+  <img src="docs/screenshots/ludus.png" alt="Ludus screen showing the seven illustrated buildings" width="800">
+</p>
+<p align="center">
+  <img src="docs/screenshots/training.png" alt="Training screen with per-gladiator stat focus and sparring" width="800">
 </p>
 
 ## Development
 
-A standard React + TypeScript + Vite app — no backend, no environment variables, no
-database.
+React + TypeScript + Vite. No backend, no env vars, no database.
 
 ```bash
 npm install
@@ -83,6 +99,5 @@ npm run build    # production build
 npm run lint     # oxlint
 ```
 
-The live site at [corybaxtaru.github.io/gladiator-manager](https://corybaxtaru.github.io/gladiator-manager/)
-is a static build published manually to the `gh-pages` branch, not deployed
-automatically on push.
+The live site is a static build pushed manually to the `gh-pages` branch —
+it doesn't redeploy automatically when `master` changes.
