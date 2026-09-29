@@ -87,7 +87,13 @@ interface Props {
  * still does all the work.
  */
 export function GladiatorHoverCard({ data, reputation, children, triggerClassName }: Props) {
-  const potentialStars = fuzzyPotentialStars(data.potentialAbility, data.potentialNoiseSeed, reputation, data.potentialRevealed);
+  const potentialStars = fuzzyPotentialStars(
+    data.potentialAbility,
+    data.potentialNoiseSeed,
+    reputation,
+    data.potentialRevealed,
+    currentAbilityStars(data.currentAbility)
+  );
   const canHover = usePointerCanHover();
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLSpanElement>(null);

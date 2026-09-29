@@ -140,18 +140,26 @@ function fallbackNoiseSeed(gladiatorId: string): number {
  * reputation grows, rather than showing a min-to-max spread. Primitive inputs so it
  * works for both the player's own gladiators and rival gladiators, which carry the
  * same potential/noise-seed data but not the full Gladiator shape.
+ *
+ * `minStars` floors the fuzzed result at the gladiator's own (unfuzzed) Current
+ * Ability stars -- PA is a hard ceiling on CA everywhere else in the game
+ * (currentAbilityOf clamps to it directly), so a fogged display that shows Potential
+ * BELOW a fighter's already-proven Current Ability reads as a real contradiction, not
+ * uncertainty. The fog should only ever hide how much higher the ceiling is, never
+ * suggest it's lower than what he's already achieved.
  */
-export function fuzzyPotentialStars(potentialAbility: number, noiseSeed: number, reputation: number, revealed: boolean): number {
+export function fuzzyPotentialStars(potentialAbility: number, noiseSeed: number, reputation: number, revealed: boolean, minStars = 0.5): number {
   const trueStars = potentialTrueStars(potentialAbility);
   if (revealed) return trueStars;
   const decay = clamp(1 - reputation / REPUTATION_STAR_SCALE_MAX, 0, 1);
   const fuzzed = trueStars + noiseSeed * decay;
-  return roundToHalf(clamp(fuzzed, 0.5, 5));
+  return roundToHalf(clamp(fuzzed, minStars, 5));
 }
 
 export function potentialDisplayStars(gladiator: Gladiator, reputation: number): number {
   const seed = gladiator.potentialNoiseSeed ?? fallbackNoiseSeed(gladiator.id);
-  return fuzzyPotentialStars(gladiator.potentialAbility, seed, reputation, gladiator.potentialRevealed === "exact");
+  const caFloor = currentAbilityStars(currentAbilityOf(gladiator));
+  return fuzzyPotentialStars(gladiator.potentialAbility, seed, reputation, gladiator.potentialRevealed === "exact", caFloor);
 }
 
 export interface PotentialStarDisplay {
