@@ -17,7 +17,64 @@ branch (not automatic -- see `README.md`).
 
 ## Where things stand
 
-**Last completed: Phase 17** (three parts, following a Round 8 playtest report). All
+**Last completed: UI design pass** (after Phase 18 and the Round 10 fixes). A design
+review against a set of UI rules the user supplied in-session (not committed to the
+repo, at their choice -- ask them for it if a future UI task needs the exact text),
+then a rebuild of the shared design layer plus four review fixes. Four commits; each
+was verified rendered at 1400px and 390px with zero horizontal overflow and zero
+console errors.
+
+- **Design system** (`App.css` `:root`, `index.css`): treat these tokens as the only
+  source of color, type, spacing and radius -- no raw hex, no ad-hoc font sizes, no
+  off-grid spacing in rules (all three were audited to zero). One warm hue for every
+  surface, stepping only lightness (`--surface-sunken` through `--surface-selected`).
+  Four text colors (`--text-primary/secondary/tertiary/muted`), every one >= 4.5:1 on
+  every surface including selected -- a full-screen audit of every visible text node
+  on every tab found no failures. One accent (`--accent`, Roman red) for action and
+  selection only; gold means value (currency, ratings, honors); green/amber/red mean
+  status only. Depth is surface steps plus low-opacity rgba borders: no shadows, no
+  gradients. Type: Cinzel (self-hosted in `src/assets/fonts/`, OFL license alongside)
+  for h1-h3, system sans for everything else, 11/14/18/22/28px, tabular numbers
+  globally. 4px spacing grid; radius 4/8/12. Controls are 40px tall minimum, tabs 44px;
+  every control has hover, active (scale 0.97, skipped under reduced motion),
+  focus-visible and disabled states; motion animates transform/opacity only.
+- **Focal points**: "Advance to Next Fight" is the only filled button in the header,
+  which is now a deliberate two-row grid (identity + time controls, then the status
+  strip). A button repeated on every card or row (Hire, Send Procurator, Keep, Issue
+  Challenge, Arrange Match, Challenge) is outlined, never filled; selected choice
+  buttons (`.btn.active`) use the selected surface with an accent edge, not a red fill.
+  Keep it that way: one filled accent button per screen or dialog.
+- **Dialogs**: every modal now goes through `components/Modal.tsx`, a native
+  `<dialog>` opened with `showModal()` (focus trap, inert page, Escape, top layer).
+  Escape/backdrop dismissal is opt-in per use: menus/pickers/confirmations take both,
+  results take Escape only, required decisions (Fight Day, a dying gladiator,
+  founding, an incoming challenge) take neither and are re-opened if the browser
+  force-closes them. Never hand-roll another backdrop div.
+- **Tooltips** (`Tooltip.tsx`): hidden bubbles are `display:none` (an invisible
+  absolute bubble was widening the whole page on phones), open bubbles shift back
+  inside the viewport, and plain-text triggers get a dotted underline + help cursor.
+- **Tier Standing panel** (`TierStandingCard.tsx`, on the Promotion screen at every
+  tier): current reputation/building/roster averages beside the bar to HOLD the tier
+  and the bar to REACH the next one, plus the weekly neglect check's status. Hold
+  thresholds come from `tierNeglect.ts`'s new `tierSustainStandard()`, which the weekly
+  check itself also uses -- change the math there, never in the component.
+- **Rivalry notices count meetings, not bouts**: `rivalLudi.ts`'s
+  `recordRivalryMeeting()` (replaces `recordRivalryResult`). A fight day, Promotion
+  Fight or death match against a given school is one meeting, decided by net bouts.
+  The per-bout record and the Bitter Rival tag are unchanged, per the Round 8 note
+  below. New `record.meetingsWon/meetingsLost` fields; old saves start them at 0.
+- **Light mode**: the game is dark-only by design (`color-scheme: dark`); with the OS
+  set to light it renders identically, verified. A light theme would be a separate
+  project -- the tokens make it possible, nothing more.
+
+**Phase 18** (progression/economy rebalance) also landed before this pass but was
+never written up here -- see `docs/phase18-rebalance.md` for the full diagnosis and
+every number it changed (promotion readiness flooring, sponsor-or-die cost and full
+recovery, recruiter pricing, promotion CA thresholds, Guard multiplier, daily mood
+decay). The Round 10 fixes after it (rival-name collision, Guard text, sticky tab bar)
+are in `git log`.
+
+**Previously completed: Phase 17** (three parts, following a Round 8 playtest report). All
 verified live against a real browser session (see each part below for how).
 
 - **Part A -- tier-neglect axis asymmetry**: Round 8 found building-level neglect
@@ -264,6 +321,29 @@ transition signal) turned out to already be mostly built from Phase 12-13 and ju
 needed a fresh look plus the one genuine remaining gap closed; don't assume this list
 is exhaustive or current without checking the live app first, the same way this phase
 had to.
+
+**From the UI design review, not yet acted on** (items 1-4 of that review shipped;
+these are the rest, roughly most to least important):
+
+- **Week summary buries the fight results**: five "A quiet day" lines come first and
+  the result cards start below the fold. Results first, quiet days collapsed.
+- **A death-match challenge can open before the week summary is seen** (seen on day 7
+  of a fresh game). Queue it behind the summary.
+- **Rival records sit off-screen on phones**: the Ludi Rankings table scrolls
+  sideways and the Record column is past the edge by default.
+- **Phone header is tall and sticky**: identity, status strip and time controls take
+  roughly a third of a 844px screen, all of it pinned. Consider pinning only the tab
+  bar and time controls below ~720px.
+- **Mood risk tag only on the Squad screen**: Fight Day, Challenges and Promotion
+  rows show the mood word ("Angry") but not Unsettled/Flight Risk.
+- **Building descriptions don't say what the next level adds** ("Grants a combat
+  roll bonus.").
+- **Rivalry notices are still frequent early**: Local tier has only three rival
+  schools and most fight days meet all of them, so meeting thresholds (3, 5, 8...)
+  are crossed often in the first few weeks. A balance call on `RIVALRY.
+  noticeThresholds` if it reads as noise in a playtest; deliberately not retuned.
+- **Two staff candidates can share a name** in the hiring pool (seen: two "Philinos
+  of Rhodes").
 
 Nothing carried over unbuilt. New items noticed while working through Phase 16,
 not yet acted on:
