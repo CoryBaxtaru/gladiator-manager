@@ -317,7 +317,7 @@ export function TrainingScreen() {
               </Tooltip>
               <div className="staff-salary">{c.staff.weeklySalary}g per week if hired</div>
               <button
-                className="btn primary small"
+                className="btn small"
                 disabled={state.gold < c.hireCost}
                 onClick={() => hireStaff(c.id)}
               >

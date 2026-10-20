@@ -97,7 +97,7 @@ export function ChallengesScreen() {
               </div>
               <div className="card-row"><span>Roster size</span><span>{l.roster.length}</span></div>
               <button
-                className="btn danger-outline"
+                className="btn"
                 disabled={eligibleGladiators.length === 0}
                 onClick={() => setPickingLudusId(l.id)}
               >
@@ -215,7 +215,7 @@ export function ChallengesScreen() {
                 <span className="fighter-select-mood">{moodLabel(g.mood)}</span>
               </span>
               <button
-                className="btn small primary"
+                className="btn small"
                 onClick={() => {
                   previewSelfChallenge(g.id);
                   setSelfPickingId(g.id);

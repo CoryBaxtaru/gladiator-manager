@@ -67,7 +67,7 @@ export function RecruitmentScreen() {
                   <div className="card-row"><span>Duration</span><span>{cfg.tripDurationDays}d</span></div>
                   <div className="card-row"><span>Candidates</span><span>{cfg.batchMin}-{cfg.batchMax}</span></div>
                   <button
-                    className="btn primary"
+                    className="btn"
                     disabled={state.gold < cost}
                     onClick={() => sendRecruiter(channel, selectedTier)}
                   >
@@ -132,7 +132,7 @@ export function RecruitmentScreen() {
                     <Tooltip text="Recoup a portion of what he cost instead of releasing him for nothing.">
                       <button className="btn" onClick={() => sellOnCandidate(c.id)}>Sell Him On ({c.refundValue}g)</button>
                     </Tooltip>
-                    <button className="btn primary" onClick={() => recruit(c.id)}>Keep</button>
+                    <button className="btn" onClick={() => recruit(c.id)}>Keep</button>
                   </div>
                 </Card>
               );

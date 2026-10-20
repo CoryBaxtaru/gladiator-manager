@@ -1,6 +1,17 @@
-:root {
-  color-scheme: dark;
-  font: 15px/145% "Trebuchet MS", "Segoe UI", Georgia, serif;
+@font-face {
+  font-family: "Cinzel";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("./assets/fonts/cinzel-latin-600-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Cinzel";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./assets/fonts/cinzel-latin-700-normal.woff2") format("woff2");
 }
 
 * {
@@ -13,5 +24,22 @@ html, body, #root {
 }
 
 h1, h2, h3, h4 {
-  margin: 0 0 8px;
+  margin: 0 0 var(--space-2);
+}
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
 }

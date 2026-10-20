@@ -84,10 +84,10 @@ export function TopBar() {
         </div>
       </div>
       <div className="topbar-actions">
-        <button className="btn primary" onClick={advanceDay} disabled={pendingFightDay}>Advance Day</button>
+        <button className="btn" onClick={advanceDay} disabled={pendingFightDay}>Advance Day</button>
         <button className="btn primary" onClick={advanceToNextFight} disabled={pendingFightDay}>Advance to Next Fight</button>
-        <button className="btn" onClick={() => setMenuOpen(true)}>Menu</button>
       </div>
+      <button className="btn topbar-menu" onClick={() => setMenuOpen(true)}>Menu</button>
       {menuOpen && <MainMenu onClose={() => setMenuOpen(false)} />}
       {sponsorshipOpen && <SponsorshipModal onClose={() => setSponsorshipOpen(false)} />}
     </header>
