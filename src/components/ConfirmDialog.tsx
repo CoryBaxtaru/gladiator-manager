@@ -1,3 +1,5 @@
+import { Modal } from "./Modal";
+
 interface ConfirmDialogProps {
   title: string;
   message: string;
@@ -18,19 +20,17 @@ export function ConfirmDialog({
   onCancel,
 }: ConfirmDialogProps) {
   return (
-    <div className="modal-backdrop" onClick={onCancel}>
-      <div className="modal confirm-modal" onClick={(e) => e.stopPropagation()}>
-        <h3>{title}</h3>
-        <p>{message}</p>
-        <div className="confirm-actions">
-          <button className="btn" onClick={onCancel}>
-            {cancelLabel}
-          </button>
-          <button className={`btn ${danger ? "danger-outline" : "primary"}`} onClick={onConfirm}>
-            {confirmLabel}
-          </button>
-        </div>
+    <Modal className="confirm-modal" onClose={onCancel} closeOnBackdrop>
+      <h3>{title}</h3>
+      <p>{message}</p>
+      <div className="confirm-actions">
+        <button className="btn" onClick={onCancel}>
+          {cancelLabel}
+        </button>
+        <button className={`btn ${danger ? "danger-outline" : "primary"}`} onClick={onConfirm}>
+          {confirmLabel}
+        </button>
       </div>
-    </div>
+    </Modal>
   );
 }

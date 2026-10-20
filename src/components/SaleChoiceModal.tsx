@@ -5,6 +5,7 @@ import { instantSalePrice, auctionSalePriceRange } from "../engine/sale";
 import { currentAbilityOf } from "../engine/rating";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { Card } from "./Card";
+import { Modal } from "./Modal";
 
 /**
  * Phase 12 Part H: "Bring to Auction" alongside the existing guaranteed instant sale --
@@ -39,40 +40,38 @@ export function SaleChoiceModal({ gladiator, onClose }: { gladiator: Gladiator; 
   }
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal confirm-modal" onClick={(e) => e.stopPropagation()}>
-        <h3>Sell {gladiator.name}?</h3>
-        <p className="hint">This cannot be undone. Choose how to sell him.</p>
-        <div className="sale-choice-grid">
-          <Card>
-            <h4>Instant Sale</h4>
-            <p className="hint">Guaranteed. Paid immediately, no risk.</p>
-            <div className="card-row">
-              <span>Price</span>
-              <span>{instant}g</span>
-            </div>
-            <button className="btn primary" onClick={() => setConfirming("instant")}>
-              Sell Instantly
-            </button>
-          </Card>
-          <Card>
-            <h4>Bring to Auction</h4>
-            <p className="hint">A gamble. Real risk in both directions around the instant-sale value.</p>
-            <div className="card-row">
-              <span>Range</span>
-              <span>{range.min}g - {range.max}g</span>
-            </div>
-            <button className="btn danger-outline" onClick={() => setConfirming("auction")}>
-              Send to Auction
-            </button>
-          </Card>
-        </div>
-        <div className="confirm-actions">
-          <button className="btn" onClick={onClose}>
-            Cancel
+    <Modal className="confirm-modal" onClose={onClose} closeOnBackdrop>
+      <h3>Sell {gladiator.name}?</h3>
+      <p className="hint">This cannot be undone. Choose how to sell him.</p>
+      <div className="sale-choice-grid">
+        <Card>
+          <h4>Instant Sale</h4>
+          <p className="hint">Guaranteed. Paid immediately, no risk.</p>
+          <div className="card-row">
+            <span>Price</span>
+            <span>{instant}g</span>
+          </div>
+          <button className="btn primary" onClick={() => setConfirming("instant")}>
+            Sell Instantly
           </button>
-        </div>
+        </Card>
+        <Card>
+          <h4>Bring to Auction</h4>
+          <p className="hint">A gamble. Real risk in both directions around the instant-sale value.</p>
+          <div className="card-row">
+            <span>Range</span>
+            <span>{range.min}g - {range.max}g</span>
+          </div>
+          <button className="btn danger-outline" onClick={() => setConfirming("auction")}>
+            Send to Auction
+          </button>
+        </Card>
       </div>
-    </div>
+      <div className="confirm-actions">
+        <button className="btn" onClick={onClose}>
+          Cancel
+        </button>
+      </div>
+    </Modal>
   );
 }

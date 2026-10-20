@@ -9,6 +9,7 @@ import { GladiatorHoverCard, hoverDataFromGladiator, hoverDataFromRival } from "
 import { WinChanceBadge } from "./WinChanceBadge";
 import { StarRating } from "./StarRating";
 import { GladiatorPortrait } from "./GladiatorPortrait";
+import { Modal } from "./Modal";
 
 export function IncomingChallengeModal() {
   const { state, respondToChallenge } = useGame();
@@ -39,107 +40,101 @@ export function IncomingChallengeModal() {
 
   if (!picking) {
     return (
-      <div className="modal-backdrop">
-        <div className="modal fight-day-modal">
-          <h2>A Death Match Challenge</h2>
-          <p className="hint deathmatch-warning">
-            {challenge.rivalLudusName} has challenged your ludus to a death match. Accepting means one of your
-            gladiators fights to the death. Declining costs real reputation, not just pride.
-          </p>
-          <div className="confirm-actions">
-            <button className="btn" onClick={() => respondToChallenge(false)}>Decline</button>
-            <button
-              className="btn danger-outline"
-              disabled={eligibleGladiators.length === 0}
-              onClick={() => setPicking(true)}
-            >
-              Accept
-            </button>
-          </div>
+      <Modal className="fight-day-modal">
+        <h2>A Death Match Challenge</h2>
+        <p className="hint deathmatch-warning">
+          {challenge.rivalLudusName} has challenged your ludus to a death match. Accepting means one of your
+          gladiators fights to the death. Declining costs real reputation, not just pride.
+        </p>
+        <div className="confirm-actions">
+          <button className="btn" onClick={() => respondToChallenge(false)}>Decline</button>
+          <button
+            className="btn danger-outline"
+            disabled={eligibleGladiators.length === 0}
+            onClick={() => setPicking(true)}
+          >
+            Accept
+          </button>
         </div>
-      </div>
+      </Modal>
     );
   }
 
   if (!previewGladiator) {
     return (
-      <div className="modal-backdrop">
-        <div className="modal fight-day-modal">
-          <h2>Choose Your Champion</h2>
-          <p className="hint deathmatch-warning">
-            Whoever you send against {challenge.rivalLudusName} risks his life. If he loses, he dies.
-          </p>
-          <div className="fighter-select-header">
-            <span className="fsh-portrait" />
-            <span className="fsh-name">Name</span>
-            <span className="fsh-ability">Ability</span>
-            <span className="fsh-mood">Mood</span>
-            <span className="fsh-action" />
-          </div>
-          <div className="fighter-select-list">
-            {eligibleGladiators.map((g) => (
-              <GladiatorHoverCard data={hoverDataFromGladiator(g)} reputation={state.reputation} key={g.id}>
-                <div className="fighter-select-row">
-                  <GladiatorPortrait name={g.name} origin={g.origin} condition={g.condition} size={32} variant="headshot" />
-                  <span className="fighter-select-name">{g.name}</span>
-                  <span className="fighter-select-sub">
-                    <StarRating value={currentAbilityStars(currentAbilityOf(g))} size="sm" />
-                    <span className="fighter-select-mood">{moodLabel(g.mood)}</span>
-                  </span>
-                  <button className="btn small danger-outline" onClick={() => setPreviewGladiatorId(g.id)}>
-                    Preview
-                  </button>
-                </div>
-              </GladiatorHoverCard>
-            ))}
-          </div>
-          <div className="confirm-actions">
-            <button className="btn" onClick={() => setPicking(false)}>Back</button>
-          </div>
+      <Modal className="fight-day-modal">
+        <h2>Choose Your Champion</h2>
+        <p className="hint deathmatch-warning">
+          Whoever you send against {challenge.rivalLudusName} risks his life. If he loses, he dies.
+        </p>
+        <div className="fighter-select-header">
+          <span className="fsh-portrait" />
+          <span className="fsh-name">Name</span>
+          <span className="fsh-ability">Ability</span>
+          <span className="fsh-mood">Mood</span>
+          <span className="fsh-action" />
         </div>
-      </div>
+        <div className="fighter-select-list">
+          {eligibleGladiators.map((g) => (
+            <GladiatorHoverCard data={hoverDataFromGladiator(g)} reputation={state.reputation} key={g.id}>
+              <div className="fighter-select-row">
+                <GladiatorPortrait name={g.name} origin={g.origin} condition={g.condition} size={32} variant="headshot" />
+                <span className="fighter-select-name">{g.name}</span>
+                <span className="fighter-select-sub">
+                  <StarRating value={currentAbilityStars(currentAbilityOf(g))} size="sm" />
+                  <span className="fighter-select-mood">{moodLabel(g.mood)}</span>
+                </span>
+                <button className="btn small danger-outline" onClick={() => setPreviewGladiatorId(g.id)}>
+                  Preview
+                </button>
+              </div>
+            </GladiatorHoverCard>
+          ))}
+        </div>
+        <div className="confirm-actions">
+          <button className="btn" onClick={() => setPicking(false)}>Back</button>
+        </div>
+      </Modal>
     );
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal fight-day-modal">
-        <h2>Matchup Preview</h2>
-        <p className="hint deathmatch-warning">This is final if you commit. The loser dies.</p>
-        {opponent && (
-          <div className="matchup-preview">
-            <GladiatorHoverCard data={hoverDataFromGladiator(previewGladiator)} reputation={state.reputation}>
-              <div className="matchup-preview-side">
-                <div className="matchup-preview-name">{previewGladiator.name}</div>
-                <div className="hint">your ludus</div>
-              </div>
-            </GladiatorHoverCard>
-            <div className="matchup-preview-vs">
-              versus
-              {winEstimate && <WinChanceBadge estimate={winEstimate} />}
+    <Modal className="fight-day-modal">
+      <h2>Matchup Preview</h2>
+      <p className="hint deathmatch-warning">This is final if you commit. The loser dies.</p>
+      {opponent && (
+        <div className="matchup-preview">
+          <GladiatorHoverCard data={hoverDataFromGladiator(previewGladiator)} reputation={state.reputation}>
+            <div className="matchup-preview-side">
+              <div className="matchup-preview-name">{previewGladiator.name}</div>
+              <div className="hint">your ludus</div>
             </div>
-            <GladiatorHoverCard data={hoverDataFromRival(opponent)} reputation={state.reputation}>
-              <div className="matchup-preview-side">
-                <div className="matchup-preview-name">{opponent.name}</div>
-                <div className="hint">{challenge.rivalLudusName}</div>
-              </div>
-            </GladiatorHoverCard>
+          </GladiatorHoverCard>
+          <div className="matchup-preview-vs">
+            versus
+            {winEstimate && <WinChanceBadge estimate={winEstimate} />}
           </div>
-        )}
-        <div className="confirm-actions">
-          <button className="btn" onClick={() => setPreviewGladiatorId(null)}>Back</button>
-          <button
-            className="btn danger-outline"
-            onClick={() => {
-              respondToChallenge(true, previewGladiator.id);
-              setPicking(false);
-              setPreviewGladiatorId(null);
-            }}
-          >
-            Commit to the Death Match
-          </button>
+          <GladiatorHoverCard data={hoverDataFromRival(opponent)} reputation={state.reputation}>
+            <div className="matchup-preview-side">
+              <div className="matchup-preview-name">{opponent.name}</div>
+              <div className="hint">{challenge.rivalLudusName}</div>
+            </div>
+          </GladiatorHoverCard>
         </div>
+      )}
+      <div className="confirm-actions">
+        <button className="btn" onClick={() => setPreviewGladiatorId(null)}>Back</button>
+        <button
+          className="btn danger-outline"
+          onClick={() => {
+            respondToChallenge(true, previewGladiator.id);
+            setPicking(false);
+            setPreviewGladiatorId(null);
+          }}
+        >
+          Commit to the Death Match
+        </button>
       </div>
-    </div>
+    </Modal>
   );
 }

@@ -8,6 +8,7 @@ import { GladiatorHoverCard, hoverDataFromGladiator } from "./GladiatorHoverCard
 import { WinChanceBadge } from "./WinChanceBadge";
 import { StarRating } from "./StarRating";
 import { GladiatorPortrait } from "./GladiatorPortrait";
+import { Modal } from "./Modal";
 
 const TIER_LABELS: Record<string, string> = {
   local: "Local Arena",
@@ -60,72 +61,70 @@ export function FightDaySelectionModal() {
   const meetsMinimum = selected.size >= minimumRequired;
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal fight-day-modal">
-        <h2>Fight Day, {TIER_LABELS[tier]}</h2>
+    <Modal className="fight-day-modal">
+      <h2>Fight Day, {TIER_LABELS[tier]}</h2>
+      <p className="hint">
+        Choose who fights today. A bruised gladiator can still go, at a real but small penalty -- anyone more
+        seriously hurt is not eligible.
+        {eligible.length > 0 && ` At least ${minimumRequired} of your ${eligible.length} fit fighter(s) must go -- the rest can sit this one out.`}
+      </p>
+      {previewMatchups.some((m) => m.tier !== tier) && (
         <p className="hint">
-          Choose who fights today. A bruised gladiator can still go, at a real but small penalty -- anyone more
-          seriously hurt is not eligible.
-          {eligible.length > 0 && ` At least ${minimumRequired} of your ${eligible.length} fit fighter(s) must go -- the rest can sit this one out.`}
+          Right after a promotion, some matchups still ease in from the tier below rather than jumping straight to
+          {" "}{TIER_LABELS[tier]} -- a fighter tagged below is one of those, not a full {TIER_LABELS[tier]} test yet.
         </p>
-        {previewMatchups.some((m) => m.tier !== tier) && (
-          <p className="hint">
-            Right after a promotion, some matchups still ease in from the tier below rather than jumping straight to
-            {" "}{TIER_LABELS[tier]} -- a fighter tagged below is one of those, not a full {TIER_LABELS[tier]} test yet.
-          </p>
-        )}
-        {eligible.length === 0 ? (
-          <p className="empty-note">No one is fit to fight today.</p>
-        ) : (
-          <>
-            <div className="fighter-select-header">
-              <span className="fsh-checkbox" />
-              <span className="fsh-portrait" />
-              <span className="fsh-name">Name</span>
-              <span className="fsh-ability">Ability</span>
-              <span className="fsh-mood">Mood</span>
-              <span className="fsh-winchance">Win Chance</span>
-            </div>
-            <div className="fighter-select-list">
-            {eligible.map((g) => (
-              <GladiatorHoverCard data={hoverDataFromGladiator(g)} reputation={state.reputation} key={g.id}>
-                <label className="fighter-select-row">
-                  <input
-                    type="checkbox"
-                    checked={selected.has(g.id)}
-                    onChange={() => toggle(g.id)}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                  <GladiatorPortrait name={g.name} origin={g.origin} condition={g.condition} size={32} variant="headshot" />
-                  <span className="fighter-select-name">{g.name}</span>
-                  <span className="fighter-select-sub">
-                    <StarRating value={currentAbilityStars(currentAbilityOf(g))} size="sm" />
-                    <span className="fighter-select-mood">{moodLabel(g.mood)}</span>
-                  </span>
-                  {winEstimates.has(g.id) && <WinChanceBadge estimate={winEstimates.get(g.id)!} />}
-                  {(() => {
-                    const matchup = matchupsByGladiatorId.get(g.id);
-                    return matchup && matchup.tier !== tier ? (
-                      <span className="hint fighter-select-tier-note">vs {TIER_LABELS[matchup.tier]}</span>
-                    ) : null;
-                  })()}
-                </label>
-              </GladiatorHoverCard>
-            ))}
-            </div>
-          </>
-        )}
-        <div className="confirm-actions">
-          {eligible.length === 0 && (
-            <button className="btn" onClick={() => resolveFightDay([])}>
-              Sit today out
-            </button>
-          )}
-          <button className="btn primary" disabled={!meetsMinimum} onClick={() => resolveFightDay(Array.from(selected))}>
-            Send {selected.size} to the arena
+      )}
+      {eligible.length === 0 ? (
+        <p className="empty-note">No one is fit to fight today.</p>
+      ) : (
+        <>
+          <div className="fighter-select-header">
+            <span className="fsh-checkbox" />
+            <span className="fsh-portrait" />
+            <span className="fsh-name">Name</span>
+            <span className="fsh-ability">Ability</span>
+            <span className="fsh-mood">Mood</span>
+            <span className="fsh-winchance">Win Chance</span>
+          </div>
+          <div className="fighter-select-list">
+          {eligible.map((g) => (
+            <GladiatorHoverCard data={hoverDataFromGladiator(g)} reputation={state.reputation} key={g.id}>
+              <label className="fighter-select-row">
+                <input
+                  type="checkbox"
+                  checked={selected.has(g.id)}
+                  onChange={() => toggle(g.id)}
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <GladiatorPortrait name={g.name} origin={g.origin} condition={g.condition} size={32} variant="headshot" />
+                <span className="fighter-select-name">{g.name}</span>
+                <span className="fighter-select-sub">
+                  <StarRating value={currentAbilityStars(currentAbilityOf(g))} size="sm" />
+                  <span className="fighter-select-mood">{moodLabel(g.mood)}</span>
+                </span>
+                {winEstimates.has(g.id) && <WinChanceBadge estimate={winEstimates.get(g.id)!} />}
+                {(() => {
+                  const matchup = matchupsByGladiatorId.get(g.id);
+                  return matchup && matchup.tier !== tier ? (
+                    <span className="hint fighter-select-tier-note">vs {TIER_LABELS[matchup.tier]}</span>
+                  ) : null;
+                })()}
+              </label>
+            </GladiatorHoverCard>
+          ))}
+          </div>
+        </>
+      )}
+      <div className="confirm-actions">
+        {eligible.length === 0 && (
+          <button className="btn" onClick={() => resolveFightDay([])}>
+            Sit today out
           </button>
-        </div>
+        )}
+        <button className="btn primary" disabled={!meetsMinimum} onClick={() => resolveFightDay(Array.from(selected))}>
+          Send {selected.size} to the arena
+        </button>
       </div>
-    </div>
+    </Modal>
   );
 }

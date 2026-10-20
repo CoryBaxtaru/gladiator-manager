@@ -1,6 +1,7 @@
 import { useGame } from "../state/GameContext";
 import { sponsorSurvivalCost } from "../engine/combat";
 import { GladiatorPortrait } from "./GladiatorPortrait";
+import { Modal } from "./Modal";
 
 /**
  * Phase 12 Part A: a real, costed choice instead of a silent death roll. Shown ahead
@@ -18,38 +19,36 @@ export function FateDecisionModal() {
   const canAfford = state.gold >= cost;
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal confirm-modal">
-        <h3>{gladiator.name} is dying</h3>
-        <div className="matchup-preview-side">
-          <GladiatorPortrait name={gladiator.name} origin={gladiator.origin} condition="gravely_injured" size={96} variant="full" />
-        </div>
-        <p>
-          His wounds are mortal. Sponsoring a physician's full attention will bring him back fully healed, not just
-          alive, at a real cost scaled to what he's worth -- or you can let him die, and the wager stays real either
-          way.
-        </p>
-        {(gladiator.timesSponsored ?? 0) > 0 && (
-          <p className="hint">
-            He's already been sponsored back from the brink {gladiator.timesSponsored} time
-            {gladiator.timesSponsored === 1 ? "" : "s"} before -- leaning on the same fighter as a safety net costs
-            more each time.
-          </p>
-        )}
-        <div className="confirm-actions">
-          <button className="btn danger-outline" onClick={() => resolveFateDecision(gladiator.id, false)}>
-            Let Him Die
-          </button>
-          <button
-            className="btn primary"
-            disabled={!canAfford}
-            title={canAfford ? undefined : "Not enough gold to sponsor his survival."}
-            onClick={() => resolveFateDecision(gladiator.id, true)}
-          >
-            Sponsor His Survival ({cost}g)
-          </button>
-        </div>
+    <Modal className="confirm-modal">
+      <h3>{gladiator.name} is dying</h3>
+      <div className="matchup-preview-side">
+        <GladiatorPortrait name={gladiator.name} origin={gladiator.origin} condition="gravely_injured" size={96} variant="full" />
       </div>
-    </div>
+      <p>
+        His wounds are mortal. Sponsoring a physician's full attention will bring him back fully healed, not just
+        alive, at a real cost scaled to what he's worth -- or you can let him die, and the wager stays real either
+        way.
+      </p>
+      {(gladiator.timesSponsored ?? 0) > 0 && (
+        <p className="hint">
+          He's already been sponsored back from the brink {gladiator.timesSponsored} time
+          {gladiator.timesSponsored === 1 ? "" : "s"} before -- leaning on the same fighter as a safety net costs
+          more each time.
+        </p>
+      )}
+      <div className="confirm-actions">
+        <button className="btn danger-outline" onClick={() => resolveFateDecision(gladiator.id, false)}>
+          Let Him Die
+        </button>
+        <button
+          className="btn primary"
+          disabled={!canAfford}
+          title={canAfford ? undefined : "Not enough gold to sponsor his survival."}
+          onClick={() => resolveFateDecision(gladiator.id, true)}
+        >
+          Sponsor His Survival ({cost}g)
+        </button>
+      </div>
+    </Modal>
   );
 }
