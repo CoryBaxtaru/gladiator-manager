@@ -275,7 +275,7 @@ export interface CombatResult {
   /** Phase 16 Part D: the stable id of the RivalLudus this fight was against, when it
    * was against one of the persistent rival ludi at all (fight day, Promotion Fight, a
    * ludus death match) rather than a one-off generated opponent (self-challenge, the
-   * Colosseum finale's Praetorian Guard) -- see engine/rivalLudi.ts's recordRivalryResult. */
+   * Colosseum finale's Praetorian Guard) -- see engine/rivalLudi.ts's recordRivalryMeeting. */
   rivalLudusId?: string | null;
   tier: FightTier;
   outcome: FightOutcome;
@@ -404,7 +404,14 @@ export interface RivalLudus {
    * game start and never regenerated (see engine/rivalLudi.ts), so this is a real,
    * persistent rivalry with a stable identity, not a coincidence of reused naming.
    */
-  record: { wins: number; losses: number };
+  record: {
+    wins: number;
+    losses: number;
+    /** Meetings (a fight day, Promotion Fight or death match against this ludus) won
+     * or lost on net bouts; drives the rivalry notice. See recordRivalryMeeting. */
+    meetingsWon: number;
+    meetingsLost: number;
+  };
 }
 
 export type SaleType = "instant" | "auction";
@@ -447,7 +454,7 @@ export interface DeathMatchOutcome {
   techniqueAnnouncement?: string | null;
   /** Phase 16 Part D: set when this fight's win/loss count against the specific rival
    * ludus fought (not set for "self" mode, which has no real rival identity) just
-   * crossed one of RIVALRY.noticeThresholds. See engine/rivalLudi.ts's recordRivalryResult. */
+   * crossed one of RIVALRY.noticeThresholds. See engine/rivalLudi.ts's recordRivalryMeeting. */
   rivalryNotice?: string | null;
 }
 

@@ -31,7 +31,7 @@ function poachableGladiator(active: Gladiator[]): Gladiator | null {
 
 /** A rival capable of doing the poaching: strictly higher reputation than the player
  * (a school with the standing to lure a fighter away). Prefers a rival the player
- * already has a real rivalry with (see engine/rivalLudi.ts's recordRivalryResult) so
+ * already has a real rivalry with (see engine/rivalLudi.ts's recordRivalryMeeting) so
  * the moment reads as a grudge, not a coincidence of naming; falls back to a random
  * eligible rival when no rivalry history exists yet. */
 function poachingRival(state: LudusState) {
@@ -40,6 +40,23 @@ function poachingRival(state: LudusState) {
   const withHistory = eligible.filter((l) => l.record.wins + l.record.losses > 0);
   const pool = withHistory.length > 0 ? withHistory : eligible;
   return pick(pool);
+}
+
+/** What the ludus has to keep up to hold its current tier: the same entry bar
+ * PROMOTION_READINESS set for getting in, softened per axis (see TIER_NEGLECT). Null
+ * at Local, which has no bar to hold. Shared by the weekly check below and the
+ * Promotion screen's Tier Standing panel, so the screen can never disagree with it. */
+export function tierSustainStandard(state: LudusState): { minAvgBuildingLevel: number; minAvgRosterCA: number } | null {
+  if (state.unlockedTier === "local") return null;
+  const required = PROMOTION_READINESS[state.unlockedTier];
+  return {
+    minAvgBuildingLevel: required.minAvgBuildingLevel * TIER_NEGLECT.buildingSustainFraction,
+    minAvgRosterCA: required.minAvgRosterCA * TIER_NEGLECT.sustainFraction,
+  };
+}
+
+export function tierNeglectOnCooldown(state: LudusState): boolean {
+  return onCooldown(state);
 }
 
 /**
@@ -69,11 +86,10 @@ export function tickTierNeglect(state: LudusState): TierNeglectTickResult {
     return reset(state);
   }
 
-  const required = PROMOTION_READINESS[state.unlockedTier];
+  const standard = tierSustainStandard(state);
   const { avgBuildingLevel, avgRosterCA } = computeStanding(state);
   const belowStandard =
-    avgBuildingLevel < required.minAvgBuildingLevel * TIER_NEGLECT.buildingSustainFraction ||
-    avgRosterCA < required.minAvgRosterCA * TIER_NEGLECT.sustainFraction;
+    !!standard && (avgBuildingLevel < standard.minAvgBuildingLevel || avgRosterCA < standard.minAvgRosterCA);
 
   if (!belowStandard) {
     return reset(state);

@@ -74,7 +74,7 @@ function generateRivalLudus(tier: FightTier, usedNames: Set<string>): RivalLudus
     reputation,
     facilityLevel: Math.max(1, Math.round(reputationToStars(reputation))),
     roster,
-    record: { wins: 0, losses: 0 },
+    record: { wins: 0, losses: 0, meetingsWon: 0, meetingsLost: 0 },
   };
 }
 
@@ -111,25 +111,35 @@ export function rivalLudiForTier(state: LudusState, tier: FightTier): RivalLudus
 }
 
 /**
- * Phase 16 Part D: records one fight's result against a specific persistent rival
- * ludus (fight day, Promotion Fight, or a ludus death match -- anything carrying a
- * real `rivalLudusId`) and, when the updated count just crossed one of
- * RIVALRY.noticeThresholds, returns a felt notice about it. A draw, or a fight with no
- * real rival ludus behind it (self-challenge, the Colosseum finale), is a no-op.
+ * Records one meeting with a specific persistent rival ludus -- a fight day, a
+ * Promotion Fight or a ludus death match; anything without a real rivalLudusId
+ * (self-challenges, the Colosseum finale) is a no-op. Every bout still counts toward
+ * the per-bout win/loss record (the Ludi Rankings column and its Bitter Rival tag),
+ * but the "the crowd remembers" notice counts MEETINGS, each decided by which side
+ * won more of that day's bouts. Counting bouts made one fight day with three fighters
+ * against the same school read as a three-time rivalry before a second meeting had
+ * ever happened.
  */
-export function recordRivalryResult(
+export function recordRivalryMeeting(
   state: LudusState,
   rivalLudusId: string | null | undefined,
-  outcome: FightOutcome
+  outcomes: FightOutcome[]
 ): { state: LudusState; notice: string | null } {
-  if (!rivalLudusId || outcome === "draw") return { state, notice: null };
+  if (!rivalLudusId || outcomes.length === 0) return { state, notice: null };
   const ludus = state.rivalLudi.find((l) => l.id === rivalLudusId);
   if (!ludus) return { state, notice: null };
 
-  const record =
-    outcome === "win"
-      ? { wins: ludus.record.wins + 1, losses: ludus.record.losses }
-      : { wins: ludus.record.wins, losses: ludus.record.losses + 1 };
+  const boutWins = outcomes.filter((o) => o === "win").length;
+  const boutLosses = outcomes.filter((o) => o === "loss").length;
+  const meetingWon = boutWins > boutLosses;
+  const meetingLost = boutLosses > boutWins;
+
+  const record = {
+    wins: ludus.record.wins + boutWins,
+    losses: ludus.record.losses + boutLosses,
+    meetingsWon: ludus.record.meetingsWon + (meetingWon ? 1 : 0),
+    meetingsLost: ludus.record.meetingsLost + (meetingLost ? 1 : 0),
+  };
 
   const updated: LudusState = {
     ...state,
@@ -137,10 +147,10 @@ export function recordRivalryResult(
   };
 
   let notice: string | null = null;
-  if (outcome === "loss" && RIVALRY.noticeThresholds.includes(record.losses)) {
-    notice = `${ludus.name} has beaten you ${record.losses} times now. The crowd remembers.`;
-  } else if (outcome === "win" && RIVALRY.noticeThresholds.includes(record.wins)) {
-    notice = `Your ludus has beaten ${ludus.name} ${record.wins} times now. They won't soon forget this rivalry.`;
+  if (meetingLost && RIVALRY.noticeThresholds.includes(record.meetingsLost)) {
+    notice = `${ludus.name} has got the better of you on ${record.meetingsLost} separate occasions now. The crowd remembers.`;
+  } else if (meetingWon && RIVALRY.noticeThresholds.includes(record.meetingsWon)) {
+    notice = `Your ludus has got the better of ${ludus.name} on ${record.meetingsWon} separate occasions now. They won't soon forget this rivalry.`;
   }
 
   return { state: updated, notice };

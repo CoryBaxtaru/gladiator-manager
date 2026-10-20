@@ -1915,6 +1915,130 @@ input[type="checkbox"] {
   font-weight: 700;
 }
 
+/* ---------- Tier standing (Promotion screen) ---------- */
+
+.tier-standing {
+  margin-bottom: var(--space-6);
+}
+
+.tier-standing-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.standing-table {
+  width: 100%;
+  max-width: 720px;
+  border-collapse: collapse;
+}
+
+.standing-table th,
+.standing-table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.standing-table tr:last-child th,
+.standing-table tr:last-child td {
+  border-bottom: none;
+}
+
+.standing-table thead th {
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  color: var(--text-tertiary);
+  white-space: normal;
+}
+
+.standing-table tbody th {
+  text-align: left;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.standing-table td:nth-child(2) {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Too narrow for four columns: each measure becomes its own block, with the column
+   name carried on each value. */
+@media (max-width: 560px) {
+  .standing-table thead {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .standing-table tr {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-1) var(--space-3);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .standing-table tr:last-child {
+    border-bottom: none;
+  }
+
+  .standing-table th,
+  .standing-table td {
+    padding: 0;
+    border-bottom: none;
+    text-align: left;
+  }
+
+  .standing-table tbody th {
+    grid-column: 1 / -1;
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .standing-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
+    color: var(--text-tertiary);
+  }
+}
+
+.standing-met {
+  color: var(--success);
+}
+
+.standing-unmet {
+  color: var(--danger);
+}
+
+.standing-na {
+  color: var(--text-muted);
+}
+
+.visually-hidden {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* ---------- Rankings ---------- */
 
 .rankings-table-scroll {

@@ -120,7 +120,14 @@ function normalizeState(state: LudusState): LudusState {
       ...ludus,
       // Phase 16 Part D: new field -- a save from before this existed has no rivalry
       // history yet, same as a fresh game's rival ludi.
-      record: ludus.record ?? { wins: 0, losses: 0 },
+      record: {
+        wins: ludus.record?.wins ?? 0,
+        losses: ludus.record?.losses ?? 0,
+        // A save from before meetings were counted starts that count fresh rather
+        // than guessing it from bout totals.
+        meetingsWon: ludus.record?.meetingsWon ?? 0,
+        meetingsLost: ludus.record?.meetingsLost ?? 0,
+      },
       roster: ludus.roster.map((fighter) => ({
         ...fighter,
         stats: migrateStats(fighter.stats, fighter.currentAbility),

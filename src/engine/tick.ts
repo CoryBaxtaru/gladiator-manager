@@ -1,4 +1,4 @@
-import type { CombatResult, DaySummary, FightMatchup, Gladiator, LudusState, SummaryEntry } from "../types";
+import type { CombatResult, DaySummary, FightMatchup, FightOutcome, Gladiator, LudusState, SummaryEntry } from "../types";
 import { tickBuildQueue, computeImbalance } from "./buildings";
 import { recomputeMood, resolveBreak, addMoodModifier } from "./mood";
 import { applyDailyTraining, maybeRevealPotential, tickInjuryRecovery, tickAgeAndDecline } from "./training";
@@ -12,7 +12,7 @@ import { maybeRivalInitiatesChallenge } from "./deathMatch";
 import { tickWeeklyDebt } from "./debt";
 import { tickWeeklyLoan, applyPurseCut } from "./loan";
 import { reputationCapFor } from "./promotion";
-import { recordRivalryResult } from "./rivalLudi";
+import { recordRivalryMeeting } from "./rivalLudi";
 import { tickTierNeglect } from "./tierNeglect";
 import { currentAbilityOf } from "./rating";
 
@@ -37,6 +37,10 @@ export function advanceDay(
   let goldFromFights = 0;
   let reputationFromFights = 0;
 
+  // A fight day against a given rival ludus is one meeting, however many of its
+  // fighters met yours -- see recordRivalryMeeting.
+  const boutsByRival = new Map<string, FightOutcome[]>();
+
   for (const matchup of fightMatchups) {
     const idx = gladiators.findIndex((g) => g.id === matchup.gladiatorId);
     if (idx === -1) continue;
@@ -58,13 +62,9 @@ export function advanceDay(
     // screen), because this one is explicitly meant to land as a named moment.
     const techniqueAnnouncement = techniqueAnnouncementFor(gladiator, updatedGladiator);
     if (techniqueAnnouncement) entries.push({ category: "fight", text: techniqueAnnouncement });
-    // Phase 16 Part D: an ordinary fight day is matched against a real persistent
-    // rival ludus (see fightday.ts), so it's the primary place this rivalry record
-    // accumulates -- update it before working.rivalLudi is otherwise untouched again
-    // until the next matchup in this same loop.
-    const rivalry = recordRivalryResult(working, matchup.rivalLudusId, result.outcome);
-    working = rivalry.state;
-    if (rivalry.notice) entries.push({ category: "event", text: rivalry.notice });
+    if (matchup.rivalLudusId) {
+      boutsByRival.set(matchup.rivalLudusId, [...(boutsByRival.get(matchup.rivalLudusId) ?? []), result.outcome]);
+    }
     combatResults.push(result);
     goldFromFights += result.goldReward;
     reputationFromFights += result.reputationReward;
@@ -72,6 +72,11 @@ export function advanceDay(
     // Fight results are shown as their own result cards (see FightResultCard /
     // SummaryModal), not duplicated here as a text entry (the bronze crown note above
     // is the one deliberate exception, since it's a rare, separate occasion).
+  }
+  for (const [rivalLudusId, outcomes] of boutsByRival) {
+    const rivalry = recordRivalryMeeting(working, rivalLudusId, outcomes);
+    working = rivalry.state;
+    if (rivalry.notice) entries.push({ category: "event", text: rivalry.notice });
   }
   // A purse-cut sponsorship (see engine/loan.ts) skims its redirect fraction off
   // fight winnings before they ever reach the player's pocket.

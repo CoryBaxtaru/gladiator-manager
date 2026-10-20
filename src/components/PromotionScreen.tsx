@@ -5,7 +5,6 @@ import {
   promotionAvailable,
   promotionOnCooldown,
   promotionChampion,
-  promotionReadiness,
   reputationCapFor,
   nextTierOf,
   buildPromotionMatchup,
@@ -21,6 +20,7 @@ import { GladiatorHoverCard, hoverDataFromGladiator, hoverDataFromRival } from "
 import { WinChanceBadge } from "./WinChanceBadge";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { GladiatorPortrait } from "./GladiatorPortrait";
+import { TierStandingCard } from "./TierStandingCard";
 
 /**
  * Tier-up is gated behind an optional, player-timed Promotion Fight against a
@@ -40,8 +40,6 @@ export function PromotionScreen() {
   const onCooldown = promotionOnCooldown(state);
   const available = promotionAvailable(state);
   const champion = promotionChampion(state);
-  const readiness = promotionReadiness(state);
-  const repReady = state.reputation >= cap;
   const eligibleGladiators = state.gladiators.filter(canFight);
   const confirmingGladiator = eligibleGladiators.find((g) => g.id === confirmingId) ?? null;
 
@@ -66,6 +64,8 @@ export function PromotionScreen() {
           The ludus has reached the Colosseum, the highest tier there is -- no one left to be promoted past. What's
           left is the closest thing this game has to an ending.
         </p>
+
+        <TierStandingCard />
 
         <Card accent={finaleAvailable ? "gold" : "none"}>
           <h3>The Emperor's Praetorian Guard</h3>
@@ -158,43 +158,7 @@ export function PromotionScreen() {
         schedule, not the moment reputation alone qualifies you.
       </p>
 
-      {!available && !onCooldown && (
-        <Card>
-          <div className="card-row">
-            <span>Reputation</span>
-            <span>{state.reputation} / {cap}</span>
-          </div>
-          <div className="progress-bar">
-            <div className="progress-bar-fill" style={{ width: `${Math.min(100, Math.round((state.reputation / cap) * 100))}%` }} />
-          </div>
-          {!repReady ? (
-            <p className="hint">Keep fighting to reach the cap. A Promotion Fight unlocks once you do and the ludus is ready.</p>
-          ) : readiness && !readiness.ok ? (
-            <>
-              <p className="hint">
-                Reputation is there, but the ludus isn't built for {REPUTATION_TIER_LABELS[nextTier]} yet:
-              </p>
-              <div className="card-row">
-                <span>Average building level</span>
-                <span className={readiness.avgBuildingLevel >= readiness.requiredBuildingLevel ? "" : "mood-negative"}>
-                  {/* Phase 18 Part A: floor, never round, the CURRENT value -- rounding
-                      to 1 decimal could show e.g. "1.3 / 1.3" while the true value was
-                      still 1.2857, a bar that reads as cleared when it isn't. Flooring
-                      can only ever under-report progress, never falsely show it met. */}
-                  {(Math.floor(readiness.avgBuildingLevel * 10) / 10).toFixed(1)} / {readiness.requiredBuildingLevel.toFixed(1)} needed
-                </span>
-              </div>
-              <div className="card-row">
-                <span>Average roster ability</span>
-                <span className={readiness.avgRosterCA >= readiness.requiredRosterCA ? "" : "mood-negative"}>
-                  {Math.floor(readiness.avgRosterCA)} / {readiness.requiredRosterCA} needed
-                </span>
-              </div>
-              <p className="hint">Upgrade buildings on the Ludus screen or keep training/recruiting to close the gap.</p>
-            </>
-          ) : null}
-        </Card>
-      )}
+      <TierStandingCard />
 
       {onCooldown && (
         <div className="banner warning">
@@ -257,7 +221,7 @@ export function PromotionScreen() {
                         <span className="fighter-select-mood">{moodLabel(g.mood)}</span>
                       </span>
                       {estimate && <WinChanceBadge estimate={estimate} />}
-                      <button className="btn small primary" onClick={() => setConfirmingId(g.id)}>
+                      <button className="btn small" onClick={() => setConfirmingId(g.id)}>
                         Challenge
                       </button>
                     </div>

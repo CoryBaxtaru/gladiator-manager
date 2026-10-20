@@ -1,6 +1,6 @@
 import type { CombatResult, FightMatchup, FightTier, LudusState, PromotionOutcome, RivalGladiator, RivalLudus } from "../types";
 import { PROMOTION, PROMOTION_READINESS, REPUTATION_BANDS_BY_TIER } from "../config";
-import { rivalLudiForTier, recordRivalryResult } from "./rivalLudi";
+import { rivalLudiForTier, recordRivalryMeeting } from "./rivalLudi";
 import { resolveFight, applyCombatResultToGladiator, canFight, techniqueAnnouncementFor } from "./combat";
 import { currentAbilityOf } from "./rating";
 import { nextId } from "./rng";
@@ -158,7 +158,7 @@ export function resolvePromotionFight(
     ...state,
     gladiators: state.gladiators.map((g) => (g.id === gladiator.id ? updatedGladiator : g)),
   };
-  const rivalry = recordRivalryResult(working, matchup.rivalLudusId, combat.outcome);
+  const rivalry = recordRivalryMeeting(working, matchup.rivalLudusId, [combat.outcome]);
   working = rivalry.state;
   const rivalryNotice = rivalry.notice;
 

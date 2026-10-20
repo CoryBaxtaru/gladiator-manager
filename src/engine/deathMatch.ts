@@ -2,7 +2,7 @@ import type { DeathMatchOutcome, FightMatchup, Gladiator, LudusState, RivalGladi
 import { DEATH_MATCH, FIGHT_ECONOMY, SELF_CHALLENGE } from "../config";
 import { resolveFight, applyCombatResultToGladiator, canFight, techniqueAnnouncementFor } from "./combat";
 import { reputationCapFor } from "./promotion";
-import { recordRivalryResult } from "./rivalLudi";
+import { recordRivalryMeeting } from "./rivalLudi";
 import { nextId, pick, chance } from "./rng";
 import { currentAbilityOf, effectiveStats } from "./rating";
 import { generateGladiator } from "./generator";
@@ -131,7 +131,7 @@ function fightDeathMatch(
     };
   }
 
-  const rivalry = recordRivalryResult(working, rivalLudus.id, combat.outcome);
+  const rivalry = recordRivalryMeeting(working, rivalLudus.id, [combat.outcome]);
   working = rivalry.state;
 
   working = setCooldown(working, rivalLudus.id);
